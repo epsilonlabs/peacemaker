@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="ASCII"?>
+<comicshop:Shop xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:comicshop="comicshop" xmi:id="_rqtZkBUPEeut3qj6TjgmMQ" name="Travelling Man">
+  <publishers xmi:id="publisher1" name="Image Comics"/>
+  <publishers xmi:id="publisher2" name="DC"/>
+<<<<<<< HEAD
+  <comics xmi:id="_WsmOoBUUEeut3qj6TjgmMQ" title="Bad Weekend" publisher="publisher1"/>
+=======
+  <comics xmi:id="_WsmOoBUUEeut3qj6TjgmMQ" title="Bad Weekend" publisher="publisher2"/>
+>>>>>>> branch
+</comicshop:Shop>

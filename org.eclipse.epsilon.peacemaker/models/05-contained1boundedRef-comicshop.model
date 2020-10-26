@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="ASCII"?>
+<comicshop:Shop xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:comicshop="comicshop" xmi:id="_rqtZkBUPEeut3qj6TjgmMQ" name="Travelling Man">
+  <comics xmi:id="comic1" title="Bad Weekend">
+<<<<<<< HEAD
+  <prologue xmi:id="prologue1" author="Alan Moore" text="A good one indeed"/>
+=======
+  <prologue xmi:id="prologue2" author="Joe Hill" text="Buy this one for sure"/>
+>>>>>>> branch
+  </comics>
+</comicshop:Shop>

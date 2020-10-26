@@ -1,0 +1,43 @@
+@namespace(uri="comicshop", prefix="comicshop")
+package comicshop;
+
+class Shop {
+	attr String name;
+	val Comic[*] comics;
+	val Publisher[*] publishers;
+	val Author[*] authors;
+}
+
+class Comic {
+	attr String title;
+	attr String releaseDate;
+	val Contributor[*] contributors;
+	val Prologue prologue;
+	ref Publisher publisher;
+}
+
+class Prologue {
+	attr String author;
+	attr String text;
+}
+
+class Contributor {
+	attr ContributionType contributionType;
+	ref Author author;
+}
+
+class Publisher {
+	attr String name;
+}
+
+class Author {
+	attr String name;
+}
+
+enum ContributionType {
+	WRITER;
+	ARTIST;
+	INKER;
+	COLORIST;
+	LETTERER;
+}
