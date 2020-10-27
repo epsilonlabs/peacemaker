@@ -6,19 +6,23 @@ import static org.eclipse.epsilon.peacemaker.PeaceMakerXMILoad.SEPARATOR_TAG;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EPackage;
+import org.eclipse.emf.ecore.InternalEObject;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
+import org.eclipse.emf.ecore.util.ExtendedMetaData;
 import org.eclipse.emf.ecore.xmi.XMLHelper;
 import org.eclipse.emf.ecore.xmi.XMLResource;
 import org.eclipse.emf.ecore.xmi.impl.SAXXMIHandler;
 import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
+import org.eclipse.epsilon.peacemaker.conflicts.AttributeRedefinitions;
 import org.eclipse.epsilon.peacemaker.conflicts.Conflict;
 import org.eclipse.epsilon.peacemaker.conflicts.ConflictSection;
 import org.eclipse.epsilon.peacemaker.conflicts.ObjectRedefinition;
@@ -34,6 +38,8 @@ public class PeaceMakerXMIHandler extends SAXXMIHandler {
 
 	protected List<ConflictSection> conflictSections = new ArrayList<>();
 	protected ConflictSection currentSection;
+
+	protected Map<EObject, AttributeRedefinitions> attributeRedefinitions = new HashMap<>();
 
 	public PeaceMakerXMIHandler(XMLResource xmiResource, XMLHelper helper, Map<?, ?> options) {
 		super(xmiResource, helper, options);
@@ -65,7 +71,13 @@ public class PeaceMakerXMIHandler extends SAXXMIHandler {
 				"03-attribute",
 				"04-nonContained1boundedRef",
 				"05-contained1boundedRef",
-				"06-newLines-newInBoth-noConflict" };
+				"06-newLines-newInBoth-noConflict",
+				"07-newLines-attributes",
+				"08-newLines-severalAttributes" };
+
+		// uncomment for specific cases
+		//		cases = new String[1];
+		//		cases[0] = "07-newLines-attributes";
 
 		for (String inputCase : cases) {
 			System.out.println("############################################");
@@ -145,9 +157,40 @@ public class PeaceMakerXMIHandler extends SAXXMIHandler {
 	}
 
 	@Override
-	protected void handleUnknownFeature(String prefix, String name, boolean isElement, EObject peekObject, String value) {
-		super.handleUnknownFeature(prefix, name, isElement, peekObject, value);
-		//TODO: include the support for our things
+	protected void handleObjectAttribs(EObject obj) {
+		if (attribs != null) {
+			InternalEObject internalEObject = (InternalEObject) obj;
+			for (int i = 0, size = attribs.getLength(); i < size; ++i) {
+				String name = attribs.getQName(i);
+
+				if (name.startsWith(LEFT_TAG)) {
+					name = name.substring(LEFT_TAG.length());
+					AttributeRedefinitions attrRedef = getAttributeRedefinitions(obj);
+					attrRedef.addLeft(name, attribs.getValue(i));
+				}
+				else if (name.startsWith(RIGHT_TAG)) {
+					name = name.substring(RIGHT_TAG.length());
+					AttributeRedefinitions attrRedef = getAttributeRedefinitions(obj);
+					attrRedef.addRight(name, attribs.getValue(i));
+				}
+
+				if (name.equals(ID_ATTRIB)) {
+					xmlResource.setID(internalEObject, attribs.getValue(i));
+				}
+				else if (name.equals(hrefAttribute) && (!recordUnknownFeature || types.peek() != UNKNOWN_FEATURE_TYPE || obj.eClass() != anyType)) {
+					handleProxy(internalEObject, attribs.getValue(i));
+				}
+				else if (isNamespaceAware) {
+					String namespace = attribs.getURI(i);
+					if (!ExtendedMetaData.XSI_URI.equals(namespace) && !notFeatures.contains(name)) {
+						setAttribValue(obj, name, attribs.getValue(i));
+					}
+				}
+				else if (!name.startsWith(XMLResource.XML_NS) && !notFeatures.contains(name)) {
+					setAttribValue(obj, name, attribs.getValue(i));
+				}
+			}
+		}
 	}
 
 	@Override
@@ -161,6 +204,21 @@ public class PeaceMakerXMIHandler extends SAXXMIHandler {
 				System.out.println("@@@@@@@@@@@@@@@@@@@@@@@");
 			}
 		}
+
+		for (AttributeRedefinitions redefs : attributeRedefinitions.values()) {
+			System.out.println("@@@@@@@@@@@@@@@@@@@@@@@");
+			System.out.println(redefs);
+			System.out.println("@@@@@@@@@@@@@@@@@@@@@@@");
+		}
+	}
+
+	protected AttributeRedefinitions getAttributeRedefinitions(EObject obj) {
+		AttributeRedefinitions result = attributeRedefinitions.get(obj);
+		if (result == null) {
+			result = new AttributeRedefinitions(obj, xmlResource.getID(obj));
+			attributeRedefinitions.put(obj, result);
+		}
+		return result;
 	}
 
 	public String toString(EObject obj) {

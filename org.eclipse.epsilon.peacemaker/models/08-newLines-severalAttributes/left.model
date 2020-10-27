@@ -7,7 +7,12 @@
     name="Travelling Man">
   <comics
       xmi:id="_tq4hkBUPEeut3qj6TjgmMQ"
-      title="A Basketful of Heads"/>
+      title="A Basketful of Heads">
+    <prologue
+        xmi:id="prologue1"
+        author="Ed Brubaker"
+        text="I thought it'd be worse"/>
+  </comics>
   <comics
       xmi:id="_RFBCcBUREeut3qj6TjgmMQ"
       title="Cruel Summer"/>
@@ -15,19 +20,11 @@
       xmi:id="_WsmOoBUUEeut3qj6TjgmMQ"
       title="Bad Weekend">
     <prologue
-        xmi:id="prologue1"
-<<<<<<< left.model
-        author="Ed Brubaker"
-=======
-        author="Joe Hill"
->>>>>>> right.model
+        xmi:id="_FiUMwBU8EeuMv6w_qu0ZJA"
+        author="Alan Moore"
         text="A good one indeed"/>
   </comics>
   <publishers
-      xmi:id="prologue2"
-<<<<<<< left.model
-      name="Dark Horse"/>
-=======
-      name="Vertigo"/>
->>>>>>> right.model
+      xmi:id="_YX-ykBU5EeuMv6w_qu0ZJA"
+      name="Image Comics"/>
 </comicshop:Shop>

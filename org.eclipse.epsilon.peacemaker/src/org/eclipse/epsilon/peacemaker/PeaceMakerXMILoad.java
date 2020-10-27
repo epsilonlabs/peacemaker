@@ -4,11 +4,14 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.eclipse.emf.ecore.xmi.XMLHelper;
 import org.eclipse.emf.ecore.xmi.XMLResource;
 import org.eclipse.emf.ecore.xmi.impl.XMILoadImpl;
+import org.eclipse.epsilon.peacemaker.PeaceMakerXMIHandler.FileSegment;
 import org.xml.sax.helpers.DefaultHandler;
 
 public class PeaceMakerXMILoad extends XMILoadImpl {
@@ -16,6 +19,11 @@ public class PeaceMakerXMILoad extends XMILoadImpl {
 	public static final String LEFT_TAG = "left:-";
 	public static final String SEPARATOR_TAG = "sep:-";
 	public static final String RIGHT_TAG = "right:-";
+
+	private static final String LEFT_REGEX = "<<<<<<<\\s+(.*)";
+	private static final String SEPARATOR_REGEX = "=======";
+	private static final String RIGHT_REGEX = ">>>>>>>\\s+(.*)";
+	private static final String ASSIGNMENT_REGEX = "\\s+([\\w:]+)=(.*)";
 
 	public PeaceMakerXMILoad(XMLHelper helper) {
 		super(helper);
@@ -38,14 +46,99 @@ public class PeaceMakerXMILoad extends XMILoadImpl {
 	protected InputStream preprocessConflicts(InputStream inputStream) throws IOException {
 		String streamContents = stream2string(inputStream);
 
-		streamContents = streamContents.replaceAll("<<<<<<<\\s+(.*)",
-				"<" + LEFT_TAG + " name=\"$1\"/>");
-		streamContents = streamContents.replaceAll("=======",
-				"<" + SEPARATOR_TAG + "/>");
-		streamContents = streamContents.replaceAll(">>>>>>>\\s+(.*)",
-				"<" + RIGHT_TAG + " name=\"$1\"/>");
+		String[] lines = streamContents.split("\\R");
+		String[] output = new String[lines.length];
 
-		return new ByteArrayInputStream(streamContents.getBytes());
+		boolean inElementAttributes = false;
+		boolean inExternalConflictSection = false;
+		boolean skipNextRightSeparator = false;
+
+		FileSegment currentSegment = FileSegment.COMMON;
+
+		for (int i = 0; i < lines.length; i++) {
+			String line = lines[i];
+			if (line.startsWith("<?xml")) {
+				output[i] = line;
+			}
+			else if (line.matches(LEFT_REGEX)) {
+				currentSegment = FileSegment.LEFT_CONFLICT;
+
+				if (!inElementAttributes) {
+					output[i] = line.replaceAll(LEFT_REGEX, "<" + LEFT_TAG + " name=\"$1\"/>");
+					inExternalConflictSection = true;
+				}
+			}
+			else if (line.matches(SEPARATOR_REGEX)) {
+				currentSegment = FileSegment.RIGHT_CONFLICT;
+
+				if (!inElementAttributes) {
+					output[i] = line.replaceAll(SEPARATOR_TAG, "<" + SEPARATOR_TAG + "/>");
+				}
+			}
+			else if (line.matches(RIGHT_REGEX)) {
+				currentSegment = FileSegment.COMMON;
+				inExternalConflictSection = false;
+
+				if (skipNextRightSeparator) {
+					skipNextRightSeparator = false;
+					continue;
+				}
+				if (!inElementAttributes) {
+					output[i] = line.replaceAll(RIGHT_REGEX, "<" + RIGHT_TAG + " name=\"$1\"/>");
+				}
+			}
+			else if (line.contains("<") && !line.contains("</") && !line.contains("/>")) {
+				if (!line.contains(">")) {
+					inElementAttributes = true;
+				}
+				output[i] = line;
+			}
+			else if (line.contains("/>") || line.contains(">")) {
+				if (!inExternalConflictSection &&
+						inElementAttributes &&
+						currentSegment != FileSegment.COMMON) {
+
+					String lineEnding = line.contains("/>") ? "/>" : ">";
+					output[i] = line.replaceAll(lineEnding, "");
+
+					output[i] = processAssignment(output[i], currentSegment);
+
+					if (currentSegment == FileSegment.RIGHT_CONFLICT) {
+						output[i] += lineEnding;
+						inElementAttributes = false;
+						skipNextRightSeparator = true; //TODO: this does not solve when other nested elements appear
+					}
+				}
+				else {
+					output[i] = line;
+					inElementAttributes = false;
+				}
+			}
+			else if (!inExternalConflictSection && inElementAttributes) {
+				// this is an assignment of an attribute
+				output[i] = processAssignment(line, currentSegment);
+			}
+			else {
+				output[i] = line;
+			}
+		}
+		
+		String result = Arrays.stream(output)
+				.filter(line -> line != null)
+				.collect(Collectors.joining(System.lineSeparator()));
+		
+		return new ByteArrayInputStream(result.getBytes());
+	}
+
+	protected String processAssignment(String line, FileSegment currentSegment) {
+		switch (currentSegment) {
+		case LEFT_CONFLICT:
+			return line.replaceAll(ASSIGNMENT_REGEX, LEFT_TAG + "$1=$2");
+		case RIGHT_CONFLICT:
+			return line.replaceAll(ASSIGNMENT_REGEX, RIGHT_TAG + "$1=$2");
+		default:
+			return line;
+		}
 	}
 
 	protected String stream2string(InputStream inputStream) throws IOException {

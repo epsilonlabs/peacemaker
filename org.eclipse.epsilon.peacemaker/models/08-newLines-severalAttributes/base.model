@@ -15,19 +15,11 @@
       xmi:id="_WsmOoBUUEeut3qj6TjgmMQ"
       title="Bad Weekend">
     <prologue
-        xmi:id="prologue1"
-<<<<<<< left.model
-        author="Ed Brubaker"
-=======
-        author="Joe Hill"
->>>>>>> right.model
+        xmi:id="_FiUMwBU8EeuMv6w_qu0ZJA"
+        author="Alan Moore"
         text="A good one indeed"/>
   </comics>
   <publishers
-      xmi:id="prologue2"
-<<<<<<< left.model
-      name="Dark Horse"/>
-=======
-      name="Vertigo"/>
->>>>>>> right.model
+      xmi:id="_YX-ykBU5EeuMv6w_qu0ZJA"
+      name="Image Comics"/>
 </comicshop:Shop>

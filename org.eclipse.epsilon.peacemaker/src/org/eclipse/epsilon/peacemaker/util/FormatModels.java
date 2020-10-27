@@ -1,4 +1,4 @@
-package donotcommit;
+package org.eclipse.epsilon.peacemaker.util;
 
 import java.io.File;
 import java.util.HashMap;
