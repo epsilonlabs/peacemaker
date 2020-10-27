@@ -60,12 +60,12 @@ public class PeaceMakerXMIHandler extends SAXXMIHandler {
 				"model", new PeaceMakerXMIResourceFactory());
 
 		String[] cases = {
-				"00",
 				"01-newInLeft",
 				"02-newInBoth-noConflict",
 				"03-attribute",
 				"04-nonContained1boundedRef",
-				"05-contained1boundedRef" };
+				"05-contained1boundedRef",
+				"06-newLines-newInBoth-noConflict" };
 
 		for (String inputCase : cases) {
 			System.out.println("############################################");
@@ -73,7 +73,7 @@ public class PeaceMakerXMIHandler extends SAXXMIHandler {
 			System.out.println("############################################");
 
 			Resource resource = resourceSet.createResource(
-					URI.createFileURI(new File("models/" + inputCase + "-comicshop.model").getAbsolutePath()));
+					URI.createFileURI(new File("modelconflicts/" + inputCase + ".model").getAbsolutePath()));
 			resource.load(null);
 			System.out.println();
 		}
@@ -142,6 +142,12 @@ public class PeaceMakerXMIHandler extends SAXXMIHandler {
 		default:
 			super.endElement(uri, localName, name);
 		}
+	}
+
+	@Override
+	protected void handleUnknownFeature(String prefix, String name, boolean isElement, EObject peekObject, String value) {
+		super.handleUnknownFeature(prefix, name, isElement, peekObject, value);
+		//TODO: include the support for our things
 	}
 
 	@Override

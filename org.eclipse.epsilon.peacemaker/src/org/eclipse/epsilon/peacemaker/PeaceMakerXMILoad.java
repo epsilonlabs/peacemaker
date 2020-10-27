@@ -38,11 +38,11 @@ public class PeaceMakerXMILoad extends XMILoadImpl {
 	protected InputStream preprocessConflicts(InputStream inputStream) throws IOException {
 		String streamContents = stream2string(inputStream);
 
-		streamContents = streamContents.replaceAll("<<<<<<<\\s+(\\w+)",
+		streamContents = streamContents.replaceAll("<<<<<<<\\s+(.*)",
 				"<" + LEFT_TAG + " name=\"$1\"/>");
 		streamContents = streamContents.replaceAll("=======",
 				"<" + SEPARATOR_TAG + "/>");
-		streamContents = streamContents.replaceAll(">>>>>>>\\s+(\\w+)",
+		streamContents = streamContents.replaceAll(">>>>>>>\\s+(.*)",
 				"<" + RIGHT_TAG + " name=\"$1\"/>");
 
 		return new ByteArrayInputStream(streamContents.getBytes());
