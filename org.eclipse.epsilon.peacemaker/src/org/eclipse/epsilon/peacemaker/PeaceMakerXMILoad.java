@@ -16,6 +16,8 @@ import org.xml.sax.helpers.DefaultHandler;
 
 public class PeaceMakerXMILoad extends XMILoadImpl {
 
+	public static final boolean debug = false;
+
 	public static final String LEFT_TAG = "left:-";
 	public static final String SEPARATOR_TAG = "sep:-";
 	public static final String RIGHT_TAG = "right:-";
@@ -35,18 +37,65 @@ public class PeaceMakerXMILoad extends XMILoadImpl {
 	}
 
 	@Override
-	public void load(XMLResource resource, InputStream inputStream, Map<?, ?> options) throws IOException {
+	public void load(XMLResource resource, InputStream inputStream,
+			Map<?, ?> options) throws IOException {
+
+		String streamContents = stream2string(inputStream);
+
+		PeaceMakerXMIResource pmResource = (PeaceMakerXMIResource) resource;
+		pmResource.loadLeft(
+				getVersionStream(streamContents, FileSegment.LEFT_CONFLICT));
+		pmResource.loadRight(
+				getVersionStream(streamContents, FileSegment.RIGHT_CONFLICT));
 
 		// convert the conflicts syntax to well-formed XML
-		InputStream correctedStream = preprocessConflicts(inputStream);
+		InputStream correctedStream = getConflictsStream(streamContents);
 
 		super.load(resource, correctedStream, options);
 	}
 
-	protected InputStream preprocessConflicts(InputStream inputStream) throws IOException {
-		String streamContents = stream2string(inputStream);
+	protected InputStream getVersionStream(String input,
+			FileSegment versionSegment) throws IOException {
 
-		String[] lines = streamContents.split("\\R");
+		String[] lines = input.split("\\R");
+		String[] output = new String[lines.length];
+
+		FileSegment currentSegment = FileSegment.COMMON;
+
+		for (int i = 0; i < lines.length; i++) {
+			String line = lines[i];
+			if (line.matches(LEFT_REGEX)) {
+				currentSegment = FileSegment.LEFT_CONFLICT;
+			}
+			else if (line.matches(SEPARATOR_REGEX)) {
+				currentSegment = FileSegment.RIGHT_CONFLICT;
+			}
+			else if (line.matches(RIGHT_REGEX)) {
+				currentSegment = FileSegment.COMMON;
+			}
+			else if (currentSegment == FileSegment.COMMON ||
+					currentSegment == versionSegment) {
+				output[i] = line;
+			}
+		}
+
+		String result = Arrays.stream(output)
+				.filter(line -> line != null)
+				.collect(Collectors.joining(System.lineSeparator()));
+
+		if (debug) {
+			System.out.println();
+			System.out.println("<<< Version model: " + versionSegment.name());
+			System.out.println();
+			System.out.println(result);
+		}
+
+		return new ByteArrayInputStream(result.getBytes());
+	}
+
+	protected InputStream getConflictsStream(String input) throws IOException {
+
+		String[] lines = input.split("\\R");
 		String[] output = new String[lines.length];
 
 		boolean inElementAttributes = false;
@@ -72,7 +121,7 @@ public class PeaceMakerXMILoad extends XMILoadImpl {
 				currentSegment = FileSegment.RIGHT_CONFLICT;
 
 				if (!inElementAttributes) {
-					output[i] = line.replaceAll(SEPARATOR_TAG, "<" + SEPARATOR_TAG + "/>");
+					output[i] = line.replaceAll(SEPARATOR_REGEX, "<" + SEPARATOR_TAG + "/>");
 				}
 			}
 			else if (line.matches(RIGHT_REGEX)) {
@@ -126,7 +175,14 @@ public class PeaceMakerXMILoad extends XMILoadImpl {
 		String result = Arrays.stream(output)
 				.filter(line -> line != null)
 				.collect(Collectors.joining(System.lineSeparator()));
-		
+
+		if (debug) {
+			System.out.println();
+			System.out.println("<<< Model with Conflicts >>>");
+			System.out.println();
+			System.out.println(result);
+		}
+
 		return new ByteArrayInputStream(result.getBytes());
 	}
 

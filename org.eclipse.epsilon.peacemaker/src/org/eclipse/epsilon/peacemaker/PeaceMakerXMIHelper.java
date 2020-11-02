@@ -152,11 +152,11 @@ public class PeaceMakerXMIHelper extends XMIHelperImpl {
 					
 					//TODO: here, the reference could have contained elements,
 					//  but these have not been parsed yet. Think about this
-					handler.addConflict(new ReferenceRedefinition(object,
-							resource.getID(object), reference, previousValue));
+					handler.addConflict(new ReferenceRedefinition(
+							resource.getID(object), reference));
 				}
 				else {
-					System.out.println("this case is unthought of right now");
+					throw new RuntimeException("this case is unthought of right now");
 				}
 			}
 			object.eSet(feature, value);
