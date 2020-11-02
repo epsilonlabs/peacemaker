@@ -1,71 +1,35 @@
 package org.eclipse.epsilon.peacemaker.conflicts;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import org.eclipse.emf.ecore.EObject;
+import java.util.ArrayList;
+import java.util.List;
 
 public class AttributeRedefinitions extends Conflict {
 
-	protected Map<String, AttributeRedefinition> redefinitions = new HashMap<>();
+	protected List<String> leftRedefinitions = new ArrayList<>();
+	protected List<String> rightRedefinitions = new ArrayList<>();
 
-	public class AttributeRedefinition {
-
-		protected String attributeName;
-		protected String leftValue;
-		protected String rightValue;
-
-		public AttributeRedefinition(String attributeName) {
-			this.attributeName = attributeName;
-		}
-
-		public String toString() {
-			return new StringBuilder()
-					.append("Redefinition of ").append(attributeName)
-					.append(". left: ").append(leftValue)
-					.append(", right: ").append(rightValue)
-					.toString();
-		}
+	public AttributeRedefinitions(String eObjectId) {
+		super(eObjectId);
 	}
 
-	public AttributeRedefinitions(EObject eObject, String eObjectId) {
-		super(eObject, eObjectId);
+	public void addLeft(String attributeName) {
+		leftRedefinitions.add(attributeName);
 	}
 
-	public void addLeft(String attributeName, String value) {
-		add(attributeName, value, true);
-
-	}
-
-	public void addRight(String attributeName, String value) {
-		add(attributeName, value, false);
-	}
-
-	protected void add(String attributeName, String value, boolean addToLeft) {
-		AttributeRedefinition redef = redefinitions.get(attributeName);
-		if (redef == null) {
-			redef = new AttributeRedefinition(attributeName);
-			redefinitions.put(attributeName, redef);
-		}
-		if (addToLeft) {
-			redef.leftValue = value;
-		}
-		else {
-			redef.rightValue = value;
-		}
+	public void addRight(String attributeName) {
+		rightRedefinitions.add(attributeName);
 	}
 
 	public String toString() {
 		StringBuilder s = new StringBuilder();
 
 		s.append("Attribute redefinitions detected").append("\n");
-		s.append("Type: ").append(eObject.eClass().getName()).append(", ");
-		s.append("Id: ").append(eObjectId).append("\n");
-		for (AttributeRedefinition redef : redefinitions.values()) {
-			s.append("\t").append(redef).append("\n");
-		}
-		
+		s.append("Object id: ").append(eObjectId).append("\n");
+		s.append("left redefinitions:").append("\n");
+		s.append("\t").append(String.join("\n\t", leftRedefinitions)).append("\n");
+		s.append("right redefinitions:").append("\n");
+		s.append("\t").append(String.join("\n\t", rightRedefinitions));
+
 		return s.toString();
 	}
-
 }

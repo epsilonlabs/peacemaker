@@ -10,38 +10,48 @@ import org.eclipse.emf.ecore.EReference;
 public class ReferenceRedefinition extends Conflict {
 
 	protected EReference reference;
-	protected Object leftValue;
+	protected EObject leftValue;
+	protected EObject rightValue;
 
 	/**
 	 * Create a reference redefinition conflict
-	 * 
-	 * @param parent    The parent that contains the reference feature
-	 * @param parentId
+	 *
+	 * @param parentId  The parent that contains the reference feature
 	 * @param reference
-	 * @param leftValue The value that is being redefined
 	 */
-	public ReferenceRedefinition(EObject parent, String parentId, EReference reference, Object leftValue) {
-		super(parent, parentId);
+	public ReferenceRedefinition(String parentId, EReference reference) {
+		super(parentId);
 		this.reference = reference;
-		this.leftValue = leftValue;
 	}
 
 	public EReference getReference() {
 		return reference;
 	}
 
-	public Object getLeftValue() {
-		return leftValue;
-	}
-
 	public String toString() {
 		StringBuilder s = new StringBuilder();
 		
 		s.append("A single, containment reference redefinition was found\n");
-		s.append("Parent: ").append(eObject.eClass().getName()).append(" ").append(eObjectId).append("\n");
+		s.append("Parent: ").append(eObjectId).append("\n");
 		s.append("Left: ").append(leftValue).append("\n");
-		s.append("Right: ").append(eObject.eGet(reference));
+		s.append("Right: ").append(rightValue);
 
 		return s.toString();
+	}
+
+	public EObject getLeftValue() {
+		return leftValue;
+	}
+
+	public void setLeftValue(EObject leftValue) {
+		this.leftValue = leftValue;
+	}
+
+	public EObject getRightValue() {
+		return rightValue;
+	}
+
+	public void setRightValue(EObject rightValue) {
+		this.rightValue = rightValue;
 	}
 }

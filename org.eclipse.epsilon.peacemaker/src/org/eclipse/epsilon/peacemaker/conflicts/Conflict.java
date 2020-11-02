@@ -1,30 +1,18 @@
 package org.eclipse.epsilon.peacemaker.conflicts;
 
-import org.eclipse.emf.ecore.EObject;
-
 public abstract class Conflict {
 
-	protected EObject eObject;
 	protected String eObjectId;
 
-	public EObject geteObject() {
-		return eObject;
-	}
-
-	public void seteObject(EObject eObject) {
-		this.eObject = eObject;
-	}
-
-	public String geteObjectId() {
+	public String getEObjectId() {
 		return eObjectId;
 	}
 
-	public void seteObjectId(String eObjectId) {
+	public void setEObjectId(String eObjectId) {
 		this.eObjectId = eObjectId;
 	}
 
-	public Conflict(EObject eObject, String eObjectId) {
-		this.eObject = eObject;
+	public Conflict(String eObjectId) {
 		this.eObjectId = eObjectId;
 	}
 

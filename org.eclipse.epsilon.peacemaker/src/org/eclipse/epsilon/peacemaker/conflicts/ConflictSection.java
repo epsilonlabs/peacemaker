@@ -3,31 +3,44 @@ package org.eclipse.epsilon.peacemaker.conflicts;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.eclipse.emf.ecore.EObject;
-
 public class ConflictSection {
 
-	protected List<Conflict> conflicts = new ArrayList<>();
-	protected List<EObject> leftObjects = new ArrayList<>();
-	protected List<EObject> rightObjects = new ArrayList<>();
+	protected List<String> leftObjects = new ArrayList<>();
+	protected List<String> rightObjects = new ArrayList<>();
 
-	public void addConflict(Conflict c) {
-		getConflicts().add(c);
+	public void addLeft(String objId) {
+		leftObjects.add(objId);
 	}
 
-	public List<Conflict> getConflicts() {
-		return conflicts;
+	public void addRight(String objId) {
+		rightObjects.add(objId);
 	}
 
-	public void addLeft(EObject obj) {
-		getLeftObjects().add(obj);
+	public boolean containsLeft(String objId) {
+		return leftObjects.contains(objId);
 	}
 
-	public void addRight(EObject obj) {
-		rightObjects.add(obj);
+	public void removeLeft(String objId) {
+		leftObjects.remove(objId);
 	}
 
-	public List<EObject> getLeftObjects() {
-		return leftObjects;
+	public void removeRight(String objId) {
+		rightObjects.remove(objId);
 	}
+
+	public boolean isEmpty() {
+		return leftObjects.isEmpty() && rightObjects.isEmpty();
+	}
+
+	public String toString() {
+		StringBuilder s = new StringBuilder();
+
+		s.append("New, unconflicted elements (ids) in left\n");
+		s.append("\t").append(String.join("\n\t", leftObjects)).append("\n\n");
+		s.append("New, unconflicted elements (ids) in right\n");
+		s.append("\t").append(String.join("\n\t", rightObjects));
+
+		return s.toString();
+	}
+
 }
