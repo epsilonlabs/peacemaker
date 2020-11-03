@@ -11,6 +11,7 @@ import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.xmi.XMLHelper;
 import org.eclipse.emf.ecore.xmi.XMLLoad;
+import org.eclipse.emf.ecore.xmi.XMLSave;
 import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
 import org.eclipse.emf.ecore.xmi.impl.XMIResourceImpl;
 import org.eclipse.epsilon.peacemaker.conflicts.AttributeRedefinitions;
@@ -34,6 +35,11 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 	@Override
 	protected XMLLoad createXMLLoad() {
 		return new PeaceMakerXMILoad(createXMLHelper());
+	}
+
+	@Override
+	protected XMLSave createXMLSave() {
+		return new PeaceMakerXMISave(createXMLHelper());
 	}
 
 	@Override
