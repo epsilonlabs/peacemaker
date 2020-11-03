@@ -18,11 +18,7 @@ public class StreamUtils {
 		String leftFile = new String(Files.readAllBytes(Paths.get(folder + "/left.model")));
 		String rightFile = new String(Files.readAllBytes(Paths.get(folder + "/right.model")));
 
-		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-
-		merge(leftFile, rightFile, outputStream);
-
-		System.out.println(outputStream.toString());
+		merge(leftFile, rightFile, System.out);
 	}
 
 	public static String stream2string(InputStream inputStream) throws IOException {
@@ -74,7 +70,7 @@ public class StreamUtils {
 			writer.println(rightLines[rightIndex]);
 			rightIndex++;
 		}
-		writer.close();
+		writer.flush();
 	}
 
 	private static String findNextCommonline(String[] leftLines, int leftIndex, String[] rightLines, int rightIndex) {
