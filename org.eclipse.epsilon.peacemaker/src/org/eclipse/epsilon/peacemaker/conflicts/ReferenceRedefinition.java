@@ -2,6 +2,9 @@ package org.eclipse.epsilon.peacemaker.conflicts;
 
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EReference;
+import org.eclipse.emf.ecore.util.EcoreUtil;
+import org.eclipse.emf.ecore.xmi.XMIResource;
+import org.eclipse.epsilon.peacemaker.util.CopyUtils;
 
 /**
  * Conflict caused by redefining a single (i.e. !isMany()) containment reference
@@ -33,8 +36,8 @@ public class ReferenceRedefinition extends Conflict {
 		
 		s.append("A single, containment reference redefinition was found\n");
 		s.append("Parent: ").append(eObjectId).append("\n");
-		s.append("Left: ").append(leftValue).append("\n");
-		s.append("Right: ").append(rightValue);
+		s.append("Left(id): ").append(((XMIResource) leftValue.eResource()).getID(leftValue)).append("\n");
+		s.append("Right(id): ").append(((XMIResource) rightValue.eResource()).getID(rightValue));
 
 		return s.toString();
 	}
@@ -53,5 +56,25 @@ public class ReferenceRedefinition extends Conflict {
 
 	public void setRightValue(EObject rightValue) {
 		this.rightValue = rightValue;
+	}
+
+	@Override
+	public void resolve(ResolveAction action) {
+		switch (action) {
+		case KEEP_LEFT:
+			EObject leftCopy = EcoreUtil.copy(leftValue);
+			EObject rightParent = rightValue.eContainer();
+			rightParent.eSet(reference, leftCopy);
+			CopyUtils.copyIds(leftValue, leftCopy);
+			break;
+		case KEEP_RIGHT:
+			EObject rightCopy = EcoreUtil.copy(rightValue);
+			EObject leftParent = leftValue.eContainer();
+			leftParent.eSet(reference, rightCopy);
+			CopyUtils.copyIds(rightValue, rightCopy);
+			break;
+		default:
+			super.resolve(action);
+		}
 	}
 }

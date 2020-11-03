@@ -91,8 +91,16 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 				.eGet(conflict.getReference()));
 	}
 
-	public void addConflict(AttributeRedefinitions attrRedef) {
-		conflicts.add(attrRedef);
+	public void addConflict(AttributeRedefinitions conflict) {
+		conflicts.add(conflict);
+		if (conflict.getEObjectId() != null) {
+			conflict.setLeftObject(leftResource.getEObject(conflict.getEObjectId()));
+			conflict.setRightObject(rightResource.getEObject(conflict.getEObjectId()));
+		}
+		else {
+			conflict.setLeftObject(leftResource.getEObject(conflict.getLeftId()));
+			conflict.setRightObject(rightResource.getEObject(conflict.getRightId()));
+		}
 	}
 
 	public void addConflictSection(ConflictSection ct) {

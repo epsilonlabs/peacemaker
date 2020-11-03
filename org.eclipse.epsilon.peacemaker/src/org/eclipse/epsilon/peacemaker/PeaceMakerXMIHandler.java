@@ -151,6 +151,10 @@ public class PeaceMakerXMIHandler extends SAXXMIHandler {
 						attrRedef = new AttributeRedefinitions(objId);
 					}
 					attrRedef.addLeft(name);
+
+					if (name.equals(ID_ATTRIB)) {
+						attrRedef.setLeftId(attribs.getValue(i));
+					}
 				}
 				else if (name.startsWith(RIGHT_TAG)) {
 					name = name.substring(RIGHT_TAG.length());
@@ -159,11 +163,14 @@ public class PeaceMakerXMIHandler extends SAXXMIHandler {
 						attrRedef = new AttributeRedefinitions(objId);
 					}
 					attrRedef.addRight(name);
+
+					if (name.equals(ID_ATTRIB)) {
+						attrRedef.setRightId(attribs.getValue(i));
+					}
 				}
 
 				if (name.equals(ID_ATTRIB)) {
-					objId = attribs.getValue(i); // needed if redefined
-					xmlResource.setID(internalEObject, objId);
+					xmlResource.setID(internalEObject, attribs.getValue(i));
 
 					switch (currentSegment) {
 					case LEFT_CONFLICT:
@@ -171,6 +178,8 @@ public class PeaceMakerXMIHandler extends SAXXMIHandler {
 						break;
 					case RIGHT_CONFLICT:
 						// if we already registered an EObject with the same id
+						//TODO: this might trigger in some cases when in reality
+						// we have a reference redefinition conflict
 						if (currentSection.containsLeft(objId)) {
 							pmResource.addConflict(new ObjectRedefinition(objId));
 							currentSection.removeLeft(objId);
@@ -197,7 +206,9 @@ public class PeaceMakerXMIHandler extends SAXXMIHandler {
 			}
 
 			if (objId == null) {
-				throw new RuntimeException("EObjects must have xmi:ids to use PeaceMaker");
+				if (attrRedef.getLeftId() == null || attrRedef.getLeftId() == null) {
+					throw new RuntimeException("EObjects must have xmi:ids to use PeaceMaker");
+				}
 			}
 			if (attrRedef != null) {
 				pmResource.addConflict(attrRedef);
