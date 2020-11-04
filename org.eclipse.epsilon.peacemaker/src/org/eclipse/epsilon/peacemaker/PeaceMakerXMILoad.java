@@ -22,10 +22,10 @@ public class PeaceMakerXMILoad extends XMILoadImpl {
 	public static final String SEPARATOR_TAG = "sep:-";
 	public static final String RIGHT_TAG = "right:-";
 
-	private static final String LEFT_REGEX = "<<<<<<<\\s+(.*)";
+	private static final String LEFT_REGEX = "<<<<<<<\\s*(.*)";
 	private static final String SEPARATOR_REGEX = "=======";
-	private static final String RIGHT_REGEX = ">>>>>>>\\s+(.*)";
-	private static final String ASSIGNMENT_REGEX = "\\s+([\\w:]+)=(.*)";
+	private static final String RIGHT_REGEX = ">>>>>>>\\s*+(.*)";
+	private static final String ASSIGNMENT_REGEX = "\\s*([\\w:]+)=(.*)";
 
 	public PeaceMakerXMILoad(XMLHelper helper) {
 		super(helper);
