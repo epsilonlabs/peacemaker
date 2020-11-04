@@ -72,11 +72,12 @@ public class PeaceMakerXMIHandler extends SAXXMIHandler {
 				"05-contained1boundedRef",
 				"06-newLines-newInBoth-noConflict",
 				"07-newLines-attributes",
-				"08-newLines-severalAttributes" };
+				"08-newLines-severalAttributes",
+				"10-newLines-contained1boundedRef" };
 
 		// uncomment for specific cases
 		//		cases = new String[1];
-		//		cases[0] = "07-newLines-attributes";
+		//		cases[0] = "10-newLines-contained1boundedRef";
 
 		for (String inputCase : cases) {
 			System.out.println("############################################");
@@ -178,10 +179,8 @@ public class PeaceMakerXMIHandler extends SAXXMIHandler {
 						break;
 					case RIGHT_CONFLICT:
 						// if we already registered an EObject with the same id
-						//TODO: this might trigger in some cases when in reality
-						// we have a reference redefinition conflict
 						if (currentSection.containsLeft(objId)) {
-							pmResource.addConflict(new ObjectRedefinition(objId));
+							addConflict(new ObjectRedefinition(objId));
 							currentSection.removeLeft(objId);
 						}
 						else {
@@ -211,7 +210,7 @@ public class PeaceMakerXMIHandler extends SAXXMIHandler {
 				}
 			}
 			if (attrRedef != null) {
-				pmResource.addConflict(attrRedef);
+				addConflict(attrRedef);
 			}
 		}
 	}
@@ -246,17 +245,52 @@ public class PeaceMakerXMIHandler extends SAXXMIHandler {
 		return String.format("%s %s", obj.eClass().getName(), xmlResource.getID(obj));
 	}
 
+	public void addConflict(ObjectRedefinition objRedef) {
+		pmResource.addConflict(objRedef);
+
+		objRedef.setLeftObject(pmResource.getLeftResource().getEObject(objRedef.getEObjectId()));
+		objRedef.setRightObject(pmResource.getRightResource().getEObject(objRedef.getEObjectId()));
+	}
+
+	public void addConflict(AttributeRedefinitions attrRedef) {
+		pmResource.addConflict(attrRedef);
+
+		// if the xmi:id attribute has been redefined
+		if (attrRedef.getEObjectId() != null) {
+			attrRedef.setLeftObject(pmResource.getLeftEObject(attrRedef.getEObjectId()));
+			attrRedef.setRightObject(pmResource.getRightEObject(attrRedef.getEObjectId()));
+		}
+		else {
+			attrRedef.setLeftObject(pmResource.getLeftEObject(attrRedef.getLeftId()));
+			attrRedef.setRightObject(pmResource.getRightEObject(attrRedef.getRightId()));
+		}
+	}
+
 	public void addConflict(ReferenceRedefinition redef) {
 		pmResource.addConflict(redef);
 
-		// remove both reference values from the conflict section
-		XMLResource leftResource = (XMLResource) pmResource.getLeftResource();
-		EObject leftParent = leftResource.getEObject(redef.getEObjectId());
-		currentSection.removeLeft(leftResource.getID((EObject) leftParent.eGet(redef.getReference())));
+		redef.setLeftValue((EObject) pmResource.getLeftEObject(redef.getEObjectId())
+				.eGet(redef.getReference()));
+		redef.setRightValue((EObject) pmResource.getRightEObject(redef.getEObjectId())
+				.eGet(redef.getReference()));
 
-		XMLResource rightResource = (XMLResource) pmResource.getRightResource();
-		EObject rightParent = rightResource.getEObject(redef.getEObjectId());
-		currentSection.removeRight(rightResource.getID((EObject) rightParent.eGet(redef.getReference())));
+		// remove both reference values from the conflict section
+		String leftValueId = pmResource.getLeftId(redef.getLeftValue());
+		currentSection.removeLeft(leftValueId);
+
+		String rightValueId = pmResource.getRightId(redef.getRightValue());
+		currentSection.removeRight(rightValueId);
+
+		if (leftValueId.equals(rightValueId)) {
+			// an ObjectRedefinition conflict would have been found before
+			//   the actual conflict (i.e. this reference redefinition)
+			for (Conflict c : pmResource.getConflicts()) {
+				if (c instanceof ObjectRedefinition && c.getEObjectId().equals(leftValueId)) {
+					pmResource.getConflicts().remove(c);
+					break;
+				}
+			}
+		}
 	}
 
 }

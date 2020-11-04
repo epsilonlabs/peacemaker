@@ -8,22 +8,19 @@ import java.util.List;
 
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
-import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.emf.ecore.xmi.XMIResource;
 import org.eclipse.emf.ecore.xmi.XMLHelper;
 import org.eclipse.emf.ecore.xmi.XMLLoad;
 import org.eclipse.emf.ecore.xmi.XMLSave;
 import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
 import org.eclipse.emf.ecore.xmi.impl.XMIResourceImpl;
-import org.eclipse.epsilon.peacemaker.conflicts.AttributeRedefinitions;
 import org.eclipse.epsilon.peacemaker.conflicts.Conflict;
 import org.eclipse.epsilon.peacemaker.conflicts.ConflictSection;
-import org.eclipse.epsilon.peacemaker.conflicts.ObjectRedefinition;
-import org.eclipse.epsilon.peacemaker.conflicts.ReferenceRedefinition;
 
 public class PeaceMakerXMIResource extends XMIResourceImpl {
 
-	protected Resource leftResource;
-	protected Resource rightResource;
+	protected XMIResource leftResource;
+	protected XMIResource rightResource;
 
 	protected List<Conflict> conflicts = new ArrayList<>();
 	protected List<ConflictSection> conflictSections = new ArrayList<>();
@@ -52,7 +49,7 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 		getResourceSet().getResourceFactoryRegistry().getExtensionToFactoryMap().put(
 				leftUri.fileExtension(), new XMIResourceFactoryImpl());
 
-		leftResource = getResourceSet().createResource(leftUri);
+		leftResource = (XMIResource) getResourceSet().createResource(leftUri);
 		leftResource.load(inputStream, Collections.EMPTY_MAP);
 	}
 
@@ -61,46 +58,40 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 		getResourceSet().getResourceFactoryRegistry().getExtensionToFactoryMap().put(
 				rightUri.fileExtension(), new XMIResourceFactoryImpl());
 
-		rightResource = getResourceSet().createResource(rightUri);
+		rightResource = (XMIResource) getResourceSet().createResource(rightUri);
 		rightResource.load(inputStream, Collections.EMPTY_MAP);
 	}
 
-	public Resource getLeftResource() {
+	public XMIResource getLeftResource() {
 		return leftResource;
 	}
 
-	public Resource getRightResource() {
+	public XMIResource getRightResource() {
 		return rightResource;
+	}
+
+	public String getLeftId(EObject obj) {
+		return leftResource.getID(obj);
+	}
+
+	public String getRightId(EObject obj) {
+		return rightResource.getID(obj);
+	}
+
+	public EObject getLeftEObject(String id) {
+		return leftResource.getEObject(id);
+	}
+
+	public EObject getRightEObject(String id) {
+		return rightResource.getEObject(id);
 	}
 
 	public List<Conflict> getConflicts() {
 		return conflicts;
 	}
 
-	public void addConflict(ObjectRedefinition conflict) {
+	public void addConflict(Conflict conflict) {
 		conflicts.add(conflict);
-		conflict.setLeftObject(leftResource.getEObject(conflict.getEObjectId()));
-		conflict.setRightObject(rightResource.getEObject(conflict.getEObjectId()));
-	}
-
-	public void addConflict(ReferenceRedefinition conflict) {
-		conflicts.add(conflict);
-		conflict.setLeftValue((EObject) leftResource.getEObject(conflict.getEObjectId())
-				.eGet(conflict.getReference()));
-		conflict.setRightValue((EObject) rightResource.getEObject(conflict.getEObjectId())
-				.eGet(conflict.getReference()));
-	}
-
-	public void addConflict(AttributeRedefinitions conflict) {
-		conflicts.add(conflict);
-		if (conflict.getEObjectId() != null) {
-			conflict.setLeftObject(leftResource.getEObject(conflict.getEObjectId()));
-			conflict.setRightObject(rightResource.getEObject(conflict.getEObjectId()));
-		}
-		else {
-			conflict.setLeftObject(leftResource.getEObject(conflict.getLeftId()));
-			conflict.setRightObject(rightResource.getEObject(conflict.getRightId()));
-		}
 	}
 
 	public void addConflictSection(ConflictSection ct) {

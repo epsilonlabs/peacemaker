@@ -53,20 +53,23 @@ public class ConflictResolveTests {
 		// expected one reference conflict, let's resolve it keeping left
 		PeaceMakerXMIResource resource = loadConflictResource(String.format(CONFLICTS_LOCATION, inputCase));
 
-		assertTrue(resource.getConflicts().size() == 1);
+		assertTrue(resource.getConflicts().size() == 2);
 		assertTrue(resource.getConflicts().get(0) instanceof ReferenceRedefinition);
 
-		ReferenceRedefinition redef = (ReferenceRedefinition) resource.getConflicts().get(0);
-		redef.resolve(ResolveAction.KEEP_LEFT);
+		System.out.println("\nKeep left in both (FULL RESOLUTION)");
+		resource.getConflicts().get(0).resolve(ResolveAction.KEEP_LEFT);
+		resource.getConflicts().get(1).resolve(ResolveAction.KEEP_LEFT);
 
-		System.out.println("\nKeep left");
 		resource.save(System.out, Collections.EMPTY_MAP);
 		System.out.println("\n");
 
 		// now resolve keeping right
 		resource = loadConflictResource(String.format(CONFLICTS_LOCATION, inputCase));
+
+		System.out.println("\nKeep right in both (FULL RESOLUTION)");
 		resource.getConflicts().get(0).resolve(ResolveAction.KEEP_RIGHT);
-		System.out.println("\nKeep right");
+		resource.getConflicts().get(1).resolve(ResolveAction.KEEP_RIGHT);
+
 		resource.doSave(System.out, Collections.EMPTY_MAP);
 		System.out.println("\n");
 	}
