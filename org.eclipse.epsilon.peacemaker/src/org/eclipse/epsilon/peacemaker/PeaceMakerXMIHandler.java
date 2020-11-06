@@ -2,7 +2,6 @@ package org.eclipse.epsilon.peacemaker;
 
 import static org.eclipse.epsilon.peacemaker.PeaceMakerXMILoad.LEFT_TAG;
 import static org.eclipse.epsilon.peacemaker.PeaceMakerXMILoad.RIGHT_TAG;
-import static org.eclipse.epsilon.peacemaker.PeaceMakerXMILoad.SEPARATOR_TAG;
 
 import java.io.File;
 import java.util.Map;
@@ -25,7 +24,6 @@ import org.eclipse.epsilon.peacemaker.conflicts.ConflictSection;
 import org.eclipse.epsilon.peacemaker.conflicts.ObjectRedefinition;
 import org.eclipse.epsilon.peacemaker.conflicts.ReferenceRedefinition;
 import org.xml.sax.Attributes;
-import org.xml.sax.SAXException;
 
 public class PeaceMakerXMIHandler extends SAXXMIHandler {
 
@@ -90,43 +88,6 @@ public class PeaceMakerXMIHandler extends SAXXMIHandler {
 			System.out.println();
 		}
 		System.out.println("Done");
-	}
-
-	@Override
-	public void startElement(String uri, String localName, String name, Attributes attributes) throws SAXException {
-
-		switch (name) {
-		case LEFT_TAG:
-			currentSegment = FileSegment.LEFT_CONFLICT;
-			currentSection = new ConflictSection();
-
-			break;
-		case SEPARATOR_TAG:
-			currentSegment = FileSegment.RIGHT_CONFLICT;
-			break;
-		case RIGHT_TAG:
-			currentSegment = FileSegment.COMMON;
-			if (!currentSection.isEmpty()) {
-				pmResource.addConflictSection(currentSection);
-			}
-			currentSection = null;
-			break;
-		default:
-			super.startElement(uri, localName, name, attributes);
-		}
-	}
-
-	@Override
-	public void endElement(String uri, String localName, String name) {
-		// here the element is still in the stack
-		switch (name) {
-		case LEFT_TAG:
-		case SEPARATOR_TAG:
-		case RIGHT_TAG:
-			break;
-		default:
-			super.endElement(uri, localName, name);
-		}
 	}
 
 	@Override
@@ -222,23 +183,6 @@ public class PeaceMakerXMIHandler extends SAXXMIHandler {
 			}
 		}
 		return null;
-	}
-
-	@Override
-	public void endDocument() {
-		super.endDocument();
-
-		for (ConflictSection cs : pmResource.getConflictSections()) {
-			System.out.println("@@@@@@@@@@ Conflict Section @@@@@@@@@@@@@");
-			System.out.println(cs);
-			System.out.println("@@@@@@@@@@@@@@@@@@@@@@@");
-		}
-
-		for (Conflict c : pmResource.getConflicts()) {
-			System.out.println(">>>>>>>> CONFLICT <<<<<<<<<<<<<");
-			System.out.println(c);
-			System.out.println(">>>>>>>>>>>>>><<<<<<<<<<<<<");
-		}
 	}
 
 	public String toString(EObject obj) {
