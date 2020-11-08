@@ -3,7 +3,6 @@ package org.eclipse.epsilon.peacemaker;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.eclipse.emf.ecore.xmi.XMLHelper;
@@ -22,20 +21,12 @@ public class PeaceMakerXMISave extends XMISaveImpl {
 	public void save(XMLResource resource, OutputStream outputStream, Map<?, ?> options) throws IOException {
 		PeaceMakerXMIResource pmResource = (PeaceMakerXMIResource) resource;
 
-		Map<?, ?> defaultSaveOptions = getDefaultSaveOptions();
-
 		ByteArrayOutputStream leftStream = new ByteArrayOutputStream();
-		pmResource.getLeftResource().save(leftStream, defaultSaveOptions);
+		pmResource.getLeftResource().save(leftStream, options);
 
 		ByteArrayOutputStream rightStream = new ByteArrayOutputStream();
-		pmResource.getRightResource().save(rightStream, defaultSaveOptions);
+		pmResource.getRightResource().save(rightStream, options);
 
 		StreamUtils.merge(leftStream.toString(), rightStream.toString(), outputStream);
-	}
-
-	protected Map<?, ?> getDefaultSaveOptions() {
-		Map<Object, Object> options = new HashMap<>();
-		options.put(XMLResource.OPTION_LINE_WIDTH, 1);
-		return options;
 	}
 }

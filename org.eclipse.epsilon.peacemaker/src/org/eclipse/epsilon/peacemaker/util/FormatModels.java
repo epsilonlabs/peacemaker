@@ -47,9 +47,12 @@ public class FormatModels {
 		Resource resource = resourceSet.createResource(
 				URI.createFileURI(new File(modelFile).getAbsolutePath()));
 		resource.load(null);
-		Map<String, Object> saveOptions = new HashMap<>();
-		saveOptions.put(XMLResource.OPTION_LINE_WIDTH, 1);
-		resource.save(saveOptions);
+		resource.save(getBreakAttributesSaveOptions());
 	}
 
+	public static Map<?, ?> getBreakAttributesSaveOptions() {
+		Map<Object, Object> options = new HashMap<>();
+		options.put(XMLResource.OPTION_LINE_WIDTH, 1);
+		return options;
+	}
 }

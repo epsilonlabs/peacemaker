@@ -16,6 +16,7 @@ import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
 import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResource;
 import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResourceFactory;
 import org.eclipse.epsilon.peacemaker.conflicts.Conflict.ResolveAction;
+import org.eclipse.epsilon.peacemaker.util.FormatModels;
 import org.eclipse.epsilon.peacemaker.conflicts.ReferenceRedefinition;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -86,7 +87,7 @@ public class ConflictResolveTests {
 		resource.getConflicts().get(0).resolve(ResolveAction.KEEP_LEFT);
 
 		System.out.println("\nKeep left for first (PARTIAL RESOLUTION)");
-		resource.save(System.out, Collections.EMPTY_MAP);
+		resource.save(System.out, FormatModels.getBreakAttributesSaveOptions());
 		System.out.println("\n");
 	}
 
@@ -104,7 +105,7 @@ public class ConflictResolveTests {
 		resource.getConflicts().get(1).resolve(ResolveAction.KEEP_RIGHT);
 
 		System.out.println("\nKeep left for first, right for second (FULL RESOLUTION)");
-		resource.save(System.out, Collections.EMPTY_MAP);
+		resource.save(System.out, FormatModels.getBreakAttributesSaveOptions());
 		System.out.println("\n");
 	}
 
