@@ -36,6 +36,7 @@ public class ReferenceRedefinition extends Conflict {
 		
 		s.append("A single, containment reference redefinition was found\n");
 		s.append("Parent: ").append(eObjectId).append("\n");
+		s.append("Reference name: ").append(reference.getName()).append("\n");
 		s.append("Left(id): ").append(((XMIResource) leftValue.eResource()).getID(leftValue)).append("\n");
 		s.append("Right(id): ").append(((XMIResource) rightValue.eResource()).getID(rightValue));
 

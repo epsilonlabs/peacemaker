@@ -12,7 +12,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.eclipse.epsilon.peacemaker.PeaceMakerXMIHandler.FileSegment;
 import org.eclipse.epsilon.peacemaker.conflicts.ConflictSection;
 import org.eclipse.epsilon.peacemaker.util.StreamUtils;
 
@@ -24,6 +23,10 @@ public class ConflictsPreprocessor {
 
 	enum LineType {
 		SEPARATOR, LEFT, RIGHT, COMMON
+	}
+
+	enum FileSegment {
+		COMMON, LEFT_CONFLICT, RIGHT_CONFLICT
 	}
 
 	protected InputStream inputStream;

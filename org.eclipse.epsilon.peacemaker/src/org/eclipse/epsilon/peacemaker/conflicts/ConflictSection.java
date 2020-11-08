@@ -20,12 +20,20 @@ public class ConflictSection {
 		return leftObjects.contains(objId);
 	}
 
+	public boolean containsRight(String objId) {
+		return rightObjects.contains(objId);
+	}
+
 	public void removeLeft(String objId) {
 		leftObjects.remove(objId);
 	}
 
 	public void removeRight(String objId) {
 		rightObjects.remove(objId);
+	}
+
+	public List<String> getLeftIds() {
+		return leftObjects;
 	}
 
 	public boolean isEmpty() {
@@ -35,12 +43,11 @@ public class ConflictSection {
 	public String toString() {
 		StringBuilder s = new StringBuilder();
 
-		s.append("New, unconflicted elements (ids) in left\n");
+		s.append("New (or modified) left objects without match\n");
 		s.append("\t").append(String.join("\n\t", leftObjects)).append("\n\n");
-		s.append("New, unconflicted elements (ids) in right\n");
+		s.append("New (or modified) right objects without match\n");
 		s.append("\t").append(String.join("\n\t", rightObjects));
 
 		return s.toString();
 	}
-
 }

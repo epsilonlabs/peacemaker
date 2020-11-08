@@ -1,32 +1,76 @@
 package org.eclipse.epsilon.peacemaker;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 
+import org.eclipse.emf.common.util.URI;
+import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.EPackage;
+import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.emf.ecore.resource.ResourceSet;
+import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
 import org.eclipse.emf.ecore.xmi.XMLHelper;
 import org.eclipse.emf.ecore.xmi.XMLResource;
 import org.eclipse.emf.ecore.xmi.impl.XMILoadImpl;
+import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
+import org.eclipse.epsilon.peacemaker.conflicts.Conflict;
 import org.eclipse.epsilon.peacemaker.conflicts.ConflictSection;
 import org.eclipse.epsilon.peacemaker.util.StreamUtils;
-import org.xml.sax.helpers.DefaultHandler;
 
 public class PeaceMakerXMILoad extends XMILoadImpl {
 
 	public static final boolean debug = true;
 
-	//TODO: remove
-	public static final String LEFT_TAG = "left:-";
-	public static final String SEPARATOR_TAG = "sep:-";
-	public static final String RIGHT_TAG = "right:-";
+	public static void main(String[] args) throws Exception {
+
+		ResourceSet resourceSet = new ResourceSetImpl();
+
+		ResourceSet ecoreResourceSet = new ResourceSetImpl();
+		ecoreResourceSet.getResourceFactoryRegistry().getExtensionToFactoryMap().put(
+				"*", new XMIResourceFactoryImpl());
+		Resource ecoreResource = ecoreResourceSet.createResource(
+				URI.createFileURI(new File("models/comicshop.ecore").getAbsolutePath()));
+		ecoreResource.load(null);
+		for (EObject o : ecoreResource.getContents()) {
+			EPackage ePackage = (EPackage) o;
+			resourceSet.getPackageRegistry().put(ePackage.getNsURI(), ePackage);
+		}
+
+		resourceSet.getResourceFactoryRegistry().getExtensionToFactoryMap().put(
+				"model", new PeaceMakerXMIResourceFactory());
+
+		String[] cases = {
+				"01-newInLeft",
+				"02-newInBoth-noConflict",
+				"03-attribute",
+				"04-nonContained1boundedRef",
+				"05-contained1boundedRef",
+				"06-newLines-newInBoth-noConflict",
+				"07-newLines-attributes",
+				"08-newLines-severalAttributes",
+				"10-newLines-contained1boundedRef" };
+
+		// uncomment for specific cases
+		//		cases = new String[1];
+		//		cases[0] = "03-attribute";
+
+		for (String inputCase : cases) {
+			System.out.println("############################################");
+			System.out.println(inputCase);
+			System.out.println("############################################");
+
+			Resource resource = resourceSet.createResource(
+					URI.createFileURI(new File("modelconflicts/" + inputCase + ".model").getAbsolutePath()));
+			resource.load(null);
+			System.out.println();
+		}
+		System.out.println("Done");
+	}
 
 	public PeaceMakerXMILoad(XMLHelper helper) {
 		super(helper);
-	}
-
-	@Override
-	protected DefaultHandler makeDefaultHandler() {
-		return new PeaceMakerXMIHandler(resource, helper, options);
 	}
 
 	@Override
@@ -53,15 +97,22 @@ public class PeaceMakerXMILoad extends XMILoadImpl {
 		pmResource.loadLeft(preprocessor.getLeftVersionHelper());
 		pmResource.loadRight(preprocessor.getRightVersionHelper());
 
-		pmResource.setConflictSections(preprocessor.getConflictSections());
+		pmResource.identifyConflicts(preprocessor.getConflictSections());
 
 		if (debug) {
 			for (ConflictSection cs : pmResource.getConflictSections()) {
-				System.out.println("@@@@@@@@@@ Conflict Section @@@@@@@@@@@@@");
-				System.out.println(cs);
-				System.out.println("@@@@@@@@@@@@@@@@@@@@@@@");
+				if (!cs.isEmpty()) {
+					System.out.println("@@@@@@@@@@ Conflict Section @@@@@@@@@@@@@");
+					System.out.println(cs);
+					System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+				}
+			}
+
+			for (Conflict c : pmResource.getConflicts()) {
+				System.out.println(">>>>>>>> CONFLICT <<<<<<<<<<<<<");
+				System.out.println(c);
+				System.out.println(">>>>>>>>>>>>>>>><<<<<<<<<<<<<<<");
 			}
 		}
-		// pmResource."identify the conflicts"
 	}
 }

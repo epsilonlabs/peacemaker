@@ -3,9 +3,9 @@ package org.eclipse.epsilon.peacemaker.conflicts;
 import org.eclipse.emf.ecore.EObject;
 
 /**
- * A conflict indicating that an object with the same id has been started in
- * each segments of a conflict section
- * 
+ * A conflict indicating that an object with the same id has been modified in
+ * each segment of a conflict section
+ *
  * @author alfonsodelavega
  *
  */
@@ -26,7 +26,7 @@ public class ObjectRedefinition extends Conflict {
 	public String toString() {
 		StringBuilder s = new StringBuilder();
 
-		s.append("An object with the same id has been defined in left and right\n");
+		s.append("An object with the same id has been redefined in left and right\n");
 		s.append("Id: ").append(eObjectId).append("\n");
 		s.append("Left: ").append(leftObject).append("\n");
 		s.append("Right: ").append(rightObject);
