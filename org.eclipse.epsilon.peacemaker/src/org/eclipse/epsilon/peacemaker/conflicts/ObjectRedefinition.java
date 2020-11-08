@@ -1,6 +1,11 @@
 package org.eclipse.epsilon.peacemaker.conflicts;
 
+import java.util.List;
+
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.EReference;
+import org.eclipse.emf.ecore.util.EcoreUtil;
+import org.eclipse.epsilon.peacemaker.util.CopyUtils;
 
 /**
  * A conflict indicating that an object with the same id has been modified in
@@ -48,5 +53,51 @@ public class ObjectRedefinition extends Conflict {
 
 	public void setRightObject(EObject rightObject) {
 		this.rightObject = rightObject;
+	}
+
+	@Override
+	public void resolve(ResolveAction action) {
+		EObject copy = null;
+		EObject fromObject = null;
+		EObject toObject = null;
+
+		switch (action) {
+		case KEEP_LEFT:
+			fromObject = leftObject;
+			toObject = rightObject;
+			break;
+		case KEEP_RIGHT:
+			fromObject = rightObject;
+			toObject = leftObject;
+			break;
+		default:
+			super.resolve(action);
+		}
+
+		copy = EcoreUtil.copy(fromObject);
+
+		EReference reference = (EReference) fromObject.eContainingFeature();
+		if (reference != null) {
+			EObject toObjectParent = toObject.eContainer();
+			if (!reference.isMany()) {
+				toObjectParent.eSet(reference, copy);
+			}
+			else {
+				@SuppressWarnings("unchecked")
+				List<Object> list = (List<Object>) toObjectParent.eGet(reference);
+
+				int index = list.indexOf(toObject);
+				list.remove(index);
+				list.add(index, copy);
+			}
+		}
+		else {
+			// root element
+			List<EObject> contents = toObject.eResource().getContents();
+			int index = contents.indexOf(toObject);
+			contents.remove(index);
+			contents.add(index, copy);
+		}
+		CopyUtils.copyIds(fromObject, copy);
 	}
 }

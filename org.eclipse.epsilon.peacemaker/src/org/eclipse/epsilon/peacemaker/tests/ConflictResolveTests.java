@@ -15,7 +15,6 @@ import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
 import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
 import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResource;
 import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResourceFactory;
-import org.eclipse.epsilon.peacemaker.conflicts.AttributeRedefinitions;
 import org.eclipse.epsilon.peacemaker.conflicts.Conflict.ResolveAction;
 import org.eclipse.epsilon.peacemaker.conflicts.ReferenceRedefinition;
 import org.junit.BeforeClass;
@@ -83,7 +82,6 @@ public class ConflictResolveTests {
 		PeaceMakerXMIResource resource = loadConflictResource(String.format(CONFLICTS_LOCATION, inputCase));
 
 		assertTrue(resource.getConflicts().size() == 2);
-		assertTrue(resource.getConflicts().get(0) instanceof AttributeRedefinitions);
 
 		resource.getConflicts().get(0).resolve(ResolveAction.KEEP_LEFT);
 
@@ -101,7 +99,6 @@ public class ConflictResolveTests {
 		PeaceMakerXMIResource resource = loadConflictResource(String.format(CONFLICTS_LOCATION, inputCase));
 
 		assertTrue(resource.getConflicts().size() == 2);
-		assertTrue(resource.getConflicts().get(0) instanceof AttributeRedefinitions);
 
 		resource.getConflicts().get(0).resolve(ResolveAction.KEEP_LEFT);
 		resource.getConflicts().get(1).resolve(ResolveAction.KEEP_RIGHT);
