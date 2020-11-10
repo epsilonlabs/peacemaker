@@ -42,6 +42,9 @@ public class PeaceMakerEditor extends EcoreEditor {
 	protected TreeViewer leftViewer;
 	protected TreeViewer rightViewer;
 
+	protected Resource leftResource;
+	protected Resource rightResource;
+
 	protected ISelectionChangedListener viewerChangedListener = new ISelectionChangedListener() {
 		public void selectionChanged(SelectionChangedEvent selectionChangedEvent) {
 			setCurrentViewer((TreeViewer) selectionChangedEvent.getSelectionProvider());
@@ -83,7 +86,10 @@ public class PeaceMakerEditor extends EcoreEditor {
 			Tree leftTree = new Tree(leftVersion, SWT.MULTI);
 			GridDataFactory.fillDefaults().grab(true, true).minSize(1, 1).applyTo(leftTree);
 
-			leftViewer = createViewer(leftTree, editingDomain.getResourceSet().getResources().get(1));
+			// TODO: get resource versions in a "safer" way
+			leftResource = editingDomain.getResourceSet().getResources().get(1);
+
+			leftViewer = createViewer(leftTree, leftResource);
 			setCurrentViewer(leftViewer);
 
 			Composite rightVersion = new Composite(sashForm, SWT.BORDER);
@@ -96,7 +102,9 @@ public class PeaceMakerEditor extends EcoreEditor {
 			Tree rightTree = new Tree(rightVersion, SWT.MULTI);
 			GridDataFactory.fillDefaults().grab(true, true).minSize(1, 1).applyTo(rightTree);
 
-			rightViewer = createViewer(rightTree, editingDomain.getResourceSet().getResources().get(2));
+			// TODO: get resource versions in a "safer" way
+			rightResource = editingDomain.getResourceSet().getResources().get(2);
+			rightViewer = createViewer(rightTree, rightResource);
 			rightViewer.addSelectionChangedListener(viewerChangedListener);
 
 
@@ -220,6 +228,46 @@ public class PeaceMakerEditor extends EcoreEditor {
 		getSite().registerContextMenu(contextMenu, new UnwrappingSelectionProvider(viewer));
 
 		// no drag and drop
+	}
+	
+	@Override
+	protected void handleActivateGen() {
+		// Recompute the read only state.
+		//
+		if (editingDomain.getResourceToReadOnlyMap() != null) {
+			// PEACEMAKER: single changed line with respect to superclass
+			initReadOnlyResources();
+
+			// Refresh any actions that may become enabled or disabled.
+			//
+			setSelection(getSelection());
+		}
+
+		if (!removedResources.isEmpty()) {
+			if (handleDirtyConflict()) {
+				getSite().getPage().closeEditor(PeaceMakerEditor.this, false);
+			}
+			else {
+				removedResources.clear();
+				changedResources.clear();
+				savedResources.clear();
+			}
+		}
+		else if (!changedResources.isEmpty()) {
+			changedResources.removeAll(savedResources);
+			handleChangedResources();
+			changedResources.clear();
+			savedResources.clear();
+		}
+	}
+
+	/**
+	 * Disable manual edition of certain resources of the view
+	 */
+	protected void initReadOnlyResources() {
+		editingDomain.getResourceToReadOnlyMap().clear();
+		editingDomain.getResourceToReadOnlyMap().put(leftResource, true);
+		editingDomain.getResourceToReadOnlyMap().put(rightResource, true);
 	}
 
 	public void setCurrentViewer(Viewer viewer) {
