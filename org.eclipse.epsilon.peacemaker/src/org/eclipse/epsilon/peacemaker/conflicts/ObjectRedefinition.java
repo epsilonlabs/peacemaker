@@ -6,6 +6,7 @@ import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EReference;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.epsilon.peacemaker.util.CopyUtils;
+import org.eclipse.epsilon.peacemaker.util.PrettyPrint;
 
 /**
  * A conflict indicating that an object with the same id has been modified in
@@ -33,8 +34,8 @@ public class ObjectRedefinition extends Conflict {
 
 		s.append("An object with the same id has been redefined in left and right\n");
 		s.append("Id: ").append(eObjectId).append("\n");
-		s.append("Left: ").append(leftObject).append("\n");
-		s.append("Right: ").append(rightObject);
+		s.append("Left: ").append(PrettyPrint.featuresMap(leftObject)).append("\n");
+		s.append("Right: ").append(PrettyPrint.featuresMap(rightObject));
 
 		return s.toString();
 	}

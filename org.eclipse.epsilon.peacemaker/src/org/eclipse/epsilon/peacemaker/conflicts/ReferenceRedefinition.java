@@ -3,8 +3,8 @@ package org.eclipse.epsilon.peacemaker.conflicts;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EReference;
 import org.eclipse.emf.ecore.util.EcoreUtil;
-import org.eclipse.emf.ecore.xmi.XMIResource;
 import org.eclipse.epsilon.peacemaker.util.CopyUtils;
+import org.eclipse.epsilon.peacemaker.util.PrettyPrint;
 
 /**
  * Conflict caused by redefining a single (i.e. !isMany()) containment reference
@@ -37,8 +37,8 @@ public class ReferenceRedefinition extends Conflict {
 		s.append("A single, containment reference redefinition was found\n");
 		s.append("Parent: ").append(eObjectId).append("\n");
 		s.append("Reference name: ").append(reference.getName()).append("\n");
-		s.append("Left(id): ").append(((XMIResource) leftValue.eResource()).getID(leftValue)).append("\n");
-		s.append("Right(id): ").append(((XMIResource) rightValue.eResource()).getID(rightValue));
+		s.append("Left(id): ").append(PrettyPrint.featuresMap(leftValue)).append("\n");
+		s.append("Right(id): ").append(PrettyPrint.featuresMap(rightValue));
 
 		return s.toString();
 	}
