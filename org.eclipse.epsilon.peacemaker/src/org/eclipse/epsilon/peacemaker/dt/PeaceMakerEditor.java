@@ -5,6 +5,7 @@ import java.util.Map;
 import org.eclipse.emf.ecore.presentation.EcoreEditor;
 import org.eclipse.emf.ecore.presentation.EcoreEditorPlugin;
 import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.emf.ecore.xmi.XMIResource;
 import org.eclipse.emf.edit.ui.provider.AdapterFactoryContentProvider;
 import org.eclipse.emf.edit.ui.provider.AdapterFactoryLabelProvider;
 import org.eclipse.emf.edit.ui.provider.DecoratingColumLabelProvider;
@@ -42,8 +43,10 @@ public class PeaceMakerEditor extends EcoreEditor {
 
 	protected TreeViewer leftViewer;
 	protected TreeViewer rightViewer;
+	protected TreeViewer mergedViewer;
 
 	protected PeaceMakerXMIResource pmResource;
+	protected XMIResource mergedResource;
 
 	protected ISelectionChangedListener viewerChangedListener = new ISelectionChangedListener() {
 		public void selectionChanged(SelectionChangedEvent selectionChangedEvent) {
@@ -66,21 +69,33 @@ public class PeaceMakerEditor extends EcoreEditor {
 		// Creates the model from the editor input
 		createModel();
 
-		// Only creates the other pages if a conflicts resource has been loaded
+		Composite conflictsPage = new Composite(getContainer(), SWT.BORDER);
+		conflictsPage.setBackground(new Color(255, 255, 255));
+		int pageIndex = addPage(conflictsPage);
+		setPageText(pageIndex, "PeaceMaker Conflicts");
+
+		// Only creates contents if the resource has been loaded
 		if (!getEditingDomain().getResourceSet().getResources().isEmpty()) {
 
-			Composite conflictsPage = new Composite(getContainer(), SWT.BORDER);
-			conflictsPage.setBackground(new Color(255, 255, 255));
+			pmResource = (PeaceMakerXMIResource) editingDomain.getResourceSet().getResources().get(0);
+			mergedResource = createMergedResource();
 
 			GridLayout pageLayout = new GridLayout(1, false);
 			conflictsPage.setLayout(pageLayout);
 
-			SashForm sashForm = new SashForm(conflictsPage, SWT.HORIZONTAL);
-			GridDataFactory.fillDefaults().grab(true, true).minSize(1, 1).applyTo(sashForm);
+			// separates the resources from the conflicts list
+			SashForm resourceConflictsSash = new SashForm(conflictsPage, SWT.HORIZONTAL);
+			GridDataFactory.fillDefaults().grab(true, true).minSize(1, 1).applyTo(resourceConflictsSash);
 
-			Composite leftVersion = new Composite(sashForm, SWT.BORDER);
-			GridLayout leftLayout = new GridLayout(1, false);
-			leftVersion.setLayout(leftLayout);
+			// separates left and right versions from the merged one
+			SashForm topBottomVersionsSash = new SashForm(resourceConflictsSash, SWT.VERTICAL);
+			GridDataFactory.fillDefaults().grab(true, true).minSize(1, 1).applyTo(topBottomVersionsSash);
+
+			// separates left and right versions
+			SashForm leftRightVersionsSash = new SashForm(topBottomVersionsSash, SWT.HORIZONTAL);
+
+			Composite leftVersion = new Composite(leftRightVersionsSash, SWT.BORDER);
+			leftVersion.setLayout(new GridLayout(1, false));
 
 			Label leftLabel = new Label(leftVersion, SWT.NONE);
 			leftLabel.setText("Left version");
@@ -88,14 +103,11 @@ public class PeaceMakerEditor extends EcoreEditor {
 			Tree leftTree = new Tree(leftVersion, SWT.MULTI);
 			GridDataFactory.fillDefaults().grab(true, true).minSize(1, 1).applyTo(leftTree);
 
-			pmResource = (PeaceMakerXMIResource) editingDomain.getResourceSet().getResources().get(0);
-
 			leftViewer = createViewer(leftTree, pmResource.getLeftResource());
 			setCurrentViewer(leftViewer);
 
-			Composite rightVersion = new Composite(sashForm, SWT.BORDER);
-			GridLayout rightLayout = new GridLayout(1, false);
-			rightVersion.setLayout(rightLayout);
+			Composite rightVersion = new Composite(leftRightVersionsSash, SWT.BORDER);
+			rightVersion.setLayout(new GridLayout(1, false));
 
 			Label rightLabel = new Label(rightVersion, SWT.NONE);
 			rightLabel.setText("Right version");
@@ -106,15 +118,25 @@ public class PeaceMakerEditor extends EcoreEditor {
 			rightViewer = createViewer(rightTree, pmResource.getRightResource());
 			rightViewer.addSelectionChangedListener(viewerChangedListener);
 
+			Composite mergedVersion = new Composite(topBottomVersionsSash, SWT.BORDER);
+			mergedVersion.setLayout(new GridLayout(1, false));
 
-			Composite conflictsList = new Composite(sashForm, SWT.NONE);
+			Label mergedLabel = new Label(mergedVersion, SWT.NONE);
+			mergedLabel.setText("Merged version (currently the left one)");
+
+			Tree mergedTree = new Tree(mergedVersion, SWT.MULTI);
+			GridDataFactory.fillDefaults().grab(true, true).minSize(1, 1).applyTo(mergedTree);
+
+			mergedViewer = createViewer(mergedTree, mergedResource);
+			mergedViewer.addSelectionChangedListener(viewerChangedListener);
+
+
+			Composite conflictsList = new Composite(resourceConflictsSash, SWT.BORDER);
 			GridDataFactory.fillDefaults().grab(true, true).minSize(1, 1).applyTo(conflictsList);
 
 			GridLayout listLayout = new GridLayout(1, false);
 			conflictsList.setLayout(listLayout);
 
-			PeaceMakerXMIResource pmResource = (PeaceMakerXMIResource) editingDomain.getResourceSet().getResources().get(0);
-			
 			for (Conflict c : pmResource.getConflicts()) {
 				Composite conflict = new Composite(conflictsList, SWT.BORDER);
 				GridDataFactory.fillDefaults().grab(true, false).minSize(1, 1).applyTo(conflict);
@@ -162,10 +184,9 @@ public class PeaceMakerEditor extends EcoreEditor {
 				}
 			}
 
-			sashForm.setWeights(new int[] { 1, 1, 1 });
-
-			int pageIndex = addPage(conflictsPage);
-			setPageText(pageIndex, "PeaceMaker Conflicts");
+			resourceConflictsSash.setWeights(new int[] { 2, 1 });
+			topBottomVersionsSash.setWeights(new int[] { 1, 1 });
+			leftRightVersionsSash.setWeights(new int[] { 1, 1 });
 
 			getSite().getShell().getDisplay().asyncExec(new Runnable() {
 
@@ -175,9 +196,6 @@ public class PeaceMakerEditor extends EcoreEditor {
 					}
 				}
 			});
-		}
-		else {
-			addPage(new Composite(getContainer(), SWT.BORDER)); // blank one
 		}
 
 		// Ensures that this editor will only display the page's tab
@@ -201,6 +219,11 @@ public class PeaceMakerEditor extends EcoreEditor {
 				updateProblemIndication();
 			}
 		});
+	}
+
+	protected XMIResource createMergedResource() {
+		// TODO: make this an actual merged resource
+		return pmResource.getLeftResource();
 	}
 
 	private TreeViewer createViewer(Tree tree, Resource resource) {
@@ -267,6 +290,7 @@ public class PeaceMakerEditor extends EcoreEditor {
 		editingDomain.getResourceToReadOnlyMap().clear();
 		editingDomain.getResourceToReadOnlyMap().put(pmResource.getLeftResource(), true);
 		editingDomain.getResourceToReadOnlyMap().put(pmResource.getRightResource(), true);
+		editingDomain.getResourceToReadOnlyMap().put(mergedResource, true);
 	}
 
 	public void setCurrentViewer(Viewer viewer) {
