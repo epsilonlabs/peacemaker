@@ -27,6 +27,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
@@ -42,8 +43,7 @@ public class PeaceMakerEditor extends EcoreEditor {
 	protected TreeViewer leftViewer;
 	protected TreeViewer rightViewer;
 
-	protected Resource leftResource;
-	protected Resource rightResource;
+	protected PeaceMakerXMIResource pmResource;
 
 	protected ISelectionChangedListener viewerChangedListener = new ISelectionChangedListener() {
 		public void selectionChanged(SelectionChangedEvent selectionChangedEvent) {
@@ -67,9 +67,11 @@ public class PeaceMakerEditor extends EcoreEditor {
 		createModel();
 
 		// Only creates the other pages if a conflicts resource has been loaded
-		if (getEditingDomain().getResourceSet().getResources().size() >= 3) {
+		if (!getEditingDomain().getResourceSet().getResources().isEmpty()) {
 
 			Composite conflictsPage = new Composite(getContainer(), SWT.BORDER);
+			conflictsPage.setBackground(new Color(255, 255, 255));
+
 			GridLayout pageLayout = new GridLayout(1, false);
 			conflictsPage.setLayout(pageLayout);
 
@@ -86,10 +88,9 @@ public class PeaceMakerEditor extends EcoreEditor {
 			Tree leftTree = new Tree(leftVersion, SWT.MULTI);
 			GridDataFactory.fillDefaults().grab(true, true).minSize(1, 1).applyTo(leftTree);
 
-			// TODO: get resource versions in a "safer" way
-			leftResource = editingDomain.getResourceSet().getResources().get(1);
+			pmResource = (PeaceMakerXMIResource) editingDomain.getResourceSet().getResources().get(0);
 
-			leftViewer = createViewer(leftTree, leftResource);
+			leftViewer = createViewer(leftTree, pmResource.getLeftResource());
 			setCurrentViewer(leftViewer);
 
 			Composite rightVersion = new Composite(sashForm, SWT.BORDER);
@@ -102,9 +103,7 @@ public class PeaceMakerEditor extends EcoreEditor {
 			Tree rightTree = new Tree(rightVersion, SWT.MULTI);
 			GridDataFactory.fillDefaults().grab(true, true).minSize(1, 1).applyTo(rightTree);
 
-			// TODO: get resource versions in a "safer" way
-			rightResource = editingDomain.getResourceSet().getResources().get(2);
-			rightViewer = createViewer(rightTree, rightResource);
+			rightViewer = createViewer(rightTree, pmResource.getRightResource());
 			rightViewer.addSelectionChangedListener(viewerChangedListener);
 
 
@@ -266,8 +265,8 @@ public class PeaceMakerEditor extends EcoreEditor {
 	 */
 	protected void initReadOnlyResources() {
 		editingDomain.getResourceToReadOnlyMap().clear();
-		editingDomain.getResourceToReadOnlyMap().put(leftResource, true);
-		editingDomain.getResourceToReadOnlyMap().put(rightResource, true);
+		editingDomain.getResourceToReadOnlyMap().put(pmResource.getLeftResource(), true);
+		editingDomain.getResourceToReadOnlyMap().put(pmResource.getRightResource(), true);
 	}
 
 	public void setCurrentViewer(Viewer viewer) {
