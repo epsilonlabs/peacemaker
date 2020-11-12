@@ -22,6 +22,11 @@ public class ConflictVersionResource extends XMIResourceImpl {
 		return new ConflictVersionLoad(createXMLHelper());
 	}
 
+	@Override
+	protected boolean useUUIDs() {
+		return true;
+	}
+
 	public void setVersionHelper(ConflictVersionHelper versionHelper) {
 		this.versionHelper = versionHelper;
 	}
