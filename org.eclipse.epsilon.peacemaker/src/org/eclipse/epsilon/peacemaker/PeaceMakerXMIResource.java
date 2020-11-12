@@ -25,7 +25,7 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 	protected ConflictVersionResource rightResource;
 
 	protected List<Conflict> conflicts = new ArrayList<>();
-	protected List<ConflictSection> conflictSections;
+	protected List<ConflictSection> conflictSections = new ArrayList<>();
 
 	public PeaceMakerXMIResource(URI uri) {
 		super(uri);
@@ -65,7 +65,7 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 	}
 
 	public void identifyConflicts(List<ConflictSection> conflictSections) {
-		this.conflictSections = conflictSections;
+		this.conflictSections.addAll(conflictSections);
 
 		for (ConflictSection cs : conflictSections) {
 			identifyConflicts(cs);
