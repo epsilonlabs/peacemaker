@@ -1,5 +1,7 @@
 package org.eclipse.epsilon.peacemaker.conflicts;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.eclipse.emf.ecore.EObject;
@@ -16,6 +18,10 @@ import org.eclipse.epsilon.peacemaker.util.PrettyPrint;
  *
  */
 public class ObjectRedefinition extends Conflict {
+
+	private static final List<ResolveAction> SUPPORTED_ACTIONS =
+			Collections.unmodifiableList(
+					Arrays.asList(ResolveAction.KEEP_LEFT, ResolveAction.KEEP_RIGHT));
 
 	protected EObject leftObject;
 	protected EObject rightObject;
@@ -54,6 +60,11 @@ public class ObjectRedefinition extends Conflict {
 
 	public void setRightObject(EObject rightObject) {
 		this.rightObject = rightObject;
+	}
+
+	@Override
+	public List<ResolveAction> getSupportedActions() {
+		return SUPPORTED_ACTIONS;
 	}
 
 	@Override

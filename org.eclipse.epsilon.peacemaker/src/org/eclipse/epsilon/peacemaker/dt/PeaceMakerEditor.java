@@ -1,5 +1,7 @@
 package org.eclipse.epsilon.peacemaker.dt;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.eclipse.emf.ecore.presentation.EcoreEditor;
@@ -14,6 +16,7 @@ import org.eclipse.emf.edit.ui.provider.UnwrappingSelectionProvider;
 import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResource;
 import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResourceFactory;
 import org.eclipse.epsilon.peacemaker.conflicts.Conflict;
+import org.eclipse.epsilon.peacemaker.conflicts.Conflict.ResolveAction;
 import org.eclipse.epsilon.peacemaker.conflicts.ConflictSection;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
@@ -28,11 +31,14 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Link;
@@ -41,12 +47,74 @@ import org.eclipse.swt.widgets.Tree;
 
 public class PeaceMakerEditor extends EcoreEditor {
 
+	public class ResolveActionGroup {
+
+		protected Group group;
+
+		public ResolveActionGroup(Composite parent, int style) {
+			group = new Group(parent, style);
+			group.setLayout(new RowLayout(SWT.VERTICAL));
+			group.setText("Actions");
+			resolveGroups.put(group, this);
+		}
+
+		public void createActionButtons(List<ResolveAction> resolveActions) {
+
+			for (ResolveAction action : resolveActions) {
+				Button actionButton = new Button(group, SWT.RADIO);
+				actionButton.setText(action.toString());
+				actionButton.addSelectionListener( new SelectionAdapter() {
+
+					@Override
+					public void widgetSelected(SelectionEvent e) {
+						if (!actionButton.getSelection()) {
+							Button newSelection = ResolveActionGroup.this.getSelectedButton();
+							System.out.println(newSelection.getText() + " button selected!");
+							System.out.println("Previous button was " + actionButton.getText());
+						}
+					}
+				});
+			}
+
+			Button noAction = new Button(group, SWT.RADIO);
+			noAction.setText("No action");
+			noAction.addSelectionListener(new SelectionAdapter() {
+
+				@Override
+				public void widgetSelected(SelectionEvent e) {
+					if (!noAction.getSelection()) {
+						Button newSelection = ResolveActionGroup.this.getSelectedButton();
+						System.out.println(newSelection.getText() + " button selected!");
+						System.out.println("Previous button was " + noAction.getText());
+					}
+				}
+			});
+			noAction.setSelection(true);
+		}
+
+		protected Button getSelectedButton() {
+			for (Control c : group.getChildren()) {
+				Button b = (Button) c;
+				if (b.getSelection()) {
+					return b;
+				}
+			}
+			return null; // unreachable, there is a button selected from the start
+		}
+
+		public Group getGroup() {
+			return group;
+		}
+	}
+
 	protected TreeViewer leftViewer;
 	protected TreeViewer rightViewer;
 	protected TreeViewer mergedViewer;
 
 	protected PeaceMakerXMIResource pmResource;
 	protected XMIResource mergedResource;
+
+	protected Map<Group, ResolveActionGroup> resolveGroups = new HashMap<>();
 
 	protected ISelectionChangedListener viewerChangedListener = new ISelectionChangedListener() {
 		public void selectionChanged(SelectionChangedEvent selectionChangedEvent) {
@@ -138,34 +206,23 @@ public class PeaceMakerEditor extends EcoreEditor {
 			conflictsList.setLayout(listLayout);
 
 			for (Conflict c : pmResource.getConflicts()) {
-				Composite conflict = new Composite(conflictsList, SWT.BORDER);
-				GridDataFactory.fillDefaults().grab(true, false).minSize(1, 1).applyTo(conflict);
+				Composite conflictControl = new Composite(conflictsList, SWT.BORDER);
+				GridDataFactory.fillDefaults().grab(true, false).minSize(1, 1).applyTo(conflictControl);
 
 				GridLayout conflictLayout = new GridLayout(1, false);
-				conflict.setLayout(conflictLayout);
+				conflictControl.setLayout(conflictLayout);
 
-				Link text = new Link(conflict, SWT.WRAP);
+				Link text = new Link(conflictControl, SWT.WRAP);
 				GridDataFactory.fillDefaults().grab(true, true).minSize(1, 1).applyTo(text);
 				text.setText(c.toString());
 
-				Link showInTreeViewers = new Link(conflict, SWT.WRAP);
+				Link showInTreeViewers = new Link(conflictControl, SWT.WRAP);
 				GridDataFactory.fillDefaults().grab(true, false).minSize(1, 1).applyTo(showInTreeViewers);
 				showInTreeViewers.setText("Show in tree viewers");
 
-				Group resolveGroup = new Group(conflict, SWT.NONE);
-				GridDataFactory.fillDefaults().grab(false, false).minSize(1, 1).applyTo(resolveGroup);
-				resolveGroup.setLayout(new RowLayout(SWT.VERTICAL));
-				resolveGroup.setText("Actions");
-
-				Button keepLeft = new Button(resolveGroup, SWT.RADIO);
-				keepLeft.setText("Keep left");
-
-				Button keepRight = new Button(resolveGroup, SWT.RADIO);
-				keepRight.setText("Keep right");
-
-				Button noAction = new Button(resolveGroup, SWT.RADIO);
-				noAction.setText("No action");
-				noAction.setSelection(true);
+				ResolveActionGroup resolveGroup = new ResolveActionGroup(conflictControl, SWT.NONE);
+				GridDataFactory.fillDefaults().grab(false, false).minSize(1, 1).applyTo(resolveGroup.getGroup());
+				resolveGroup.createActionButtons(c.getSupportedActions());
 			}
 
 			for (ConflictSection cs : pmResource.getConflictSections()) {
