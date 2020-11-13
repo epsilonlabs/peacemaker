@@ -1,9 +1,11 @@
 package org.eclipse.epsilon.peacemaker.dt;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.emf.common.notify.Notifier;
 import org.eclipse.emf.ecore.presentation.EcoreEditor;
 import org.eclipse.emf.ecore.presentation.EcoreEditorPlugin;
 import org.eclipse.emf.ecore.resource.Resource;
@@ -50,6 +52,7 @@ public class PeaceMakerEditor extends EcoreEditor {
 	public class ResolveActionGroup {
 
 		protected Group group;
+		protected Map<Button, ResolveAction> button2action = new HashMap<>();
 
 		public ResolveActionGroup(Composite parent, int style) {
 			group = new Group(parent, style);
@@ -58,19 +61,28 @@ public class PeaceMakerEditor extends EcoreEditor {
 			resolveGroups.put(group, this);
 		}
 
-		public void createActionButtons(List<ResolveAction> resolveActions) {
+		public void createActionButtons(Conflict conflict) {
 
-			for (ResolveAction action : resolveActions) {
+			for (ResolveAction action : conflict.getSupportedActions()) {
 				Button actionButton = new Button(group, SWT.RADIO);
 				actionButton.setText(action.toString());
-				actionButton.addSelectionListener( new SelectionAdapter() {
+				button2action.put(actionButton, action);
+
+				actionButton.addSelectionListener(new SelectionAdapter() {
 
 					@Override
 					public void widgetSelected(SelectionEvent e) {
+						// if actionButton is the previously selected one
 						if (!actionButton.getSelection()) {
+							//TODO: undo the action of the actionButton (needs new commandstack)
+
 							Button newSelection = ResolveActionGroup.this.getSelectedButton();
-							System.out.println(newSelection.getText() + " button selected!");
-							System.out.println("Previous button was " + actionButton.getText());
+							if (button2action.containsKey(newSelection)) {
+								//TODO: study how to add the radio button as listener (do-undo stuff)
+								ConflictResolveCommand command = new ConflictResolveCommand(
+										notifiers, conflict, button2action.get(newSelection));
+								editingDomain.getCommandStack().execute(command);
+							}
 						}
 					}
 				});
@@ -82,10 +94,15 @@ public class PeaceMakerEditor extends EcoreEditor {
 
 				@Override
 				public void widgetSelected(SelectionEvent e) {
+					// if noAction was the previously selected button
 					if (!noAction.getSelection()) {
+						// nothing to undo in this case
+
+						// by definition, the new button has an action
 						Button newSelection = ResolveActionGroup.this.getSelectedButton();
-						System.out.println(newSelection.getText() + " button selected!");
-						System.out.println("Previous button was " + noAction.getText());
+						ConflictResolveCommand command = new ConflictResolveCommand(
+								notifiers, conflict, button2action.get(newSelection));
+						editingDomain.getCommandStack().execute(command);
 					}
 				}
 			});
@@ -115,6 +132,7 @@ public class PeaceMakerEditor extends EcoreEditor {
 	protected XMIResource mergedResource;
 
 	protected Map<Group, ResolveActionGroup> resolveGroups = new HashMap<>();
+	protected List<Notifier> notifiers;
 
 	protected ISelectionChangedListener viewerChangedListener = new ISelectionChangedListener() {
 		public void selectionChanged(SelectionChangedEvent selectionChangedEvent) {
@@ -147,6 +165,7 @@ public class PeaceMakerEditor extends EcoreEditor {
 
 			pmResource = (PeaceMakerXMIResource) editingDomain.getResourceSet().getResources().get(0);
 			mergedResource = createMergedResource();
+			notifiers = Arrays.asList(pmResource.getLeftResource(), pmResource.getRightResource());
 
 			GridLayout pageLayout = new GridLayout(1, false);
 			conflictsPage.setLayout(pageLayout);
@@ -222,7 +241,7 @@ public class PeaceMakerEditor extends EcoreEditor {
 
 				ResolveActionGroup resolveGroup = new ResolveActionGroup(conflictControl, SWT.NONE);
 				GridDataFactory.fillDefaults().grab(false, false).minSize(1, 1).applyTo(resolveGroup.getGroup());
-				resolveGroup.createActionButtons(c.getSupportedActions());
+				resolveGroup.createActionButtons(c);
 			}
 
 			for (ConflictSection cs : pmResource.getConflictSections()) {
