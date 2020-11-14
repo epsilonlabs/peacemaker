@@ -1,15 +1,27 @@
 package org.eclipse.epsilon.peacemaker.dt;
 
 import java.util.Arrays;
+import java.util.EventObject;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.emf.common.command.AbstractCommand;
+import org.eclipse.emf.common.command.Command;
+import org.eclipse.emf.common.command.CommandStack;
+import org.eclipse.emf.common.command.CommandStackListener;
 import org.eclipse.emf.common.notify.Notifier;
+import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.presentation.EcoreEditor;
 import org.eclipse.emf.ecore.presentation.EcoreEditorPlugin;
+import org.eclipse.emf.ecore.provider.EcoreItemProviderAdapterFactory;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.xmi.XMIResource;
+import org.eclipse.emf.edit.domain.AdapterFactoryEditingDomain;
+import org.eclipse.emf.edit.provider.ComposedAdapterFactory;
+import org.eclipse.emf.edit.provider.ReflectiveItemProviderAdapterFactory;
+import org.eclipse.emf.edit.provider.resource.ResourceItemProviderAdapterFactory;
 import org.eclipse.emf.edit.ui.provider.AdapterFactoryContentProvider;
 import org.eclipse.emf.edit.ui.provider.AdapterFactoryLabelProvider;
 import org.eclipse.emf.edit.ui.provider.DecoratingColumLabelProvider;
@@ -46,67 +58,97 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Tree;
+import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.views.properties.PropertySheetPage;
 
 public class PeaceMakerEditor extends EcoreEditor {
 
 	public class ResolveActionGroup {
 
+		protected Conflict conflict; // necessary for event listeners
 		protected Group group;
 		protected Map<Button, ResolveAction> button2action = new HashMap<>();
+		protected Map<ResolveAction, Button> action2button = new HashMap<>();
 
-		public ResolveActionGroup(Composite parent, int style) {
+		// avoid triggering events when changing radio buttons programmatically
+		protected boolean buttonEventsDisabled = false;
+
+		public ResolveActionGroup(Composite parent, int style, Conflict conflict) {
 			group = new Group(parent, style);
 			group.setLayout(new RowLayout(SWT.VERTICAL));
 			group.setText("Actions");
 			resolveGroups.put(group, this);
+			this.conflict = conflict;
 		}
 
 		public void createActionButtons(Conflict conflict) {
 
-			for (ResolveAction action : conflict.getSupportedActions()) {
+			for (ResolveAction action : ResolveAction.values()) {
+				if (!conflict.supports(action)) {
+					continue;
+				}
 				Button actionButton = new Button(group, SWT.RADIO);
 				actionButton.setText(action.toString());
 				button2action.put(actionButton, action);
+				action2button.put(action, actionButton);
+
+				if (action == ResolveAction.NO_ACTION) {
+					actionButton.setSelection(true);
+				}
 
 				actionButton.addSelectionListener(new SelectionAdapter() {
 
 					@Override
 					public void widgetSelected(SelectionEvent e) {
 						// if actionButton is the previously selected one
-						if (!actionButton.getSelection()) {
-							//TODO: undo the action of the actionButton (needs new commandstack)
+						if (!buttonEventsDisabled && !actionButton.getSelection()) {
+							getCommandStack().undo(conflict, action);
 
-							Button newSelection = ResolveActionGroup.this.getSelectedButton();
-							if (button2action.containsKey(newSelection)) {
-								//TODO: study how to add the radio button as listener (do-undo stuff)
-								ConflictResolveCommand command = new ConflictResolveCommand(
-										notifiers, conflict, button2action.get(newSelection));
-								editingDomain.getCommandStack().execute(command);
-							}
+							Button newSelection = getSelectedButton();
+							ConflictResolveCommand command = new ConflictResolveCommand(
+									notifiers, conflict,
+									button2action.get(newSelection), action);
+							getCommandStack().execute(command);
 						}
 					}
 				});
 			}
 
-			Button noAction = new Button(group, SWT.RADIO);
-			noAction.setText("No action");
-			noAction.addSelectionListener(new SelectionAdapter() {
+			// update radio buttons selections according to the command actions
+			editingDomain.getCommandStack().addCommandStackListener(new CommandStackListener() {
 
 				@Override
-				public void widgetSelected(SelectionEvent e) {
-					// if noAction was the previously selected button
-					if (!noAction.getSelection()) {
-						// nothing to undo in this case
+				public void commandStackChanged(EventObject event) {
+					ConflictResolveCommand mostRecentCommand =
+							(ConflictResolveCommand) getCommandStack().getMostRecentCommand();
 
-						// by definition, the new button has an action
-						Button newSelection = ResolveActionGroup.this.getSelectedButton();
-						ConflictResolveCommand command = new ConflictResolveCommand(
-								notifiers, conflict, button2action.get(newSelection));
-						editingDomain.getCommandStack().execute(command);
+					// if the command stack has not been flushed
+					//   and it is a command related to the conflict of this group
+					if (mostRecentCommand != null && mostRecentCommand.getConflict() == conflict) {
+						synchronized (ResolveActionGroup.this) {
+							buttonEventsDisabled = true;
+						}
+
+						// if the command has been undone
+						if (mostRecentCommand.canExecute()) {
+							// select the previous radio button
+							action2button.get(mostRecentCommand.getAction()).setSelection(false);
+							action2button.get(mostRecentCommand.getPreviousAction()).setSelection(true);
+
+						}
+						// else if the comand has been redone
+						else if (!action2button.get(mostRecentCommand.getAction()).getSelection()) {
+							// select the next button
+							action2button.get(mostRecentCommand.getAction()).setSelection(true);
+							action2button.get(mostRecentCommand.getPreviousAction()).setSelection(false);
+						}
+
+						synchronized (ResolveActionGroup.this) {
+							buttonEventsDisabled = false;
+						}
 					}
 				}
 			});
-			noAction.setSelection(true);
 		}
 
 		protected Button getSelectedButton() {
@@ -239,7 +281,7 @@ public class PeaceMakerEditor extends EcoreEditor {
 				GridDataFactory.fillDefaults().grab(true, false).minSize(1, 1).applyTo(showInTreeViewers);
 				showInTreeViewers.setText("Show in tree viewers");
 
-				ResolveActionGroup resolveGroup = new ResolveActionGroup(conflictControl, SWT.NONE);
+				ResolveActionGroup resolveGroup = new ResolveActionGroup(conflictControl, SWT.NONE, c);
 				GridDataFactory.fillDefaults().grab(false, false).minSize(1, 1).applyTo(resolveGroup.getGroup());
 				resolveGroup.createActionButtons(c);
 			}
@@ -359,6 +401,93 @@ public class PeaceMakerEditor extends EcoreEditor {
 		}
 	}
 
+	@Override
+	protected void initializeEditingDomain() {
+		// Create an adapter factory that yields item providers.
+		//
+		adapterFactory = new ComposedAdapterFactory(ComposedAdapterFactory.Descriptor.Registry.INSTANCE);
+
+		adapterFactory.addAdapterFactory(new ResourceItemProviderAdapterFactory());
+		ecoreItemProviderAdapterFactory = new EcoreItemProviderAdapterFactory();
+		adapterFactory.addAdapterFactory(ecoreItemProviderAdapterFactory);
+		adapterFactory.addAdapterFactory(new ReflectiveItemProviderAdapterFactory());
+
+		// Create the command stack that will notify this editor as commands are executed.
+		//
+		ConflictsCommandStack commandStack = new ConflictsCommandStack() {
+
+			@Override
+			public void execute(Command command) {
+				if (!(command instanceof AbstractCommand.NonDirtying)) {
+					DiagnosticDecorator.cancel(editingDomain);
+				}
+				super.execute(command);
+			}
+		};
+
+		// Add a listener to set the most recent command's affected objects to be the selection of the viewer with focus.
+		//
+		commandStack.addCommandStackListener(new CommandStackListener() {
+
+			public void commandStackChanged(final EventObject event) {
+				getContainer().getDisplay().asyncExec(new Runnable() {
+
+					public void run() {
+						firePropertyChange(IEditorPart.PROP_DIRTY);
+
+						// Try to select the affected objects.
+						//
+						Command mostRecentCommand = ((CommandStack) event.getSource()).getMostRecentCommand();
+						if (mostRecentCommand != null) {
+							setSelectionToViewer(mostRecentCommand.getAffectedObjects());
+						}
+						for (Iterator<PropertySheetPage> i = propertySheetPages.iterator(); i.hasNext();) {
+							PropertySheetPage propertySheetPage = i.next();
+							if (propertySheetPage.getControl() == null || propertySheetPage.getControl().isDisposed()) {
+								i.remove();
+							}
+							else {
+								propertySheetPage.refresh();
+							}
+						}
+					}
+				});
+			}
+		});
+
+		// Create the editing domain with a special command stack.
+		//
+		editingDomain =
+				new AdapterFactoryEditingDomain(adapterFactory, commandStack) {
+
+					{
+						resourceToReadOnlyMap = new HashMap<>();
+					}
+
+					@Override
+					public boolean isReadOnly(Resource resource) {
+						if (super.isReadOnly(resource) || resource == null) {
+							return true;
+						}
+						else {
+							URI uri = resource.getURI();
+							boolean result =
+									"java".equals(uri.scheme()) ||
+											"xcore".equals(uri.fileExtension()) ||
+											"xcoreiq".equals(uri.fileExtension()) ||
+											"oclinecore".equals(uri.fileExtension()) ||
+											"genmodel".equals(uri.fileExtension()) ||
+											uri.isPlatformResource() && !resourceSet.getURIConverter().normalize(uri).isPlatformResource() ||
+											uri.isPlatformPlugin();
+							if (resourceToReadOnlyMap != null) {
+								resourceToReadOnlyMap.put(resource, result);
+							}
+							return result;
+						}
+					}
+				};
+	}
+
 	/**
 	 * Disable manual edition of certain resources of the view
 	 */
@@ -401,5 +530,9 @@ public class PeaceMakerEditor extends EcoreEditor {
 			// Set the editors selection based on the current viewer's selection.
 			setSelection(currentViewer == null ? StructuredSelection.EMPTY : currentViewer.getSelection());
 		}
+	}
+
+	public ConflictsCommandStack getCommandStack() {
+		return (ConflictsCommandStack) editingDomain.getCommandStack();
 	}
 }

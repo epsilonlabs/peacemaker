@@ -1,9 +1,5 @@
 package org.eclipse.epsilon.peacemaker.conflicts;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EReference;
 import org.eclipse.emf.ecore.util.EcoreUtil;
@@ -15,10 +11,6 @@ import org.eclipse.epsilon.peacemaker.util.PrettyPrint;
  * @author alfonsodelavega
  */
 public class ReferenceRedefinition extends Conflict {
-
-	private static final List<ResolveAction> SUPPORTED_ACTIONS =
-			Collections.unmodifiableList(
-					Arrays.asList(ResolveAction.KEEP_LEFT, ResolveAction.KEEP_RIGHT));
 
 	protected EReference reference;
 	protected EObject leftValue;
@@ -67,11 +59,16 @@ public class ReferenceRedefinition extends Conflict {
 		this.rightValue = rightValue;
 	}
 
-	@Override
-	public List<ResolveAction> getSupportedActions() {
-		return SUPPORTED_ACTIONS;
+	public boolean supports(ResolveAction action) {
+		switch (action) {
+		case KEEP_LEFT:
+		case KEEP_RIGHT:
+			return true;
+		default:
+			return super.supports(action);
+		}
 	}
-	
+
 	@Override
 	public void resolve(ResolveAction action) {
 		switch (action) {

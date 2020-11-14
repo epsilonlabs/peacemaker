@@ -126,7 +126,7 @@ public class ConflictResolveTests {
 		Conflict firstConflict = resource.getConflicts().get(0);
 		ConflictResolveCommand command = new ConflictResolveCommand(
 				Arrays.asList(resource.getLeftResource(), resource.getRightResource()),
-				firstConflict, ResolveAction.KEEP_LEFT);
+				firstConflict, ResolveAction.KEEP_LEFT, null);
 
 		ByteArrayOutputStream beforeStream = new ByteArrayOutputStream();
 		System.out.println("\nBefore executing command:");

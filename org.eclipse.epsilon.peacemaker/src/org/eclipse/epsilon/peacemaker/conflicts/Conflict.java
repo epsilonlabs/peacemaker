@@ -1,13 +1,10 @@
 package org.eclipse.epsilon.peacemaker.conflicts;
 
-import java.util.Collections;
-import java.util.List;
-
 public abstract class Conflict {
 
 	public enum ResolveAction {
 
-		KEEP, REMOVE, KEEP_LEFT, KEEP_RIGHT;
+		KEEP, REMOVE, KEEP_LEFT, KEEP_RIGHT, NO_ACTION;
 
 		@Override
 		public String toString() {
@@ -20,6 +17,8 @@ public abstract class Conflict {
 				return "Keep left";
 			case KEEP_RIGHT:
 				return "Keep right";
+			case NO_ACTION:
+				return "No Action";
 			default:
 				throw new IllegalArgumentException();
 			}
@@ -40,12 +39,17 @@ public abstract class Conflict {
 		this.eObjectId = eObjectId;
 	}
 
-	public List<ResolveAction> getSupportedActions() {
-		return Collections.EMPTY_LIST;
+	public boolean supports(ResolveAction action) {
+		return action == ResolveAction.NO_ACTION;
 	}
 
 	public void resolve(ResolveAction action) {
-		throw new UnsupportedOperationException(
-				"Unsupported resolve action for this conflict: " + action);
+		switch (action) {
+		case NO_ACTION:
+			break;
+		default:
+			throw new UnsupportedOperationException(
+					"Unsupported resolve action for this conflict: " + action);
+		}
 	}
 }
