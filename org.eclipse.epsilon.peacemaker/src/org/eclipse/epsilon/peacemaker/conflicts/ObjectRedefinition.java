@@ -96,11 +96,11 @@ public class ObjectRedefinition extends Conflict {
 			}
 			else {
 				@SuppressWarnings("unchecked")
-				List<Object> list = (List<Object>) toObjectParent.eGet(reference);
+				List<EObject> list = (List<EObject>) toObjectParent.eGet(reference);
 
 				int index = list.indexOf(toObject);
 				list.remove(index);
-				list.add(index, copy);
+				CopyUtils.safeIndexAdd(list, index, copy);
 			}
 		}
 		else {
@@ -108,7 +108,7 @@ public class ObjectRedefinition extends Conflict {
 			List<EObject> contents = toObject.eResource().getContents();
 			int index = contents.indexOf(toObject);
 			contents.remove(index);
-			contents.add(index, copy);
+			CopyUtils.safeIndexAdd(contents, index, copy);
 		}
 		CopyUtils.copyIds(fromObject, copy);
 	}

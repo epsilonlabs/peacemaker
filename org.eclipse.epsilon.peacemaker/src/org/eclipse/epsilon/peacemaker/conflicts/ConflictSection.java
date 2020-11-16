@@ -36,6 +36,10 @@ public class ConflictSection {
 		return leftObjects;
 	}
 
+	public List<String> getRightIds() {
+		return rightObjects;
+	}
+
 	public boolean isEmpty() {
 		return leftObjects.isEmpty() && rightObjects.isEmpty();
 	}

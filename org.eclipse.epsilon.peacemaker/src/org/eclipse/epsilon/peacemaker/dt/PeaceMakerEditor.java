@@ -31,7 +31,6 @@ import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResource;
 import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResourceFactory;
 import org.eclipse.epsilon.peacemaker.conflicts.Conflict;
 import org.eclipse.epsilon.peacemaker.conflicts.Conflict.ResolveAction;
-import org.eclipse.epsilon.peacemaker.conflicts.ConflictSection;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.layout.GridDataFactory;
@@ -284,22 +283,6 @@ public class PeaceMakerEditor extends EcoreEditor {
 				ResolveActionGroup resolveGroup = new ResolveActionGroup(conflictControl, SWT.NONE, c);
 				GridDataFactory.fillDefaults().grab(false, false).minSize(1, 1).applyTo(resolveGroup.getGroup());
 				resolveGroup.createActionButtons(c);
-			}
-
-			for (ConflictSection cs : pmResource.getConflictSections()) {
-				if (!cs.isEmpty()) {
-					Composite conflictSection = new Composite(conflictsList, SWT.BORDER);
-					GridDataFactory.fillDefaults().grab(true, false).minSize(1, 1).applyTo(conflictSection);
-					GridLayout conflictSectionLayout = new GridLayout(1, false);
-					conflictSection.setLayout(conflictSectionLayout);
-
-					Label label = new Label(conflictSection, SWT.WRAP);
-					label.setText("Conflict Section");
-
-					Link text = new Link(conflictSection, SWT.BORDER | SWT.WRAP);
-					GridDataFactory.fillDefaults().grab(true, false).minSize(1, 1).applyTo(text);
-					text.setText(cs.toString());
-				}
 			}
 
 			resourceConflictsSash.setWeights(new int[] { 2, 1 });

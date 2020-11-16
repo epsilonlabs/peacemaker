@@ -18,6 +18,7 @@ import org.eclipse.epsilon.peacemaker.conflicts.Conflict;
 import org.eclipse.epsilon.peacemaker.conflicts.ConflictSection;
 import org.eclipse.epsilon.peacemaker.conflicts.ObjectRedefinition;
 import org.eclipse.epsilon.peacemaker.conflicts.ReferenceRedefinition;
+import org.eclipse.epsilon.peacemaker.conflicts.UnconflictedObject;
 
 public class PeaceMakerXMIResource extends XMIResourceImpl {
 
@@ -119,6 +120,15 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 				//       and the conflicts file does not have enough information to detect those
 			}
 		}
+		
+		// Any element remaining on the conflict section has not been identified
+		//   as part of a conflict. Indicate them as "free" elements to keep or remove
+		for (String id : new ArrayList<>(cs.getLeftIds())) {
+			addConflict(new UnconflictedObject(id, true));
+		}
+		for (String id : new ArrayList<>(cs.getRightIds())) {
+			addConflict(new UnconflictedObject(id, false));
+		}
 	}
 
 	protected boolean isContainmentNotManyReference(EStructuralFeature feature) {
@@ -127,20 +137,33 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 				!((EReference) feature).isMany();
 	}
 
-	public void addConflict(ObjectRedefinition objRedef) {
+	protected void addConflict(ObjectRedefinition objRedef) {
 		conflicts.add(objRedef);
 
 		objRedef.setLeftObject(getLeftEObject(objRedef.getEObjectId()));
 		objRedef.setRightObject(getRightEObject(objRedef.getEObjectId()));
 	}
 
-	public void addConflict(ReferenceRedefinition redef) {
+	protected void addConflict(ReferenceRedefinition redef) {
 		conflicts.add(redef);
 
 		redef.setLeftValue((EObject) getLeftEObject(redef.getEObjectId())
 				.eGet(redef.getReference()));
 		redef.setRightValue((EObject) getRightEObject(redef.getEObjectId())
 				.eGet(redef.getReference()));
+	}
+
+	protected void addConflict(UnconflictedObject unconflictedObj) {
+		conflicts.add(unconflictedObj);
+
+		if (unconflictedObj.inLeftSegment()) {
+			unconflictedObj.setObjectResource(leftResource);
+			unconflictedObj.setOtherResource(rightResource);
+		}
+		else {
+			unconflictedObj.setObjectResource(rightResource);
+			unconflictedObj.setOtherResource(leftResource);
+		}
 	}
 
 	public XMIResource getLeftResource() {
