@@ -23,8 +23,8 @@ public class CopyUtils {
 	}
 
 	/**
-	 * Adds object at the indicated index if the list is in range, or at the
-	 * end if it's not
+	 * Adds object at the indicated index of the list if in range, or at the
+	 * end if not
 	 */
 	public static void safeIndexAdd(List<EObject> list, int index, EObject obj) {
 		if (index < 0 || index > list.size()) {
