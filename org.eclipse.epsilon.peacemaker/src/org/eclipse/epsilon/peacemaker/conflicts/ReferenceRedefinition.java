@@ -14,6 +14,7 @@ import org.eclipse.epsilon.peacemaker.util.PrettyPrint;
 public class ReferenceRedefinition extends Conflict {
 
 	protected EReference reference;
+
 	protected EObject leftValue;
 	protected EObject rightValue;
 
@@ -23,13 +24,11 @@ public class ReferenceRedefinition extends Conflict {
 	 * @param parentId  The parent that contains the reference feature
 	 * @param reference
 	 */
-	public ReferenceRedefinition(String parentId, EReference reference) {
-		super(parentId);
+	public ReferenceRedefinition(String parentId, PeaceMakerXMIResource pmResource,
+			EReference reference) {
+		super(parentId, pmResource);
 		this.reference = reference;
-	}
 
-	@Override
-	public void init(PeaceMakerXMIResource pmResource) {
 		leftValue = (EObject) pmResource.getLeftEObject(eObjectId)
 				.eGet(reference);
 		rightValue = (EObject) pmResource.getRightEObject(eObjectId)
@@ -76,5 +75,17 @@ public class ReferenceRedefinition extends Conflict {
 		default:
 			super.resolve(action);
 		}
+	}
+
+	@Override
+	public EObject getLeftVersionObject() {
+		// objectId is the parent in this case, get the reference value from it
+		return (EObject) pmResource.getLeftEObject(eObjectId).eGet(reference);
+	}
+
+	@Override
+	public EObject getRightVersionObject() {
+		// objectId is the parent in this case, get the reference value from it
+		return (EObject) pmResource.getRightEObject(eObjectId).eGet(reference);
 	}
 }

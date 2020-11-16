@@ -23,15 +23,9 @@ public class ObjectRedefinition extends Conflict {
 
 	/**
 	 * Create a object redefinition conflict
-	 *
-	 * @param objectId
 	 */
-	public ObjectRedefinition(String objectId) {
-		super(objectId);
-	}
-
-	@Override
-	public void init(PeaceMakerXMIResource pmResource) {
+	public ObjectRedefinition(String objectId, PeaceMakerXMIResource pmResource) {
+		super(objectId, pmResource);
 		leftObject = pmResource.getLeftEObject(eObjectId);
 		rightObject = pmResource.getRightEObject(eObjectId);
 	}

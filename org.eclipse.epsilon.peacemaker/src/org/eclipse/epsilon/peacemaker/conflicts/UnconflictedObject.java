@@ -18,13 +18,11 @@ public class UnconflictedObject extends Conflict {
 	/** The other resource (not containing the object) */
 	protected XMIResource otherResource;
 
-	public UnconflictedObject(String eObjectId, boolean inLeftSegment) {
-		super(eObjectId);
+	public UnconflictedObject(String eObjectId, PeaceMakerXMIResource pmResource,
+			boolean inLeftSegment) {
+		super(eObjectId, pmResource);
 		this.inLeftSegment = inLeftSegment;
-	}
 
-	@Override
-	public void init(PeaceMakerXMIResource pmResource) {
 		if (inLeftSegment) {
 			objectResource = pmResource.getLeftResource();
 			otherResource = pmResource.getRightResource();

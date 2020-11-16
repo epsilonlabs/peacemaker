@@ -13,6 +13,7 @@ import org.eclipse.emf.common.command.CommandStack;
 import org.eclipse.emf.common.command.CommandStackListener;
 import org.eclipse.emf.common.notify.Notifier;
 import org.eclipse.emf.common.util.URI;
+import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.presentation.EcoreEditor;
 import org.eclipse.emf.ecore.presentation.EcoreEditorPlugin;
 import org.eclipse.emf.ecore.provider.EcoreItemProviderAdapterFactory;
@@ -222,6 +223,8 @@ public class PeaceMakerEditor extends EcoreEditor {
 			// separates left and right versions
 			SashForm leftRightVersionsSash = new SashForm(topBottomVersionsSash, SWT.HORIZONTAL);
 
+
+			// viewer for the left version resource (top left)
 			Composite leftVersion = new Composite(leftRightVersionsSash, SWT.BORDER);
 			leftVersion.setLayout(new GridLayout(1, false));
 
@@ -234,6 +237,8 @@ public class PeaceMakerEditor extends EcoreEditor {
 			leftViewer = createViewer(leftTree, pmResource.getLeftResource());
 			setCurrentViewer(leftViewer);
 
+
+			// viewer for the right version resource (right of left version viewer)
 			Composite rightVersion = new Composite(leftRightVersionsSash, SWT.BORDER);
 			rightVersion.setLayout(new GridLayout(1, false));
 
@@ -246,6 +251,8 @@ public class PeaceMakerEditor extends EcoreEditor {
 			rightViewer = createViewer(rightTree, pmResource.getRightResource());
 			rightViewer.addSelectionChangedListener(viewerChangedListener);
 
+
+			// viewer for the merged version (below left and right viewers)
 			Composite mergedVersion = new Composite(topBottomVersionsSash, SWT.BORDER);
 			mergedVersion.setLayout(new GridLayout(1, false));
 
@@ -259,13 +266,14 @@ public class PeaceMakerEditor extends EcoreEditor {
 			mergedViewer.addSelectionChangedListener(viewerChangedListener);
 
 
+			// list of conflicts along with the available actions (right side)
 			Composite conflictsList = new Composite(resourceConflictsSash, SWT.BORDER);
 			GridDataFactory.fillDefaults().grab(true, true).minSize(1, 1).applyTo(conflictsList);
 
 			GridLayout listLayout = new GridLayout(1, false);
 			conflictsList.setLayout(listLayout);
 
-			for (Conflict c : pmResource.getConflicts()) {
+			for (Conflict conflict : pmResource.getConflicts()) {
 				Composite conflictControl = new Composite(conflictsList, SWT.BORDER);
 				GridDataFactory.fillDefaults().grab(true, false).minSize(1, 1).applyTo(conflictControl);
 
@@ -274,15 +282,22 @@ public class PeaceMakerEditor extends EcoreEditor {
 
 				Link text = new Link(conflictControl, SWT.WRAP);
 				GridDataFactory.fillDefaults().grab(true, true).minSize(1, 1).applyTo(text);
-				text.setText(c.toString());
+				text.setText(conflict.toString());
 
 				Link showInTreeViewers = new Link(conflictControl, SWT.WRAP);
 				GridDataFactory.fillDefaults().grab(true, false).minSize(1, 1).applyTo(showInTreeViewers);
-				showInTreeViewers.setText("Show in tree viewers");
+				showInTreeViewers.setText("<a>Show in tree viewers</a>");
+				showInTreeViewers.addSelectionListener(new SelectionAdapter() {
 
-				ResolveActionGroup resolveGroup = new ResolveActionGroup(conflictControl, SWT.NONE, c);
+					@Override
+					public void widgetSelected(SelectionEvent e) {
+						updateTreeViewerSelections(conflict);
+					}
+				});
+
+				ResolveActionGroup resolveGroup = new ResolveActionGroup(conflictControl, SWT.NONE, conflict);
 				GridDataFactory.fillDefaults().grab(false, false).minSize(1, 1).applyTo(resolveGroup.getGroup());
-				resolveGroup.createActionButtons(c);
+				resolveGroup.createActionButtons(conflict);
 			}
 
 			resourceConflictsSash.setWeights(new int[] { 2, 1 });
@@ -322,12 +337,24 @@ public class PeaceMakerEditor extends EcoreEditor {
 		});
 	}
 
+	protected void updateTreeViewerSelections(Conflict conflict) {
+		EObject leftVersionObject = conflict.getLeftVersionObject();
+		if (leftVersionObject != null) {
+			leftViewer.setSelection(new StructuredSelection(leftVersionObject), true);
+		}
+
+		EObject rightVersionObject = conflict.getRightVersionObject();
+		if (rightVersionObject != null) {
+			rightViewer.setSelection(new StructuredSelection(rightVersionObject), true);
+		}
+	}
+
 	protected XMIResource createMergedResource() {
 		// TODO: make this an actual merged resource
 		return pmResource.getLeftResource();
 	}
 
-	private TreeViewer createViewer(Tree tree, Resource resource) {
+	protected TreeViewer createViewer(Tree tree, Resource resource) {
 		TreeViewer viewer = new TreeViewer(tree);
 
 		viewer.setUseHashlookup(true);

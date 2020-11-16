@@ -86,7 +86,7 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 
 				// TODO: include here a more fine-grained analysis that can
 				//       detect concrete changes (e.g. AttributeRedefinitions)
-				addConflict(new ObjectRedefinition(id));
+				addConflict(new ObjectRedefinition(id, this));
 				cs.removeLeft(id);
 				cs.removeRight(id);
 			}
@@ -106,7 +106,7 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 					rightObj = (EObject) rightParent.eGet(ref);
 
 					if (rightObj != null) {
-						ReferenceRedefinition redef = new ReferenceRedefinition(rightParentId, ref);
+						ReferenceRedefinition redef = new ReferenceRedefinition(rightParentId, this, ref);
 						addConflict(redef);
 						cs.removeLeft(id);
 						cs.removeRight(getRightId(rightObj));
@@ -124,10 +124,10 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 		// Any element remaining on the conflict section has not been identified
 		//   as part of a conflict. Indicate them as "free" elements to keep or remove
 		for (String id : new ArrayList<>(cs.getLeftIds())) {
-			addConflict(new UnconflictedObject(id, true));
+			addConflict(new UnconflictedObject(id, this, true));
 		}
 		for (String id : new ArrayList<>(cs.getRightIds())) {
-			addConflict(new UnconflictedObject(id, false));
+			addConflict(new UnconflictedObject(id, this, false));
 		}
 	}
 
@@ -138,7 +138,6 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 	}
 
 	protected void addConflict(Conflict conflict) {
-		conflict.init(this);
 		conflicts.add(conflict);
 	}
 

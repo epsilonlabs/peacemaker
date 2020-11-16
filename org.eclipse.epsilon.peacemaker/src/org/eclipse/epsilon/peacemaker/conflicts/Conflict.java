@@ -1,5 +1,6 @@
 package org.eclipse.epsilon.peacemaker.conflicts;
 
+import org.eclipse.emf.ecore.EObject;
 import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResource;
 
 public abstract class Conflict {
@@ -27,16 +28,12 @@ public abstract class Conflict {
 		}
 	}
 
+	protected PeaceMakerXMIResource pmResource;
 	protected String eObjectId;
 
-	public Conflict(String eObjectId) {
+	public Conflict(String eObjectId, PeaceMakerXMIResource pmResource) {
 		this.eObjectId = eObjectId;
-	}
-
-	/**
-	 * Initialises a conflict with information from the conflicts resource
-	 */
-	public void init(PeaceMakerXMIResource resource) {
+		this.pmResource = pmResource;
 	}
 
 	public boolean supports(ResolveAction action) {
@@ -51,5 +48,19 @@ public abstract class Conflict {
 			throw new UnsupportedOperationException(
 					"Unsupported resolve action for this conflict: " + action);
 		}
+	}
+
+	/**
+	 * Returns the object from the left version that intervenes in the conflict
+	 */
+	public EObject getLeftVersionObject() {
+		return pmResource.getLeftEObject(eObjectId);
+	}
+
+	/**
+	 * Returns the object from the right version that intervenes in the conflict
+	 */
+	public EObject getRightVersionObject() {
+		return pmResource.getRightEObject(eObjectId);
 	}
 }
