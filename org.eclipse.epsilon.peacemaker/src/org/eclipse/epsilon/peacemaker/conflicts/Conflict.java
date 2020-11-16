@@ -1,5 +1,7 @@
 package org.eclipse.epsilon.peacemaker.conflicts;
 
+import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResource;
+
 public abstract class Conflict {
 
 	public enum ResolveAction {
@@ -27,16 +29,14 @@ public abstract class Conflict {
 
 	protected String eObjectId;
 
-	public String getEObjectId() {
-		return eObjectId;
-	}
-
-	public void setEObjectId(String eObjectId) {
-		this.eObjectId = eObjectId;
-	}
-
 	public Conflict(String eObjectId) {
 		this.eObjectId = eObjectId;
+	}
+
+	/**
+	 * Initialises a conflict with information from the conflicts resource
+	 */
+	public void init(PeaceMakerXMIResource resource) {
 	}
 
 	public boolean supports(ResolveAction action) {

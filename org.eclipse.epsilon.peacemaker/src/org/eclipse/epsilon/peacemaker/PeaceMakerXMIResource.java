@@ -137,33 +137,9 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 				!((EReference) feature).isMany();
 	}
 
-	protected void addConflict(ObjectRedefinition objRedef) {
-		conflicts.add(objRedef);
-
-		objRedef.setLeftObject(getLeftEObject(objRedef.getEObjectId()));
-		objRedef.setRightObject(getRightEObject(objRedef.getEObjectId()));
-	}
-
-	protected void addConflict(ReferenceRedefinition redef) {
-		conflicts.add(redef);
-
-		redef.setLeftValue((EObject) getLeftEObject(redef.getEObjectId())
-				.eGet(redef.getReference()));
-		redef.setRightValue((EObject) getRightEObject(redef.getEObjectId())
-				.eGet(redef.getReference()));
-	}
-
-	protected void addConflict(UnconflictedObject unconflictedObj) {
-		conflicts.add(unconflictedObj);
-
-		if (unconflictedObj.inLeftSegment()) {
-			unconflictedObj.setObjectResource(leftResource);
-			unconflictedObj.setOtherResource(rightResource);
-		}
-		else {
-			unconflictedObj.setObjectResource(rightResource);
-			unconflictedObj.setOtherResource(leftResource);
-		}
+	protected void addConflict(Conflict conflict) {
+		conflict.init(this);
+		conflicts.add(conflict);
 	}
 
 	public XMIResource getLeftResource() {

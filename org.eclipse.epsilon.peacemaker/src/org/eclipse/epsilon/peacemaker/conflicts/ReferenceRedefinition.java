@@ -3,6 +3,7 @@ package org.eclipse.epsilon.peacemaker.conflicts;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EReference;
 import org.eclipse.emf.ecore.util.EcoreUtil;
+import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResource;
 import org.eclipse.epsilon.peacemaker.util.CopyUtils;
 import org.eclipse.epsilon.peacemaker.util.PrettyPrint;
 
@@ -27,8 +28,12 @@ public class ReferenceRedefinition extends Conflict {
 		this.reference = reference;
 	}
 
-	public EReference getReference() {
-		return reference;
+	@Override
+	public void init(PeaceMakerXMIResource pmResource) {
+		leftValue = (EObject) pmResource.getLeftEObject(eObjectId)
+				.eGet(reference);
+		rightValue = (EObject) pmResource.getRightEObject(eObjectId)
+				.eGet(reference);
 	}
 
 	public String toString() {
@@ -41,22 +46,6 @@ public class ReferenceRedefinition extends Conflict {
 		s.append("Right(id): ").append(PrettyPrint.featuresMap(rightValue));
 
 		return s.toString();
-	}
-
-	public EObject getLeftValue() {
-		return leftValue;
-	}
-
-	public void setLeftValue(EObject leftValue) {
-		this.leftValue = leftValue;
-	}
-
-	public EObject getRightValue() {
-		return rightValue;
-	}
-
-	public void setRightValue(EObject rightValue) {
-		this.rightValue = rightValue;
 	}
 
 	public boolean supports(ResolveAction action) {

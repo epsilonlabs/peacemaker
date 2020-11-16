@@ -6,6 +6,7 @@ import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EReference;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.emf.ecore.xmi.XMIResource;
+import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResource;
 import org.eclipse.epsilon.peacemaker.util.CopyUtils;
 
 public class UnconflictedObject extends Conflict {
@@ -20,6 +21,18 @@ public class UnconflictedObject extends Conflict {
 	public UnconflictedObject(String eObjectId, boolean inLeftSegment) {
 		super(eObjectId);
 		this.inLeftSegment = inLeftSegment;
+	}
+
+	@Override
+	public void init(PeaceMakerXMIResource pmResource) {
+		if (inLeftSegment) {
+			objectResource = pmResource.getLeftResource();
+			otherResource = pmResource.getRightResource();
+		}
+		else {
+			objectResource = pmResource.getRightResource();
+			otherResource = pmResource.getLeftResource();
+		}
 	}
 
 	public String toString() {
@@ -88,17 +101,5 @@ public class UnconflictedObject extends Conflict {
 		default:
 			super.resolve(action);
 		}
-	}
-
-	public void setObjectResource(XMIResource objectResource) {
-		this.objectResource = objectResource;
-	}
-
-	public void setOtherResource(XMIResource otherResource) {
-		this.otherResource = otherResource;
-	}
-
-	public boolean inLeftSegment() {
-		return inLeftSegment;
 	}
 }

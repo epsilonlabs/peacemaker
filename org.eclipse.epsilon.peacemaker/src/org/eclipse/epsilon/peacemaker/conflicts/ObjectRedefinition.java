@@ -5,6 +5,7 @@ import java.util.List;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EReference;
 import org.eclipse.emf.ecore.util.EcoreUtil;
+import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResource;
 import org.eclipse.epsilon.peacemaker.util.CopyUtils;
 import org.eclipse.epsilon.peacemaker.util.PrettyPrint;
 
@@ -29,6 +30,12 @@ public class ObjectRedefinition extends Conflict {
 		super(objectId);
 	}
 
+	@Override
+	public void init(PeaceMakerXMIResource pmResource) {
+		leftObject = pmResource.getLeftEObject(eObjectId);
+		rightObject = pmResource.getRightEObject(eObjectId);
+	}
+
 	public String toString() {
 		StringBuilder s = new StringBuilder();
 
@@ -38,22 +45,6 @@ public class ObjectRedefinition extends Conflict {
 		s.append("Right: ").append(PrettyPrint.featuresMap(rightObject));
 
 		return s.toString();
-	}
-
-	public EObject getLeftObject() {
-		return leftObject;
-	}
-
-	public void setLeftObject(EObject leftObject) {
-		this.leftObject = leftObject;
-	}
-
-	public EObject getRightObject() {
-		return rightObject;
-	}
-
-	public void setRightObject(EObject rightObject) {
-		this.rightObject = rightObject;
 	}
 
 	public boolean supports(ResolveAction action) {
