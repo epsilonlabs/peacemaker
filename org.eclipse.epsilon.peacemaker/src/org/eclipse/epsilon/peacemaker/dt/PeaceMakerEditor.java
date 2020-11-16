@@ -9,7 +9,6 @@ import java.util.Map;
 
 import org.eclipse.emf.common.command.AbstractCommand;
 import org.eclipse.emf.common.command.Command;
-import org.eclipse.emf.common.command.CommandStack;
 import org.eclipse.emf.common.command.CommandStackListener;
 import org.eclipse.emf.common.notify.Notifier;
 import org.eclipse.emf.common.util.URI;
@@ -445,11 +444,17 @@ public class PeaceMakerEditor extends EcoreEditor {
 					public void run() {
 						firePropertyChange(IEditorPart.PROP_DIRTY);
 
-						// Try to select the affected objects.
-						//
-						Command mostRecentCommand = ((CommandStack) event.getSource()).getMostRecentCommand();
+						// update selections based on conflict resolutions
+						ConflictResolveCommand mostRecentCommand = (ConflictResolveCommand) getCommandStack().getMostRecentCommand();
 						if (mostRecentCommand != null) {
-							setSelectionToViewer(mostRecentCommand.getAffectedObjects());
+							final Conflict conflict = mostRecentCommand.getConflict();
+							Runnable runnable = new Runnable() {
+
+								public void run() {
+									updateTreeViewerSelections(conflict);
+								}
+							};
+							getSite().getShell().getDisplay().asyncExec(runnable);
 						}
 						for (Iterator<PropertySheetPage> i = propertySheetPages.iterator(); i.hasNext();) {
 							PropertySheetPage propertySheetPage = i.next();
