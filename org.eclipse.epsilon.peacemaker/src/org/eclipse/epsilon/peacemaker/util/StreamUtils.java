@@ -18,7 +18,7 @@ public class StreamUtils {
 		String leftFile = new String(Files.readAllBytes(Paths.get(folder + "/left.model")));
 		String rightFile = new String(Files.readAllBytes(Paths.get(folder + "/right.model")));
 
-		merge(leftFile, rightFile, System.out);
+		merge(leftFile, rightFile, System.out, "HEAD", "branch1");
 	}
 
 	public static String stream2string(InputStream inputStream) throws IOException {
@@ -31,10 +31,14 @@ public class StreamUtils {
 		return result.toString("UTF-8");
 	}
 
-	public static void merge(String left, String right, OutputStream outputStream) {
+	public static void merge(String left, String right, OutputStream outputStream,
+			String leftVersionName, String rightVersionName) {
 
 		String[] leftLines = left.split("\\R");
 		String[] rightLines = right.split("\\R");
+
+		String leftSeparator = "<<<<<<<" + PrettyPrint.prefix(leftVersionName, " ");
+		String rightSeparator = ">>>>>>>" + PrettyPrint.prefix(rightVersionName, " ");
 
 		PrintWriter writer = new PrintWriter(outputStream);
 
@@ -48,7 +52,7 @@ public class StreamUtils {
 			}
 			else {
 				String nextCommonLine = findNextCommonline(leftLines, leftIndex, rightLines, rightIndex);
-				writer.println("<<<<<<<");
+				writer.println(leftSeparator);
 				while (!leftLines[leftIndex].equals(nextCommonLine)) {
 					writer.println(leftLines[leftIndex]);
 					leftIndex++;
@@ -58,7 +62,7 @@ public class StreamUtils {
 					writer.println(rightLines[rightIndex]);
 					rightIndex++;
 				}
-				writer.println(">>>>>>>");
+				writer.println(rightSeparator);
 			}
 		}
 		// one of the sides has ended, only one of the following loops may be entered

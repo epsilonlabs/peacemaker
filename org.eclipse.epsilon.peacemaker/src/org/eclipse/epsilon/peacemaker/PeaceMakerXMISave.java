@@ -27,6 +27,8 @@ public class PeaceMakerXMISave extends XMISaveImpl {
 		ByteArrayOutputStream rightStream = new ByteArrayOutputStream();
 		pmResource.getRightResource().save(rightStream, options);
 
-		StreamUtils.merge(leftStream.toString(), rightStream.toString(), outputStream);
+		StreamUtils.merge(leftStream.toString(), rightStream.toString(), outputStream,
+				pmResource.getLeftResource().getVersionName(),
+				pmResource.getRightResource().getVersionName());
 	}
 }

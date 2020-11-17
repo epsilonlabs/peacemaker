@@ -94,8 +94,8 @@ public class PeaceMakerXMILoad extends XMILoadImpl {
 		}
 
 		PeaceMakerXMIResource pmResource = (PeaceMakerXMIResource) resource;
-		pmResource.loadLeft(preprocessor.getLeftVersionHelper());
-		pmResource.loadRight(preprocessor.getRightVersionHelper());
+		pmResource.loadLeft(preprocessor.getLeftVersionHelper(), preprocessor.getLeftVersionName());
+		pmResource.loadRight(preprocessor.getRightVersionHelper(), preprocessor.getRightVersionName());
 
 		pmResource.identifyConflicts(preprocessor.getConflictSections());
 

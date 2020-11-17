@@ -31,6 +31,7 @@ import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResource;
 import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResourceFactory;
 import org.eclipse.epsilon.peacemaker.conflicts.Conflict;
 import org.eclipse.epsilon.peacemaker.conflicts.Conflict.ResolveAction;
+import org.eclipse.epsilon.peacemaker.util.PrettyPrint;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.layout.GridDataFactory;
@@ -231,7 +232,8 @@ public class PeaceMakerEditor extends EcoreEditor {
 			leftVersion.setLayout(new GridLayout(1, false));
 
 			Label leftLabel = new Label(leftVersion, SWT.NONE);
-			leftLabel.setText("Left version");
+			leftLabel.setText("Left version" +
+					PrettyPrint.format(pmResource.getLeftResource().getVersionName(), " (", ")"));
 
 			Tree leftTree = new Tree(leftVersion, SWT.MULTI);
 			GridDataFactory.fillDefaults().grab(true, true).minSize(1, 1).applyTo(leftTree);
@@ -245,7 +247,8 @@ public class PeaceMakerEditor extends EcoreEditor {
 			rightVersion.setLayout(new GridLayout(1, false));
 
 			Label rightLabel = new Label(rightVersion, SWT.NONE);
-			rightLabel.setText("Right version");
+			rightLabel.setText("Right version" +
+					PrettyPrint.format(pmResource.getRightResource().getVersionName(), " (", ")"));
 
 			Tree rightTree = new Tree(rightVersion, SWT.MULTI);
 			GridDataFactory.fillDefaults().grab(true, true).minSize(1, 1).applyTo(rightTree);

@@ -30,4 +30,18 @@ public class PrettyPrint {
 		s.append("}");
 		return s.toString();
 	}
+
+	/**
+	 * Adds the prefix to non-empty strings
+	 */
+	public static String prefix(String text, String prefix) {
+		return format(text, prefix, "");
+	}
+
+	/**
+	 * Adds prefix and suffix to non-empty strings
+	 */
+	public static String format(String text, String prefix, String suffix) {
+		return "".equals(text) ? "" : prefix + text + suffix;
+	}
 }

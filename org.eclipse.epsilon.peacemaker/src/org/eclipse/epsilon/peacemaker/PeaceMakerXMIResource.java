@@ -9,7 +9,6 @@ import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EReference;
 import org.eclipse.emf.ecore.EStructuralFeature;
-import org.eclipse.emf.ecore.xmi.XMIResource;
 import org.eclipse.emf.ecore.xmi.XMLLoad;
 import org.eclipse.emf.ecore.xmi.XMLSave;
 import org.eclipse.emf.ecore.xmi.impl.XMIResourceImpl;
@@ -42,12 +41,14 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 		return new PeaceMakerXMISave(createXMLHelper());
 	}
 
-	public void loadLeft(ConflictVersionHelper versionHelper) throws IOException {
+	public void loadLeft(ConflictVersionHelper versionHelper, String versionName) throws IOException {
 		leftResource = loadVersionResource("leftVersion", versionHelper);
+		leftResource.setVersionName(versionName);
 	}
 
-	public void loadRight(ConflictVersionHelper versionHelper) throws IOException {
+	public void loadRight(ConflictVersionHelper versionHelper, String versionName) throws IOException {
 		rightResource = loadVersionResource("rightVersion", versionHelper);
+		rightResource.setVersionName(versionName);
 	}
 
 	protected ConflictVersionResource loadVersionResource(String extension,
@@ -141,11 +142,11 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 		conflicts.add(conflict);
 	}
 
-	public XMIResource getLeftResource() {
+	public ConflictVersionResource getLeftResource() {
 		return leftResource;
 	}
 
-	public XMIResource getRightResource() {
+	public ConflictVersionResource getRightResource() {
 		return rightResource;
 	}
 

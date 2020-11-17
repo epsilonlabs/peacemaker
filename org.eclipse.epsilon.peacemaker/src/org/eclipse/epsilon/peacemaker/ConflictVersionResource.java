@@ -8,6 +8,7 @@ import org.eclipse.epsilon.peacemaker.ConflictsPreprocessor.ConflictVersionHelpe
 public class ConflictVersionResource extends XMIResourceImpl {
 
 	protected ConflictVersionHelper versionHelper;
+	private String versionName;
 
 	public ConflictVersionResource() {
 		super();
@@ -33,5 +34,13 @@ public class ConflictVersionResource extends XMIResourceImpl {
 
 	public ConflictVersionHelper getVersionHelper() {
 		return versionHelper;
+	}
+
+	public String getVersionName() {
+		return versionName;
+	}
+
+	public void setVersionName(String versionName) {
+		this.versionName = versionName;
 	}
 }

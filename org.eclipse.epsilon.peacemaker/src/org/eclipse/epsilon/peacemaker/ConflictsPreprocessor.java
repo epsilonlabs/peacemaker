@@ -10,6 +10,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.eclipse.epsilon.peacemaker.conflicts.ConflictSection;
@@ -17,9 +19,13 @@ import org.eclipse.epsilon.peacemaker.util.StreamUtils;
 
 public class ConflictsPreprocessor {
 
-	public static final String LEFT_REGEX = "<<<<<<<\\s*(.*)";
+	public static final String LEFT_REGEX = "<<<<<<<\\s?(.*)";
 	public static final String SEPARATOR_REGEX = "=======";
-	public static final String RIGHT_REGEX = ">>>>>>>\\s*+(.*)";
+	public static final String RIGHT_REGEX = ">>>>>>>\\s?(.*)";
+
+	// names of the conflicting versions
+	protected String leftVersionName;
+	protected String rightVersionName;
 
 	enum LineType {
 		SEPARATOR, LEFT, RIGHT, COMMON
@@ -61,6 +67,10 @@ public class ConflictsPreprocessor {
 				currentSegment = FileSegment.LEFT_CONFLICT;
 
 				currentSection = new ConflictSection();
+
+				if (leftVersionName == null) {
+					leftVersionName = getVersionName(line, LEFT_REGEX);
+				}
 			}
 			else if (line.matches(SEPARATOR_REGEX)) {
 				lineTypes[index] = LineType.SEPARATOR;
@@ -71,6 +81,10 @@ public class ConflictsPreprocessor {
 				currentSegment = FileSegment.COMMON;
 
 				currentSection = null;
+
+				if (rightVersionName == null) {
+					rightVersionName = getVersionName(line, RIGHT_REGEX);
+				}
 			}
 			else {
 				switch (currentSegment) {
@@ -91,6 +105,13 @@ public class ConflictsPreprocessor {
 				}
 			}
 		}
+	}
+
+	protected String getVersionName(String line, String regex) {
+		// we already know the line matches the regex
+		Matcher matcher = Pattern.compile(regex).matcher(line);
+		matcher.matches();
+		return matcher.group(1);
 	}
 
 	public String getOriginalContents() {
@@ -151,5 +172,13 @@ public class ConflictsPreprocessor {
 
 	public ConflictVersionHelper getRightVersionHelper() {
 		return new ConflictVersionHelper(LineType.RIGHT, rightOriginalLinesIndex);
+	}
+
+	public String getLeftVersionName() {
+		return leftVersionName;
+	}
+
+	public String getRightVersionName() {
+		return rightVersionName;
 	}
 }
