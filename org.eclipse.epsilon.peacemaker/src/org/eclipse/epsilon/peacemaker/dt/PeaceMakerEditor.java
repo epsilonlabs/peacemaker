@@ -42,6 +42,8 @@ import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
+import org.eclipse.swt.custom.StyleRange;
+import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -56,6 +58,7 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.views.properties.PropertySheetPage;
@@ -279,9 +282,17 @@ public class PeaceMakerEditor extends EcoreEditor {
 				GridLayout conflictLayout = new GridLayout(1, false);
 				conflictControl.setLayout(conflictLayout);
 
-				Link text = new Link(conflictControl, SWT.WRAP);
-				GridDataFactory.fillDefaults().grab(true, true).minSize(1, 1).applyTo(text);
-				text.setText(conflict.toString());
+				StyledText title = new StyledText(conflictControl, SWT.NONE);
+				title.setText(conflict.getTitle());
+				StyleRange style = new StyleRange();
+				style.start = 0;
+				style.length = title.getText().length();
+				style.fontStyle = SWT.BOLD;
+				title.setStyleRange(style);
+
+				Text description = new Text(conflictControl, SWT.WRAP);
+				GridDataFactory.fillDefaults().grab(true, true).minSize(1, 1).applyTo(description);
+				description.setText(conflict.getDescription());
 
 				Link showInTreeViewers = new Link(conflictControl, SWT.WRAP);
 				GridDataFactory.fillDefaults().grab(true, false).minSize(1, 1).applyTo(showInTreeViewers);

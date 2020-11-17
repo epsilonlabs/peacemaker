@@ -33,8 +33,7 @@ public class ObjectRedefinition extends Conflict {
 	public String toString() {
 		StringBuilder s = new StringBuilder();
 
-		s.append("An object with the same id has been redefined in left and right\n");
-		s.append("Id: ").append(eObjectId).append("\n");
+		s.append(getTitle()).append("\n").append(getDescription()).append("\n");
 		s.append("Left: ").append(PrettyPrint.featuresMap(leftObject)).append("\n");
 		s.append("Right: ").append(PrettyPrint.featuresMap(rightObject));
 
@@ -96,5 +95,17 @@ public class ObjectRedefinition extends Conflict {
 			CopyUtils.safeIndexAdd(contents, index, copy);
 		}
 		CopyUtils.copyIds(fromObject, copy);
+	}
+
+	@Override
+	public String getTitle() {
+		return "Object Redefinition";
+	}
+
+	@Override
+	public String getDescription() {
+		return String.format(
+				"A %s object with the same id (%s) has been redefined in the left and right versions",
+				leftObject.eClass().getName(), eObjectId);
 	}
 }

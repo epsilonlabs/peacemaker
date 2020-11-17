@@ -34,14 +34,7 @@ public class UnconflictedObject extends Conflict {
 	}
 
 	public String toString() {
-		StringBuilder s = new StringBuilder();
-
-		s.append("Unconflicted object found in the ")
-				.append(inLeftSegment ? "left" : "right")
-				.append(" segment of a conflict section\n")
-				.append("Id: ").append(eObjectId);
-
-		return s.toString();
+		return getDescription();
 	}
 
 	@Override
@@ -99,5 +92,20 @@ public class UnconflictedObject extends Conflict {
 		default:
 			super.resolve(action);
 		}
+	}
+
+	@Override
+	public String getTitle() {
+		return "Unconflicted object";
+	}
+
+	@Override
+	public String getDescription() {
+
+		return String.format(
+				"Unconflicted %s object with id %s found in the %s segment of a conflict section",
+				objectResource.getEObject(eObjectId).eClass().getName(),
+				eObjectId,
+				inLeftSegment ? "left" : "right");
 	}
 }

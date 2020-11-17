@@ -63,4 +63,12 @@ public abstract class Conflict {
 	public EObject getRightVersionObject() {
 		return pmResource.getRightEObject(eObjectId);
 	}
+
+	public String getTitle() {
+		return "Conflict";
+	}
+
+	public String getDescription() {
+		return "A conflict has been detected around an object with id " + eObjectId;
+	}
 }

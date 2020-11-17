@@ -1,5 +1,6 @@
 package org.eclipse.epsilon.peacemaker.conflicts;
 
+import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EReference;
 import org.eclipse.emf.ecore.util.EcoreUtil;
@@ -38,11 +39,9 @@ public class ReferenceRedefinition extends Conflict {
 	public String toString() {
 		StringBuilder s = new StringBuilder();
 		
-		s.append("A single, containment reference redefinition was found\n");
-		s.append("Parent: ").append(eObjectId).append("\n");
-		s.append("Reference name: ").append(reference.getName()).append("\n");
-		s.append("Left(id): ").append(PrettyPrint.featuresMap(leftValue)).append("\n");
-		s.append("Right(id): ").append(PrettyPrint.featuresMap(rightValue));
+		s.append(getTitle()).append("\n").append(getDescription()).append("\n");
+		s.append("Left: ").append(PrettyPrint.featuresMap(leftValue)).append("\n");
+		s.append("Right: ").append(PrettyPrint.featuresMap(rightValue));
 
 		return s.toString();
 	}
@@ -87,5 +86,19 @@ public class ReferenceRedefinition extends Conflict {
 	public EObject getRightVersionObject() {
 		// objectId is the parent in this case, get the reference value from it
 		return (EObject) pmResource.getRightEObject(eObjectId).eGet(reference);
+	}
+
+	@Override
+	public String getTitle() {
+		return "Reference Redefinition";
+	}
+
+	@Override
+	public String getDescription() {
+		String referenceEClass = ((EClass)reference.eContainer()).getName();
+		return String.format(
+				"The single-bounded and containment reference \"%s\" from type %s" +
+				" was redefined on the left and right versions of a %s object with id %s",
+				reference.getName(), referenceEClass, referenceEClass, eObjectId);
 	}
 }
