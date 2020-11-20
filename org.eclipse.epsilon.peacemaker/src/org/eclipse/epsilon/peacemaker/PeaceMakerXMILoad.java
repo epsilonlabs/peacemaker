@@ -16,7 +16,6 @@ import org.eclipse.emf.ecore.xmi.XMLResource;
 import org.eclipse.emf.ecore.xmi.impl.XMILoadImpl;
 import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
 import org.eclipse.epsilon.peacemaker.conflicts.Conflict;
-import org.eclipse.epsilon.peacemaker.conflicts.ConflictSection;
 import org.eclipse.epsilon.peacemaker.util.StreamUtils;
 
 public class PeaceMakerXMILoad extends XMILoadImpl {
@@ -113,14 +112,6 @@ public class PeaceMakerXMILoad extends XMILoadImpl {
 		pmResource.identifyConflicts(preprocessor.getConflictSections());
 
 		if (debug) {
-			for (ConflictSection cs : pmResource.getConflictSections()) {
-				if (!cs.isEmpty()) {
-					System.out.println("@@@@@@@@@@ Conflict Section @@@@@@@@@@@@@");
-					System.out.println(cs);
-					System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-				}
-			}
-
 			for (Conflict c : pmResource.getConflicts()) {
 				System.out.println(">>>>>>>> CONFLICT <<<<<<<<<<<<<");
 				System.out.println(c);
