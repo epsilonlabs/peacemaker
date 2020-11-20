@@ -26,7 +26,7 @@ import org.eclipse.epsilon.peacemaker.util.FormatModels;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class ConflictResolveTests {
+public class PeaceMakerTests {
 
 	private static String CONFLICTS_LOCATION = "modelconflicts/%s.model";
 
