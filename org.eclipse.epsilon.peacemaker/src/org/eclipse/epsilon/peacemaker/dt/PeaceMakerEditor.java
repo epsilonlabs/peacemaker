@@ -523,6 +523,7 @@ public class PeaceMakerEditor extends EcoreEditor {
 	protected void initReadOnlyResources() {
 		editingDomain.getResourceToReadOnlyMap().clear();
 		editingDomain.getResourceToReadOnlyMap().put(pmResource.getLeftResource(), true);
+		editingDomain.getResourceToReadOnlyMap().put(pmResource.getBaseResource(), true);
 		editingDomain.getResourceToReadOnlyMap().put(pmResource.getRightResource(), true);
 		editingDomain.getResourceToReadOnlyMap().put(mergedResource, true);
 	}

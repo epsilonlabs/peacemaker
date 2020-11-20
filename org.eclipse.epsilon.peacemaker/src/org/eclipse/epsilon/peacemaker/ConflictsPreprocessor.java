@@ -82,6 +82,10 @@ public class ConflictsPreprocessor {
 				hasBaseVersion = true;
 				lineTypes[index] = LineType.SEPARATOR;
 				currentSegment = FileSegment.BASE_CONFLICT;
+
+				if (baseVersionName == null) {
+					baseVersionName = getVersionName(line, BASE_REGEX);
+				}
 			}
 			else if (line.matches(SEPARATOR_REGEX)) {
 				lineTypes[index] = LineType.SEPARATOR;

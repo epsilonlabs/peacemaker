@@ -41,7 +41,7 @@ public class UpdateDelete extends Conflict {
 		s.append("Updated version: ")
 				.append(PrettyPrint.featuresMap(resourceWithUpdate.getEObject(eObjectId))).append("\n");
 		s.append("Base version: ")
-				.append(PrettyPrint.featuresMap(pmResource.getBaseResource().getEObject(eObjectId))).append("\n");
+				.append(PrettyPrint.featuresMap(pmResource.getBaseResource().getEObject(eObjectId)));
 
 		return s.toString();
 	}
