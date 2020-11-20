@@ -7,20 +7,29 @@ public class ConflictSection {
 
 	protected List<String> leftObjects = new ArrayList<>();
 	protected List<String> rightObjects = new ArrayList<>();
+	protected List<String> baseObjects = new ArrayList<>();
 
 	public void addLeft(String objId) {
 		leftObjects.add(objId);
+	}
+
+	public void addBase(String objId) {
+		baseObjects.add(objId);
 	}
 
 	public void addRight(String objId) {
 		rightObjects.add(objId);
 	}
 
-	public boolean containsLeft(String objId) {
+	public boolean leftContains(String objId) {
 		return leftObjects.contains(objId);
 	}
 
-	public boolean containsRight(String objId) {
+	public boolean baseContains(String objId) {
+		return baseObjects.contains(objId);
+	}
+
+	public boolean rightContains(String objId) {
 		return rightObjects.contains(objId);
 	}
 

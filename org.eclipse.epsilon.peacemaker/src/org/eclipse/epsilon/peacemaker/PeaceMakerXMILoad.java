@@ -50,7 +50,9 @@ public class PeaceMakerXMILoad extends XMILoadImpl {
 				"06-newLines-newInBoth-noConflict",
 				"07-newLines-attributes",
 				"08-newLines-severalAttributes",
-				"10-newLines-contained1boundedRef" };
+				"10-newLines-contained1boundedRef",
+				"11-updateDelete",
+				"12-deleteUpdate" };
 
 		// uncomment for specific cases
 		//		cases = new String[1];
@@ -88,6 +90,13 @@ public class PeaceMakerXMILoad extends XMILoadImpl {
 			System.out.println("<<< left version: \n" +
 					StreamUtils.stream2string(preprocessor.getLeftVersionHelper().getVersionContents()));
 			System.out.println();
+
+			if (preprocessor.hasBaseVersion()) {
+				System.out.println("||| baseversion: \n" +
+						StreamUtils.stream2string(preprocessor.getBaseVersionHelper().getVersionContents()));
+				System.out.println();
+			}
+
 			System.out.println(">>> right version: \n" +
 					StreamUtils.stream2string(preprocessor.getRightVersionHelper().getVersionContents()));
 			System.out.println();
@@ -96,6 +105,10 @@ public class PeaceMakerXMILoad extends XMILoadImpl {
 		PeaceMakerXMIResource pmResource = (PeaceMakerXMIResource) resource;
 		pmResource.loadLeft(preprocessor.getLeftVersionHelper(), preprocessor.getLeftVersionName());
 		pmResource.loadRight(preprocessor.getRightVersionHelper(), preprocessor.getRightVersionName());
+
+		if (preprocessor.hasBaseVersion()) {
+			pmResource.loadBase(preprocessor.getBaseVersionHelper(), preprocessor.getBaseVersionName());
+		}
 
 		pmResource.identifyConflicts(preprocessor.getConflictSections());
 

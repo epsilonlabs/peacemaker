@@ -20,22 +20,27 @@ import org.eclipse.epsilon.peacemaker.util.StreamUtils;
 public class ConflictsPreprocessor {
 
 	public static final String LEFT_REGEX = "<<<<<<<\\s?(.*)";
+	public static final String BASE_REGEX = "\\|\\|\\|\\|\\|\\|\\|\\s?(.*)";
 	public static final String SEPARATOR_REGEX = "=======";
 	public static final String RIGHT_REGEX = ">>>>>>>\\s?(.*)";
 
-	// names of the conflicting versions
-	protected String leftVersionName;
-	protected String rightVersionName;
-
 	enum LineType {
-		SEPARATOR, LEFT, RIGHT, COMMON
+		SEPARATOR, LEFT, BASE, RIGHT, COMMON
 	}
 
 	enum FileSegment {
-		COMMON, LEFT_CONFLICT, RIGHT_CONFLICT
+		COMMON, LEFT_CONFLICT, BASE_CONFLICT, RIGHT_CONFLICT
 	}
 
+
 	protected InputStream inputStream;
+	// if diff3 base (ancestor) style of conflicts has been detected
+	protected boolean hasBaseVersion = false;
+
+	// names of the conflicting versions
+	protected String leftVersionName;
+	protected String baseVersionName;
+	protected String rightVersionName;
 
 	// NOTE: All these line attributes assume 0 is the first line,
 	//   so any parameter coming from the handler locator (which starts at 1)
@@ -45,6 +50,7 @@ public class ConflictsPreprocessor {
 	protected String[] lines;
 	protected LineType[] lineTypes;
 	protected List<Integer> leftOriginalLinesIndex = new ArrayList<>();
+	protected List<Integer> baseOriginalLinesIndex = new ArrayList<>();
 	protected List<Integer> rightOriginalLinesIndex = new ArrayList<>();
 	protected Map<Integer, ConflictSection> line2conflictSection = new LinkedHashMap<>();
 
@@ -72,6 +78,11 @@ public class ConflictsPreprocessor {
 					leftVersionName = getVersionName(line, LEFT_REGEX);
 				}
 			}
+			else if (line.matches(BASE_REGEX)) {
+				hasBaseVersion = true;
+				lineTypes[index] = LineType.SEPARATOR;
+				currentSegment = FileSegment.BASE_CONFLICT;
+			}
 			else if (line.matches(SEPARATOR_REGEX)) {
 				lineTypes[index] = LineType.SEPARATOR;
 				currentSegment = FileSegment.RIGHT_CONFLICT;
@@ -91,11 +102,17 @@ public class ConflictsPreprocessor {
 				case COMMON:
 					lineTypes[index] = LineType.COMMON;
 					leftOriginalLinesIndex.add(index);
+					baseOriginalLinesIndex.add(index);
 					rightOriginalLinesIndex.add(index);
 					break;
 				case LEFT_CONFLICT:
 					lineTypes[index] = LineType.LEFT;
 					leftOriginalLinesIndex.add(index);
+					line2conflictSection.put(index, currentSection);
+					break;
+				case BASE_CONFLICT:
+					lineTypes[index] = LineType.BASE;
+					baseOriginalLinesIndex.add(index);
 					line2conflictSection.put(index, currentSection);
 					break;
 				case RIGHT_CONFLICT:
@@ -128,8 +145,10 @@ public class ConflictsPreprocessor {
 		protected List<Integer> originalLinesIndex; // careful: handler locator lines start in 1
 
 		public ConflictVersionHelper(LineType versionType, List<Integer> originalLineNumber) {
-			if (!(versionType == LineType.LEFT | versionType == LineType.RIGHT)) {
-				throw new IllegalArgumentException("Only left or right versions can be created");
+			if (!(versionType == LineType.LEFT ||
+					versionType == LineType.BASE ||
+					versionType == LineType.RIGHT)) {
+				throw new IllegalArgumentException("Only left, base, or right versions can be created");
 			}
 			this.versionType = versionType;
 			this.originalLinesIndex = originalLineNumber;
@@ -159,6 +178,9 @@ public class ConflictsPreprocessor {
 				if (versionType == LineType.LEFT) {
 					cs.addLeft(objId);
 				}
+				else if (versionType == LineType.BASE) {
+					cs.addBase(objId);
+				}
 				else {
 					cs.addRight(objId);
 				}
@@ -170,6 +192,10 @@ public class ConflictsPreprocessor {
 		return new ConflictVersionHelper(LineType.LEFT, leftOriginalLinesIndex);
 	}
 
+	public ConflictVersionHelper getBaseVersionHelper() {
+		return new ConflictVersionHelper(LineType.BASE, baseOriginalLinesIndex);
+	}
+
 	public ConflictVersionHelper getRightVersionHelper() {
 		return new ConflictVersionHelper(LineType.RIGHT, rightOriginalLinesIndex);
 	}
@@ -178,7 +204,15 @@ public class ConflictsPreprocessor {
 		return leftVersionName;
 	}
 
+	public String getBaseVersionName() {
+		return baseVersionName;
+	}
+
 	public String getRightVersionName() {
 		return rightVersionName;
+	}
+
+	public boolean hasBaseVersion() {
+		return hasBaseVersion;
 	}
 }

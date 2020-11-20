@@ -20,6 +20,7 @@ import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResourceFactory;
 import org.eclipse.epsilon.peacemaker.conflicts.Conflict;
 import org.eclipse.epsilon.peacemaker.conflicts.Conflict.ResolveAction;
 import org.eclipse.epsilon.peacemaker.conflicts.ReferenceRedefinition;
+import org.eclipse.epsilon.peacemaker.conflicts.UpdateDelete;
 import org.eclipse.epsilon.peacemaker.dt.ConflictResolveCommand;
 import org.eclipse.epsilon.peacemaker.util.FormatModels;
 import org.junit.BeforeClass;
@@ -145,6 +146,25 @@ public class ConflictResolveTests {
 		System.out.println("\n");
 
 		assertTrue(Arrays.equals(beforeStream.toByteArray(), afterStream.toByteArray()));
+	}
+
+	@Test
+	public void testUpdateDeleteIdentification() throws IOException {
+		String inputCase = "11-updateDelete";
+		displayCase(inputCase);
+
+		PeaceMakerXMIResource resource = loadConflictResource(String.format(CONFLICTS_LOCATION, inputCase));
+
+		assertTrue(resource.getConflicts().size() == 1);
+		assertTrue(resource.getConflicts().get(0) instanceof UpdateDelete);
+
+		inputCase = "12-deleteUpdate";
+		displayCase(inputCase);
+
+		resource = loadConflictResource(String.format(CONFLICTS_LOCATION, inputCase));
+
+		assertTrue(resource.getConflicts().size() == 1);
+		assertTrue(resource.getConflicts().get(0) instanceof UpdateDelete);
 	}
 
 	public static void displayCase(String inputCase) {

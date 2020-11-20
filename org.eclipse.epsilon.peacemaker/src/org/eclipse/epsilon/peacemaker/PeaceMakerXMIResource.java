@@ -18,10 +18,12 @@ import org.eclipse.epsilon.peacemaker.conflicts.ConflictSection;
 import org.eclipse.epsilon.peacemaker.conflicts.ObjectRedefinition;
 import org.eclipse.epsilon.peacemaker.conflicts.ReferenceRedefinition;
 import org.eclipse.epsilon.peacemaker.conflicts.UnconflictedObject;
+import org.eclipse.epsilon.peacemaker.conflicts.UpdateDelete;
 
 public class PeaceMakerXMIResource extends XMIResourceImpl {
 
 	protected ConflictVersionResource leftResource;
+	protected ConflictVersionResource baseResource;
 	protected ConflictVersionResource rightResource;
 
 	protected List<Conflict> conflicts = new ArrayList<>();
@@ -44,6 +46,11 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 	public void loadLeft(ConflictVersionHelper versionHelper, String versionName) throws IOException {
 		leftResource = loadVersionResource("leftVersion", versionHelper);
 		leftResource.setVersionName(versionName);
+	}
+
+	public void loadBase(ConflictVersionHelper versionHelper, String versionName) throws IOException {
+		baseResource = loadVersionResource("baseVersion", versionHelper);
+		baseResource.setVersionName(versionName);
 	}
 
 	public void loadRight(ConflictVersionHelper versionHelper, String versionName) throws IOException {
@@ -74,22 +81,22 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 		}
 	}
 
-	protected void identifyConflicts(ConflictSection cs) {
-		for (String id : new ArrayList<>(cs.getLeftIds())) {
+	protected void identifyConflicts(ConflictSection conflictSection) {
+		for (String id : new ArrayList<>(conflictSection.getLeftIds())) {
 
 			EObject leftObj = getLeftEObject(id);
-			EObject rightObj = getRightEObject(id);
 			
-			if (rightObj != null) {
-				if (!cs.containsRight(id)) {
-					throw new RuntimeException("Study this case");
-				}
-
+			if (conflictSection.rightContains(id)) {
 				// TODO: include here a more fine-grained analysis that can
 				//       detect concrete changes (e.g. AttributeRedefinitions)
 				addConflict(new ObjectRedefinition(id, this));
-				cs.removeLeft(id);
-				cs.removeRight(id);
+				conflictSection.removeLeft(id);
+				conflictSection.removeRight(id);
+			}
+			else if (conflictSection.baseContains(id)) {
+				// object updated in left version, and deleted in the right one
+				addConflict(new UpdateDelete(id, this, true));
+				conflictSection.removeLeft(id);
 			}
 			else {
 				// check containing ref again
@@ -104,30 +111,37 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 						throw new RuntimeException("complicated reference case, study deeper");
 					}
 
-					rightObj = (EObject) rightParent.eGet(ref);
+					EObject rightObj = (EObject) rightParent.eGet(ref);
 
 					if (rightObj != null) {
 						ReferenceRedefinition redef = new ReferenceRedefinition(rightParentId, this, ref);
 						addConflict(redef);
-						cs.removeLeft(id);
-						cs.removeRight(getRightId(rightObj));
+						conflictSection.removeLeft(id);
+						conflictSection.removeRight(getRightId(rightObj));
 					}
 					else {
 						throw new RuntimeException("changed reference in left, deleted in right?");
 					}
 				}
-				// else: orphan left element in the ConflictSection, also needs some study
-				//       for instance, updates in left, and deletions in right, enter here,
-				//       and the conflicts file does not have enough information to detect those
+			}
+		}
+
+		// UpdateDelete conflicts can appear the other way (update in right version, delete in left)
+		// loop over right ids to detect those cases
+		for (String id : new ArrayList<>(conflictSection.getRightIds())) {
+			if (conflictSection.baseContains(id)) {
+				// object updated in right version, and deleted in the left one
+				addConflict(new UpdateDelete(id, this, false));
+				conflictSection.removeRight(id);
 			}
 		}
 		
 		// Any element remaining on the conflict section has not been identified
 		//   as part of a conflict. Indicate them as "free" elements to keep or remove
-		for (String id : new ArrayList<>(cs.getLeftIds())) {
+		for (String id : new ArrayList<>(conflictSection.getLeftIds())) {
 			addConflict(new UnconflictedObject(id, this, true));
 		}
-		for (String id : new ArrayList<>(cs.getRightIds())) {
+		for (String id : new ArrayList<>(conflictSection.getRightIds())) {
 			addConflict(new UnconflictedObject(id, this, false));
 		}
 	}
@@ -144,6 +158,10 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 
 	public ConflictVersionResource getLeftResource() {
 		return leftResource;
+	}
+
+	public ConflictVersionResource getBaseResource() {
+		return baseResource;
 	}
 
 	public ConflictVersionResource getRightResource() {
