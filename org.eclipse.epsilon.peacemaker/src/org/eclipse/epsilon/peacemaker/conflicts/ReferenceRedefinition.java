@@ -19,6 +19,9 @@ public class ReferenceRedefinition extends Conflict {
 	protected EObject leftValue;
 	protected EObject rightValue;
 
+	protected String leftValueId;
+	protected String rightValueId;
+
 	/**
 	 * Create a reference redefinition conflict
 	 *
@@ -34,6 +37,9 @@ public class ReferenceRedefinition extends Conflict {
 				.eGet(reference);
 		rightValue = (EObject) pmResource.getRightEObject(eObjectId)
 				.eGet(reference);
+
+		leftValueId = pmResource.getLeftId(leftValue);
+		rightValueId = pmResource.getRightId(rightValue);
 	}
 
 	public String toString() {
@@ -86,6 +92,14 @@ public class ReferenceRedefinition extends Conflict {
 	public EObject getRightVersionObject() {
 		// objectId is the parent in this case, get the reference value from it
 		return (EObject) pmResource.getRightEObject(eObjectId).eGet(reference);
+	}
+
+	public String getLeftVersionId() {
+		return leftValueId;
+	}
+
+	public String getRightVersionId() {
+		return rightValueId;
 	}
 
 	@Override

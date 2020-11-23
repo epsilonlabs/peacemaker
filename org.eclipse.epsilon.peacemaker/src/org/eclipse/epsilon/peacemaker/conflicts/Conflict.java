@@ -64,6 +64,14 @@ public abstract class Conflict {
 		return pmResource.getRightEObject(eObjectId);
 	}
 
+	public String getLeftVersionId() {
+		return eObjectId;
+	}
+
+	public String getRightVersionId() {
+		return eObjectId;
+	}
+
 	public String getTitle() {
 		return "Conflict";
 	}

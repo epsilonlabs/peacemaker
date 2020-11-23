@@ -4,6 +4,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.emf.ecore.xmi.XMIResource;
 
 public class CopyUtils {
@@ -33,6 +34,14 @@ public class CopyUtils {
 		}
 		else {
 			list.add(index, obj);
+		}
+	}
+
+	public static void copyContents(XMIResource from, XMIResource to) {
+		for (EObject obj : from.getContents()) {
+			EObject copy = EcoreUtil.copy(obj);
+			to.getContents().add(copy);
+			copyIds(obj, copy);
 		}
 	}
 }
