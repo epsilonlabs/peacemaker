@@ -14,6 +14,15 @@ class Comic {
 	val Contributor[*] contributors;
 	val Prologue prologue;
 	ref Publisher publisher;
+	val Review[*] reviews;
+}
+
+class Review {
+	attr String author;
+	attr String date;
+	attr String title;
+	attr String text;
+	attr int stars;
 }
 
 class Prologue {

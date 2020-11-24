@@ -4,12 +4,10 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -172,21 +170,21 @@ public class ConflictsPreprocessor {
 
 		public void addToConflictSections(int start, int end, String objId) {
 			// there could be several conflict sections in the same element
-			Set<ConflictSection> conflictSections = new HashSet<>();
+			// for the only case this can happen (ObjectRedefinition), we only
+			// need to add the element to the first conflict section
 			for (int line = originalLine(start); line <= originalLine(end); line++) {
 				if (lineTypes[line] == versionType) {
-					conflictSections.add(line2conflictSection.get(line));
-				}
-			}
-			for (ConflictSection cs : conflictSections) {
-				if (versionType == LineType.LEFT) {
-					cs.addLeft(objId);
-				}
-				else if (versionType == LineType.BASE) {
-					cs.addBase(objId);
-				}
-				else {
-					cs.addRight(objId);
+					ConflictSection cs = line2conflictSection.get(line);
+					if (versionType == LineType.LEFT) {
+						cs.addLeft(objId);
+					}
+					else if (versionType == LineType.BASE) {
+						cs.addBase(objId);
+					}
+					else {
+						cs.addRight(objId);
+					}
+					break; // we only need the first one
 				}
 			}
 		}

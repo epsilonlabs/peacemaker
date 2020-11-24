@@ -19,6 +19,7 @@ import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResource;
 import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResourceFactory;
 import org.eclipse.epsilon.peacemaker.conflicts.Conflict;
 import org.eclipse.epsilon.peacemaker.conflicts.Conflict.ResolveAction;
+import org.eclipse.epsilon.peacemaker.conflicts.ObjectRedefinition;
 import org.eclipse.epsilon.peacemaker.conflicts.ReferenceRedefinition;
 import org.eclipse.epsilon.peacemaker.conflicts.UpdateDelete;
 import org.eclipse.epsilon.peacemaker.dt.ConflictResolveCommand;
@@ -165,6 +166,17 @@ public class PeaceMakerTests {
 
 		assertTrue(resource.getConflicts().size() == 1);
 		assertTrue(resource.getConflicts().get(0) instanceof UpdateDelete);
+	}
+
+	@Test
+	public void testSeveralConflictSectionsSameElement() throws IOException {
+		String inputCase = "13-severalConflictSectionsSameObject";
+		displayCase(inputCase);
+
+		PeaceMakerXMIResource resource = loadConflictResource(String.format(CONFLICTS_LOCATION, inputCase));
+
+		assertTrue(resource.getConflicts().size() == 1);
+		assertTrue(resource.getConflicts().get(0) instanceof ObjectRedefinition);
 	}
 
 	public static void displayCase(String inputCase) {

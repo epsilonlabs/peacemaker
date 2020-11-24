@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="ASCII"?>
+<comicshop:Shop
+    xmi:version="2.0"
+    xmlns:xmi="http://www.omg.org/XMI"
+    xmlns:comicshop="comicshop"
+    xmi:id="_rqtZkBUPEeut3qj6TjgmMQ"
+    name="Travelling Man">
+  <comics
+      xmi:id="_tq4hkBUPEeut3qj6TjgmMQ"
+      title="A Basketful of Heads"/>
+  <comics
+      xmi:id="_WsmOoBUUEeut3qj6TjgmMQ"
+      title="Bad Weekend">
+  <reviews
+      xmi:id="review1"
+      author="Alfonso"
+<<<<<<< left.model
+      date="20201124"
+=======
+      date="20201105"
+>>>>>>> right.model
+      title="I though this was going to be worse"
+<<<<<<< left.model
+      text="You don't know the truth till the end"
+      stars="4"/>
+=======
+      text="Really good"
+      stars="5"/>
+>>>>>>> right.model
+  </comics>
+  <comics
+      xmi:id="_RFBCcBUREeut3qj6TjgmMQ"
+      title="Cruel Summer"/>
+</comicshop:Shop>
