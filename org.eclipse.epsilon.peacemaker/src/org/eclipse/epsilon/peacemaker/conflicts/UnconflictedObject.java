@@ -95,6 +95,18 @@ public class UnconflictedObject extends Conflict {
 	}
 
 	@Override
+	protected ConflictObjectStatus getStatus(ResolveAction action) {
+		switch (action) {
+		case KEEP:
+			return ConflictObjectStatus.ACCEPTED;
+		case REMOVE:
+			return ConflictObjectStatus.DISCARDED;
+		default:
+			return super.getStatus(action);
+		}
+	}
+
+	@Override
 	public String getTitle() {
 		return "Unconflicted object";
 	}

@@ -14,7 +14,6 @@ import org.eclipse.emf.common.notify.Notifier;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.presentation.EcoreEditor;
-import org.eclipse.emf.ecore.presentation.EcoreEditorPlugin;
 import org.eclipse.emf.ecore.provider.EcoreItemProviderAdapterFactory;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.xmi.XMIResource;
@@ -24,14 +23,15 @@ import org.eclipse.emf.edit.provider.ReflectiveItemProviderAdapterFactory;
 import org.eclipse.emf.edit.provider.resource.ResourceItemProviderAdapterFactory;
 import org.eclipse.emf.edit.ui.provider.AdapterFactoryContentProvider;
 import org.eclipse.emf.edit.ui.provider.AdapterFactoryLabelProvider;
-import org.eclipse.emf.edit.ui.provider.DecoratingColumLabelProvider;
 import org.eclipse.emf.edit.ui.provider.DiagnosticDecorator;
 import org.eclipse.emf.edit.ui.provider.UnwrappingSelectionProvider;
 import org.eclipse.epsilon.peacemaker.ConflictVersionResource;
 import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResource;
 import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResourceFactory;
 import org.eclipse.epsilon.peacemaker.conflicts.Conflict;
+import org.eclipse.epsilon.peacemaker.conflicts.Conflict.ConflictObjectStatus;
 import org.eclipse.epsilon.peacemaker.conflicts.Conflict.ResolveAction;
+import org.eclipse.epsilon.peacemaker.conflicts.ReferenceRedefinition;
 import org.eclipse.epsilon.peacemaker.util.CopyUtils;
 import org.eclipse.epsilon.peacemaker.util.PrettyPrint;
 import org.eclipse.jface.action.MenuManager;
@@ -138,7 +138,6 @@ public class PeaceMakerEditor extends EcoreEditor {
 							// select the previous radio button
 							action2button.get(mostRecentCommand.getAction()).setSelection(false);
 							action2button.get(mostRecentCommand.getPreviousAction()).setSelection(true);
-
 						}
 						// else if the comand has been redone
 						else if (!action2button.get(mostRecentCommand.getAction()).getSelection()) {
@@ -180,6 +179,9 @@ public class PeaceMakerEditor extends EcoreEditor {
 	protected Map<Group, ResolveActionGroup> resolveGroups = new HashMap<>();
 	protected List<Notifier> notifiers;
 
+	protected Map<String, ConflictObjectStatus> leftObjectStatus = new HashMap<>();
+	protected Map<String, ConflictObjectStatus> rightObjectStatus = new HashMap<>();
+
 	protected ISelectionChangedListener viewerChangedListener = new ISelectionChangedListener() {
 		public void selectionChanged(SelectionChangedEvent selectionChangedEvent) {
 			setCurrentViewer((TreeViewer) selectionChangedEvent.getSelectionProvider());
@@ -213,6 +215,8 @@ public class PeaceMakerEditor extends EcoreEditor {
 			mergedResource = createMergedResource();
 			notifiers = Arrays.asList(pmResource.getLeftResource(), pmResource.getRightResource());
 
+			initializeConflictObjectStatus();
+
 			GridLayout pageLayout = new GridLayout(1, false);
 			conflictsPage.setLayout(pageLayout);
 
@@ -239,7 +243,7 @@ public class PeaceMakerEditor extends EcoreEditor {
 			Tree leftTree = new Tree(leftVersion, SWT.MULTI);
 			GridDataFactory.fillDefaults().grab(true, true).minSize(1, 1).applyTo(leftTree);
 
-			leftViewer = createVersionViewer(leftTree, pmResource.getLeftResource());
+			leftViewer = createVersionViewer(leftTree, pmResource.getLeftResource(), leftObjectStatus);
 			setCurrentViewer(leftViewer);
 
 
@@ -254,7 +258,7 @@ public class PeaceMakerEditor extends EcoreEditor {
 			Tree rightTree = new Tree(rightVersion, SWT.MULTI);
 			GridDataFactory.fillDefaults().grab(true, true).minSize(1, 1).applyTo(rightTree);
 
-			rightViewer = createVersionViewer(rightTree, pmResource.getRightResource());
+			rightViewer = createVersionViewer(rightTree, pmResource.getRightResource(), rightObjectStatus);
 			rightViewer.addSelectionChangedListener(viewerChangedListener);
 
 
@@ -268,7 +272,7 @@ public class PeaceMakerEditor extends EcoreEditor {
 			Tree mergedTree = new Tree(mergedVersion, SWT.MULTI);
 			GridDataFactory.fillDefaults().grab(true, true).minSize(1, 1).applyTo(mergedTree);
 
-			mergedViewer = createMergedViewer(mergedTree, mergedResource);
+			mergedViewer = createMergedViewer(mergedTree);
 			mergedViewer.addSelectionChangedListener(viewerChangedListener);
 
 
@@ -305,7 +309,7 @@ public class PeaceMakerEditor extends EcoreEditor {
 
 					@Override
 					public void widgetSelected(SelectionEvent e) {
-						updateTreeViewerSelections(conflict);
+						refreshViewers(conflict);
 					}
 				});
 
@@ -351,22 +355,42 @@ public class PeaceMakerEditor extends EcoreEditor {
 		});
 	}
 
-	protected void updateTreeViewerSelections(Conflict conflict) {
+	protected void initializeConflictObjectStatus() {
+		for (Conflict conflict : pmResource.getConflicts()) {
+			updateConflictObjectStatus(conflict, ResolveAction.NO_ACTION);
+		}
+	}
+
+	protected void updateConflictObjectStatus(Conflict conflict, ResolveAction action) {
+		if (conflict instanceof ReferenceRedefinition) {
+			leftObjectStatus.put(conflict.getLeftVersionId(), conflict.getLeftStatus(action));
+			rightObjectStatus.put(conflict.getRightVersionId(), conflict.getRightStatus(action));
+		}
+		else {
+			leftObjectStatus.put(conflict.getEObjectId(), conflict.getLeftStatus(action));
+			rightObjectStatus.put(conflict.getEObjectId(), conflict.getRightStatus(action));
+		}
+	}
+
+	protected void refreshViewers(Conflict conflict) {
 		ConflictVersionResource leftVersion = (ConflictVersionResource) leftViewer.getInput();
 		EObject leftVersionObject = leftVersion.getEObject(conflict.getLeftVersionId());
 		if (leftVersionObject != null) {
 			leftViewer.setSelection(new StructuredSelection(leftVersionObject), true);
+			leftViewer.refresh(leftVersionObject, true);
 		}
 
 		ConflictVersionResource rightVersion = (ConflictVersionResource) rightViewer.getInput();
 		EObject rightVersionObject = rightVersion.getEObject(conflict.getRightVersionId());
 		if (rightVersionObject != null) {
 			rightViewer.setSelection(new StructuredSelection(rightVersionObject), true);
+			rightViewer.refresh(rightVersionObject, true);
 		}
 
 		EObject mergedObject = conflict.getLeftVersionObject();
 		if (mergedObject != null) {
 			mergedViewer.setSelection(new StructuredSelection(mergedObject), true);
+			mergedViewer.refresh(mergedObject, true);
 		}
 	}
 
@@ -374,7 +398,8 @@ public class PeaceMakerEditor extends EcoreEditor {
 		return pmResource.getLeftResource();
 	}
 
-	protected TreeViewer createVersionViewer(Tree tree, ConflictVersionResource resource) {
+	protected TreeViewer createVersionViewer(Tree tree, ConflictVersionResource resource,
+			Map<String, ConflictObjectStatus> objectStatus) {
 		TreeViewer viewer = new TreeViewer(tree);
 
 		ConflictVersionResource copy = new ConflictVersionResource(URI.createURI("" + resource.getURI() + ".copy"));
@@ -382,22 +407,22 @@ public class PeaceMakerEditor extends EcoreEditor {
 
 		viewer.setUseHashlookup(true);
 		viewer.setContentProvider(new AdapterFactoryContentProvider(adapterFactory));
-		viewer.setLabelProvider(new DecoratingColumLabelProvider(new AdapterFactoryLabelProvider(adapterFactory),
-				new DiagnosticDecorator(editingDomain, viewer, EcoreEditorPlugin.getPlugin().getDialogSettings())));
+		viewer.setLabelProvider(new VersionLabelProvider(
+				new AdapterFactoryLabelProvider(adapterFactory), copy, objectStatus));
 		viewer.setInput(copy);
 		createContextMenuFor(viewer);
 
 		return viewer;
 	}
 
-	protected TreeViewer createMergedViewer(Tree tree, Resource resource) {
+	protected TreeViewer createMergedViewer(Tree tree) {
 		TreeViewer viewer = new TreeViewer(tree);
 
 		viewer.setUseHashlookup(true);
 		viewer.setContentProvider(new AdapterFactoryContentProvider(adapterFactory));
-		viewer.setLabelProvider(new DecoratingColumLabelProvider(new AdapterFactoryLabelProvider(adapterFactory),
-				new DiagnosticDecorator(editingDomain, viewer, EcoreEditorPlugin.getPlugin().getDialogSettings())));
-		viewer.setInput(resource);
+		viewer.setLabelProvider(new ResultLabelProvider(
+				new AdapterFactoryLabelProvider(adapterFactory), mergedResource, leftObjectStatus));
+		viewer.setInput(mergedResource);
 		createContextMenuFor(viewer);
 
 		return viewer;
@@ -482,16 +507,18 @@ public class PeaceMakerEditor extends EcoreEditor {
 						firePropertyChange(IEditorPart.PROP_DIRTY);
 
 						// update selections based on conflict resolutions
-						ConflictResolveCommand mostRecentCommand = (ConflictResolveCommand) getCommandStack().getMostRecentCommand();
+						ConflictResolveCommand mostRecentCommand =
+								(ConflictResolveCommand) getCommandStack().getMostRecentCommand();
 						if (mostRecentCommand != null) {
 							final Conflict conflict = mostRecentCommand.getConflict();
-							Runnable runnable = new Runnable() {
 
-								public void run() {
-									updateTreeViewerSelections(conflict);
-								}
-							};
-							getSite().getShell().getDisplay().asyncExec(runnable);
+							// if command has been undone, use the previous action
+							ResolveAction action = mostRecentCommand.canExecute() ?
+									mostRecentCommand.getPreviousAction() : 
+									mostRecentCommand.getAction();
+							
+							updateConflictObjectStatus(conflict, action);
+							refreshViewers(conflict);
 						}
 						for (Iterator<PropertySheetPage> i = propertySheetPages.iterator(); i.hasNext();) {
 							PropertySheetPage propertySheetPage = i.next();

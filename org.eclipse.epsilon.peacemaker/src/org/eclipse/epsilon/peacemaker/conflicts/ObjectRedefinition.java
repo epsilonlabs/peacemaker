@@ -98,6 +98,30 @@ public class ObjectRedefinition extends Conflict {
 	}
 
 	@Override
+	public ConflictObjectStatus getLeftStatus(ResolveAction action) {
+		switch (action) {
+		case KEEP_LEFT:
+			return ConflictObjectStatus.ACCEPTED;
+		case KEEP_RIGHT:
+			return ConflictObjectStatus.DISCARDED;
+		default:
+			return super.getLeftStatus(action);
+		}
+	}
+
+	@Override
+	public ConflictObjectStatus getRightStatus(ResolveAction action) {
+		switch (action) {
+		case KEEP_LEFT:
+			return ConflictObjectStatus.DISCARDED;
+		case KEEP_RIGHT:
+			return ConflictObjectStatus.ACCEPTED;
+		default:
+			return super.getRightStatus(action);
+		}
+	}
+
+	@Override
 	public String getTitle() {
 		return "Object Redefinition";
 	}

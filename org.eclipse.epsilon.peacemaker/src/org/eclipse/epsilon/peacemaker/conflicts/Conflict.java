@@ -28,6 +28,14 @@ public abstract class Conflict {
 		}
 	}
 
+	/**
+	 * The status of an object that is involved in a conflict. Depends on the
+	 * applied resolve action
+	 */
+	public enum ConflictObjectStatus {
+		ACCEPTED, DISCARDED, UNRESOLVED
+	}
+
 	protected PeaceMakerXMIResource pmResource;
 	protected String eObjectId;
 
@@ -44,6 +52,24 @@ public abstract class Conflict {
 		switch (action) {
 		case NO_ACTION:
 			break;
+		default:
+			throw new UnsupportedOperationException(
+					"Unsupported resolve action for this conflict: " + action);
+		}
+	}
+
+	public ConflictObjectStatus getLeftStatus(ResolveAction action) {
+		return getStatus(action);
+	}
+
+	public ConflictObjectStatus getRightStatus(ResolveAction action) {
+		return getStatus(action);
+	}
+
+	protected ConflictObjectStatus getStatus(ResolveAction action) {
+		switch (action) {
+		case NO_ACTION:
+			return ConflictObjectStatus.UNRESOLVED;
 		default:
 			throw new UnsupportedOperationException(
 					"Unsupported resolve action for this conflict: " + action);
@@ -78,5 +104,9 @@ public abstract class Conflict {
 
 	public String getDescription() {
 		return "A conflict has been detected around an object with id " + eObjectId;
+	}
+
+	public String getEObjectId() {
+		return eObjectId;
 	}
 }

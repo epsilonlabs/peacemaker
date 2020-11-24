@@ -83,6 +83,30 @@ public class ReferenceRedefinition extends Conflict {
 	}
 
 	@Override
+	public ConflictObjectStatus getLeftStatus(ResolveAction action) {
+		switch (action) {
+		case KEEP_LEFT:
+			return ConflictObjectStatus.ACCEPTED;
+		case KEEP_RIGHT:
+			return ConflictObjectStatus.DISCARDED;
+		default:
+			return super.getLeftStatus(action);
+		}
+	}
+
+	@Override
+	public ConflictObjectStatus getRightStatus(ResolveAction action) {
+		switch (action) {
+		case KEEP_LEFT:
+			return ConflictObjectStatus.DISCARDED;
+		case KEEP_RIGHT:
+			return ConflictObjectStatus.ACCEPTED;
+		default:
+			return super.getRightStatus(action);
+		}
+	}
+
+	@Override
 	public EObject getLeftVersionObject() {
 		// objectId is the parent in this case, get the reference value from it
 		return (EObject) pmResource.getLeftEObject(eObjectId).eGet(reference);

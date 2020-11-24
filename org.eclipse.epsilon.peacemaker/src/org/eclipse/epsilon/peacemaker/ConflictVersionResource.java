@@ -1,6 +1,7 @@
 package org.eclipse.epsilon.peacemaker;
 
 import org.eclipse.emf.common.util.URI;
+import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.xmi.XMLLoad;
 import org.eclipse.emf.ecore.xmi.impl.XMIResourceImpl;
 import org.eclipse.epsilon.peacemaker.ConflictsPreprocessor.ConflictVersionHelper;
@@ -26,6 +27,23 @@ public class ConflictVersionResource extends XMIResourceImpl {
 	@Override
 	protected boolean useUUIDs() {
 		return true;
+	}
+
+	@Override
+	public void setID(EObject eObject, String id) {
+		Object oldID = id != null ? getEObjectToIDMap().put(eObject, id) : getEObjectToIDMap().remove(eObject);
+
+		// the extra comparisons prevent the removal of a map from a conflicting object
+		if (oldID != null &&
+				getIDToEObjectMap().containsKey(oldID) &&
+				getIDToEObjectMap().get(oldID) == eObject) {
+
+			getIDToEObjectMap().remove(oldID);
+		}
+
+		if (id != null) {
+			getIDToEObjectMap().put(id, eObject);
+		}
 	}
 
 	public void setVersionHelper(ConflictVersionHelper versionHelper) {
