@@ -69,13 +69,13 @@ public class ReferenceRedefinition extends Conflict {
 			EObject leftCopy = EcoreUtil.copy(leftValue);
 			EObject rightParent = rightValue.eContainer();
 			rightParent.eSet(reference, leftCopy);
-			CopyUtils.copyIds(leftValue, leftCopy);
+			CopyUtils.finishCopy(leftValue, leftCopy);
 			break;
 		case KEEP_RIGHT:
 			EObject rightCopy = EcoreUtil.copy(rightValue);
 			EObject leftParent = leftValue.eContainer();
 			leftParent.eSet(reference, rightCopy);
-			CopyUtils.copyIds(rightValue, rightCopy);
+			CopyUtils.finishCopy(rightValue, rightCopy);
 			break;
 		default:
 			super.resolve(action);

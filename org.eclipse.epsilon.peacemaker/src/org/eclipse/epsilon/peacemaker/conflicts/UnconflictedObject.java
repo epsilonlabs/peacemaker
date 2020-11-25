@@ -82,7 +82,7 @@ public class UnconflictedObject extends Conflict {
 					otherParent.eSet(ref, copy);
 				}
 			}
-			CopyUtils.copyIds(obj, copy);
+			CopyUtils.finishCopy(obj, copy);
 			break;
 		}
 		case REMOVE: {

@@ -1,15 +1,24 @@
 package org.eclipse.epsilon.peacemaker.util;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.EStructuralFeature.Setting;
 import org.eclipse.emf.ecore.util.EcoreUtil;
+import org.eclipse.emf.ecore.util.EcoreUtil.ExternalCrossReferencer;
 import org.eclipse.emf.ecore.xmi.XMIResource;
 
 public class CopyUtils {
 
-	public static void copyIds(EObject obj, EObject copy) {
+	public static void finishCopy(EObject fromObject, EObject toObject) {
+		copyIds(fromObject, toObject);
+		fixCrossReferences(fromObject, toObject);
+	}
+
+	protected static void copyIds(EObject obj, EObject copy) {
 		XMIResource objResource = (XMIResource)obj.eResource();
 		XMIResource copyResource = (XMIResource)copy.eResource();
 		
@@ -20,6 +29,33 @@ public class CopyUtils {
 
 		while (objContents.hasNext()) {
 			copyResource.setID(copyContents.next(), objResource.getID(objContents.next()));
+		}
+	}
+
+	/**
+	 * Change cross-references to the previous resource with references to
+	 * objects in the current resource of the copy
+	 */
+	protected static void fixCrossReferences(EObject obj, EObject copy) {
+		XMIResource objResource = getResource(obj);
+		XMIResource copyResource = getResource(copy);
+
+		Map<EObject, Collection<Setting>> externalReferences = ExternalCrossReferencer.find(copy);
+
+		for (EObject externalObj : externalReferences.keySet()) {
+			if (getResource(externalObj) == objResource) {
+				EObject externalObjCopy = copyResource.getEObject(objResource.getID(externalObj));
+				if (externalObjCopy != null) {
+					for (Setting setting : externalReferences.get(externalObj)) {
+						setting.set(externalObjCopy);
+					}
+				}
+				else {
+					// there is no object to point to in the copy resource, what to do?
+					throw new IllegalStateException(
+							"Nothing to reference internally to when copying the resource: " + obj);
+				}
+			}
 		}
 	}
 
@@ -41,7 +77,13 @@ public class CopyUtils {
 		for (EObject obj : from.getContents()) {
 			EObject copy = EcoreUtil.copy(obj);
 			to.getContents().add(copy);
-			copyIds(obj, copy);
+			finishCopy(obj, copy);
 		}
 	}
+
+	protected static XMIResource getResource(EObject obj) {
+		return (XMIResource) EcoreUtil.getRootContainer(obj).eResource();
+	}
+
+
 }

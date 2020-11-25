@@ -94,7 +94,7 @@ public class ObjectRedefinition extends Conflict {
 			contents.remove(index);
 			CopyUtils.safeIndexAdd(contents, index, copy);
 		}
-		CopyUtils.copyIds(fromObject, copy);
+		CopyUtils.finishCopy(fromObject, copy);
 	}
 
 	@Override

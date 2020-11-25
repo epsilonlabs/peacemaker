@@ -14,6 +14,7 @@ import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
+import org.eclipse.emf.ecore.util.EcoreUtil.ExternalCrossReferencer;
 import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
 import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResource;
 import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResourceFactory;
@@ -177,6 +178,21 @@ public class PeaceMakerTests {
 
 		assertTrue(resource.getConflicts().size() == 1);
 		assertTrue(resource.getConflicts().get(0) instanceof ObjectRedefinition);
+	}
+
+	@Test
+	public void testExternalCrossReferenceUpdate() throws IOException {
+		String inputCase = "04-nonContained1boundedRef";
+		displayCase(inputCase);
+
+		PeaceMakerXMIResource resource = loadConflictResource(String.format(CONFLICTS_LOCATION, inputCase));
+
+		assertTrue(resource.getConflicts().size() == 1);
+		assertTrue(resource.getConflicts().get(0) instanceof ObjectRedefinition);
+
+		resource.getConflicts().get(0).resolve(ResolveAction.KEEP_LEFT);
+
+		assertTrue(ExternalCrossReferencer.find(resource.getRightResource()).isEmpty());
 	}
 
 	public static void displayCase(String inputCase) {
