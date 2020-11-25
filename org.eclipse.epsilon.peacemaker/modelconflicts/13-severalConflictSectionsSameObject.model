@@ -11,21 +11,21 @@
   <comics
       xmi:id="_WsmOoBUUEeut3qj6TjgmMQ"
       title="Bad Weekend">
-  <reviews
-      xmi:id="review1"
-      author="Alfonso"
+    <reviews
+        xmi:id="review1"
+        author="Alfonso"
 <<<<<<< left.model
-      date="20201124"
+        date="20201124"
 =======
-      date="20201105"
+        date="20201105"
 >>>>>>> right.model
-      title="I though this was going to be worse"
+        title="I though this was going to be worse"
 <<<<<<< left.model
-      text="You don't know the truth till the end"
-      stars="4"/>
+        text="You don't know the truth till the end"
+        stars="4"/>
 =======
-      text="Really good"
-      stars="5"/>
+        text="Really good"
+        stars="5"/>
 >>>>>>> right.model
   </comics>
   <comics
