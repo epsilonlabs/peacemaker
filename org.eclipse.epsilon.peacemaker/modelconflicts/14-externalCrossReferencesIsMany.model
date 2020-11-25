@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="ASCII"?>
+<comicshop:Shop xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:comicshop="comicshop" xmi:id="_rqtZkBUPEeut3qj6TjgmMQ" name="Travelling Man">
+<<<<<<< HEAD
+  <comics xmi:id="_WsmOoBUUEeut3qj6TjgmMQ" title="Bad Weekend" authors="author1 author2" publisher="publisher1"/>
+=======
+  <comics xmi:id="_WsmOoBUUEeut3qj6TjgmMQ" title="Bad Weekend" authors="author1" publisher="publisher2"/>
+>>>>>>> branch
+  <publishers xmi:id="publisher1" name="Image Comics"/>
+  <publishers xmi:id="publisher2" name="DC"/>
+  <authors xmi:id="author1" name="Ed Brubaker"/>
+  <authors xmi:id="author2" name="Sean Philips"/>
+</comicshop:Shop>

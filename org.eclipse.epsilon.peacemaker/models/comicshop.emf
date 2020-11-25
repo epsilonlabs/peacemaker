@@ -11,7 +11,7 @@ class Shop {
 class Comic {
 	attr String title;
 	attr String releaseDate;
-	val Contributor[*] contributors;
+	ref Author[*] authors;
 	val Prologue prologue;
 	ref Publisher publisher;
 	val Review[*] reviews;
@@ -30,23 +30,10 @@ class Prologue {
 	attr String text;
 }
 
-class Contributor {
-	attr ContributionType contributionType;
-	ref Author author;
-}
-
 class Publisher {
 	attr String name;
 }
 
 class Author {
 	attr String name;
-}
-
-enum ContributionType {
-	WRITER;
-	ARTIST;
-	INKER;
-	COLORIST;
-	LETTERER;
 }

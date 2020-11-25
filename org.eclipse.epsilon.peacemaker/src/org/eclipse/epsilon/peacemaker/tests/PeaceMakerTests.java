@@ -193,6 +193,18 @@ public class PeaceMakerTests {
 		resource.getConflicts().get(0).resolve(ResolveAction.KEEP_LEFT);
 
 		assertTrue(ExternalCrossReferencer.find(resource.getRightResource()).isEmpty());
+
+		inputCase = "14-externalCrossReferencesIsMany";
+		displayCase(inputCase);
+
+		resource = loadConflictResource(String.format(CONFLICTS_LOCATION, inputCase));
+
+		assertTrue(resource.getConflicts().size() == 1);
+		assertTrue(resource.getConflicts().get(0) instanceof ObjectRedefinition);
+
+		resource.getConflicts().get(0).resolve(ResolveAction.KEEP_RIGHT);
+
+		assertTrue(ExternalCrossReferencer.find(resource.getRightResource()).isEmpty());
 	}
 
 	public static void displayCase(String inputCase) {

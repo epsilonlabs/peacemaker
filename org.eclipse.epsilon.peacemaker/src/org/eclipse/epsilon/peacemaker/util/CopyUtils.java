@@ -110,7 +110,17 @@ public class CopyUtils {
 				EObject externalObjCopy = copyResource.getEObject(objResource.getID(externalObj));
 				if (externalObjCopy != null) {
 					for (Setting setting : externalReferences.get(externalObj)) {
-						setting.set(externalObjCopy);
+						if (!setting.getEStructuralFeature().isMany()) {
+							setting.set(externalObjCopy);
+						}
+						else {
+							@SuppressWarnings("unchecked")
+							List<EObject> list = (List<EObject>) setting.get(true);
+
+							int index = list.indexOf(externalObj);
+							list.remove(index);
+							safeIndexAdd(list, index, externalObjCopy);
+						}
 					}
 				}
 				else {
