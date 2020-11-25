@@ -6,12 +6,75 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.EReference;
 import org.eclipse.emf.ecore.EStructuralFeature.Setting;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.emf.ecore.util.EcoreUtil.ExternalCrossReferencer;
 import org.eclipse.emf.ecore.xmi.XMIResource;
 
 public class CopyUtils {
+
+	public static void copyToResource(EObject obj, XMIResource objResource, XMIResource otherResource) {
+		EObject copy = EcoreUtil.copy(obj);
+		EReference ref = (EReference) obj.eContainingFeature();
+		if (ref == null) {
+			// root object: add new one to resource contents
+			safeIndexAdd(otherResource.getContents(),
+					objResource.getContents().indexOf(obj), copy);
+		}
+		else {
+			String parentId = objResource.getID(obj.eContainer());
+			EObject otherParent = otherResource.getEObject(parentId);
+			if (otherParent == null) {
+				throw new IllegalStateException(
+						"Trying to keep an object while the parent in the other resource does not exist");
+			}
+
+			if (ref.isMany()) {
+				@SuppressWarnings("unchecked")
+				List<EObject> parentRefValues = (List<EObject>) obj.eContainer().eGet(ref);
+				@SuppressWarnings("unchecked")
+				List<EObject> otherParentRefValues = (List<EObject>) otherParent.eGet(ref);
+
+				safeIndexAdd(otherParentRefValues, parentRefValues.indexOf(obj), copy);
+			}
+			else {
+				otherParent.eSet(ref, copy);
+			}
+		}
+		finishCopy(obj, copy);
+	}
+
+	/**
+	 * Replaces an object with a copy of another one
+	 */
+	public static void copyAndReplace(EObject replacingObj, EObject replacedObj) {
+		EObject copy = EcoreUtil.copy(replacingObj);
+
+		EReference reference = (EReference) replacingObj.eContainingFeature();
+		if (reference != null) {
+			EObject toObjectParent = replacedObj.eContainer();
+			if (!reference.isMany()) {
+				toObjectParent.eSet(reference, copy);
+			}
+			else {
+				@SuppressWarnings("unchecked")
+				List<EObject> list = (List<EObject>) toObjectParent.eGet(reference);
+
+				int index = list.indexOf(replacedObj);
+				list.remove(index);
+				safeIndexAdd(list, index, copy);
+			}
+		}
+		else {
+			// root element
+			List<EObject> contents = replacedObj.eResource().getContents();
+			int index = contents.indexOf(replacedObj);
+			contents.remove(index);
+			safeIndexAdd(contents, index, copy);
+		}
+		finishCopy(replacingObj, copy);
+	}
 
 	public static void finishCopy(EObject fromObject, EObject toObject) {
 		copyIds(fromObject, toObject);
@@ -84,6 +147,4 @@ public class CopyUtils {
 	protected static XMIResource getResource(EObject obj) {
 		return (XMIResource) EcoreUtil.getRootContainer(obj).eResource();
 	}
-
-
 }

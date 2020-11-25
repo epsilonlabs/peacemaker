@@ -1,10 +1,6 @@
 package org.eclipse.epsilon.peacemaker.conflicts;
 
-import java.util.List;
-
 import org.eclipse.emf.ecore.EObject;
-import org.eclipse.emf.ecore.EReference;
-import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResource;
 import org.eclipse.epsilon.peacemaker.util.CopyUtils;
 import org.eclipse.epsilon.peacemaker.util.PrettyPrint;
@@ -52,49 +48,18 @@ public class ObjectRedefinition extends Conflict {
 
 	@Override
 	public void resolve(ResolveAction action) {
-		EObject copy = null;
-		EObject fromObject = null;
-		EObject toObject = null;
 
 		switch (action) {
 		case KEEP_LEFT:
-			fromObject = leftObject;
-			toObject = rightObject;
+			CopyUtils.copyAndReplace(leftObject, rightObject);
 			break;
 		case KEEP_RIGHT:
-			fromObject = rightObject;
-			toObject = leftObject;
+			CopyUtils.copyAndReplace(rightObject, leftObject);
 			break;
 		default:
 			super.resolve(action);
 			return;
 		}
-
-		copy = EcoreUtil.copy(fromObject);
-
-		EReference reference = (EReference) fromObject.eContainingFeature();
-		if (reference != null) {
-			EObject toObjectParent = toObject.eContainer();
-			if (!reference.isMany()) {
-				toObjectParent.eSet(reference, copy);
-			}
-			else {
-				@SuppressWarnings("unchecked")
-				List<EObject> list = (List<EObject>) toObjectParent.eGet(reference);
-
-				int index = list.indexOf(toObject);
-				list.remove(index);
-				CopyUtils.safeIndexAdd(list, index, copy);
-			}
-		}
-		else {
-			// root element
-			List<EObject> contents = toObject.eResource().getContents();
-			int index = contents.indexOf(toObject);
-			contents.remove(index);
-			CopyUtils.safeIndexAdd(contents, index, copy);
-		}
-		CopyUtils.finishCopy(fromObject, copy);
 	}
 
 	@Override

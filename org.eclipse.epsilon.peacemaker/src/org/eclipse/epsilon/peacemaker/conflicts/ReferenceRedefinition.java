@@ -3,7 +3,6 @@ package org.eclipse.epsilon.peacemaker.conflicts;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EReference;
-import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResource;
 import org.eclipse.epsilon.peacemaker.util.CopyUtils;
 import org.eclipse.epsilon.peacemaker.util.PrettyPrint;
@@ -66,16 +65,10 @@ public class ReferenceRedefinition extends Conflict {
 	public void resolve(ResolveAction action) {
 		switch (action) {
 		case KEEP_LEFT:
-			EObject leftCopy = EcoreUtil.copy(leftValue);
-			EObject rightParent = rightValue.eContainer();
-			rightParent.eSet(reference, leftCopy);
-			CopyUtils.finishCopy(leftValue, leftCopy);
+			CopyUtils.copyAndReplace(leftValue, rightValue);
 			break;
 		case KEEP_RIGHT:
-			EObject rightCopy = EcoreUtil.copy(rightValue);
-			EObject leftParent = leftValue.eContainer();
-			leftParent.eSet(reference, rightCopy);
-			CopyUtils.finishCopy(rightValue, rightCopy);
+			CopyUtils.copyAndReplace(rightValue, leftValue);
 			break;
 		default:
 			super.resolve(action);
