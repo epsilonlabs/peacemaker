@@ -65,10 +65,10 @@ public class ReferenceRedefinition extends Conflict {
 	public void resolve(ResolveAction action) {
 		switch (action) {
 		case KEEP_LEFT:
-			CopyUtils.copyAndReplace(leftValue, rightValue);
+			CopyUtils.replace(leftValue, rightValue);
 			break;
 		case KEEP_RIGHT:
-			CopyUtils.copyAndReplace(rightValue, leftValue);
+			CopyUtils.replace(rightValue, leftValue);
 			break;
 		default:
 			super.resolve(action);

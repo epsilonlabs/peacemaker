@@ -51,10 +51,10 @@ public class ObjectRedefinition extends Conflict {
 
 		switch (action) {
 		case KEEP_LEFT:
-			CopyUtils.copyAndReplace(leftObject, rightObject);
+			CopyUtils.replace(leftObject, rightObject);
 			break;
 		case KEEP_RIGHT:
-			CopyUtils.copyAndReplace(rightObject, leftObject);
+			CopyUtils.replace(rightObject, leftObject);
 			break;
 		default:
 			super.resolve(action);

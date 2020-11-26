@@ -5,6 +5,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.emf.ecore.EAttribute;
+import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EReference;
 import org.eclipse.emf.ecore.EStructuralFeature;
@@ -12,11 +14,103 @@ import org.eclipse.emf.ecore.EStructuralFeature.Setting;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.util.EcoreUtil;
+import org.eclipse.emf.ecore.util.EcoreUtil.Copier;
 import org.eclipse.emf.ecore.util.EcoreUtil.ExternalCrossReferencer;
+import org.eclipse.emf.ecore.util.InternalEList;
 import org.eclipse.emf.ecore.xmi.XMIResource;
 import org.eclipse.epsilon.peacemaker.ConflictVersionResource;
 
 public class CopyUtils {
+
+	/**
+	 * Allows overriding the internal contents of an element with another.
+	 * Ignores contained children objects
+	 */
+	public static class Replacer extends Copier {
+
+		private static final long serialVersionUID = 1L;
+
+		public void replaceContents(EObject replacingObj, EObject replacedObj) {
+
+			EClass eClass = replacingObj.eClass();
+			for (int i = 0, size = eClass.getFeatureCount(); i < size; ++i) {
+				EStructuralFeature feature = eClass.getEStructuralFeature(i);
+				if (feature.isChangeable() && !feature.isDerived()) {
+					if (!replacingObj.eIsSet(feature)) {
+						replacedObj.eUnset(feature);
+					}
+					else if (feature instanceof EAttribute) {
+						copyAttribute((EAttribute) feature, replacingObj, replacedObj);
+					}
+					else {
+						EReference eReference = (EReference) feature;
+						if (!eReference.isContainment()) {
+							copyReference(eReference, replacingObj, replacedObj);
+						}
+					}
+				}
+			}
+			
+			String replacingObjId = getId(replacingObj);
+			if (!replacingObjId.equals(getId(replacedObj))) {
+				setId(replacedObj, replacingObjId);
+			}
+		}
+
+		protected void copyReference(EReference eReference, EObject replacingObj, EObject replacedObj) {
+			XMIResource replacingObjResource = (XMIResource) replacingObj.eResource();
+			XMIResource replacedObjResource = (XMIResource) replacedObj.eResource();
+
+			EStructuralFeature.Setting setting = getTarget(eReference, replacingObj, replacedObj);
+			if (setting != null) {
+				Object value = replacingObj.eGet(eReference, resolveProxies);
+				if (eReference.isMany()) {
+					@SuppressWarnings("unchecked")
+					InternalEList<EObject> source = (InternalEList<EObject>) value;
+					@SuppressWarnings("unchecked")
+					InternalEList<EObject> target = (InternalEList<EObject>) setting;
+
+					target.clear(); // first step to replace the reference pointers
+
+					int index = 0;
+					for (Iterator<EObject> k = resolveProxies ? source.iterator() : source.basicIterator(); k.hasNext();) {
+						EObject referencedEObject = k.next();
+						EObject nonExternalReferencedEObject = replacedObjResource.getEObject(
+								replacingObjResource.getID((EObject) referencedEObject));
+
+						if (nonExternalReferencedEObject == null) {
+							// there is nothing in the resource of the replaced
+							//   element to replace the current external reference.
+							throw new IllegalStateException(
+									"Nothing to reference internally to when copying the resource: " + referencedEObject);
+						}
+						else {
+							target.addUnique(index, nonExternalReferencedEObject);
+							++index;
+						}
+					}
+				}
+				else {
+					if (value == null) {
+						setting.set(null);
+					}
+					else {
+						EObject nonExternalValue = replacedObjResource.getEObject(
+								replacingObjResource.getID((EObject) value));
+						if (nonExternalValue == null) {
+							// there is nothing in the resource of the replaced
+							//   element to replace the current external reference.
+							throw new IllegalStateException(
+									"Nothing to reference internally to when copying the resource: " + value);
+						}
+						else {
+							setting.set(nonExternalValue);
+						}
+					}
+				}
+			}
+		}
+	}
 
 	public static class DanglingCrossReferencer extends EcoreUtil.CrossReferencer {
 
@@ -44,6 +138,10 @@ public class CopyUtils {
 			done();
 			return this;
 		}
+	}
+
+	public static void replace(EObject replacingObj, EObject replacedObj) {
+		new Replacer().replaceContents(replacingObj, replacedObj);
 	}
 
 	public static void copyToResource(EObject obj, XMIResource objResource, XMIResource otherResource) {
@@ -78,6 +176,7 @@ public class CopyUtils {
 		fixExternalReferences(obj, copy);
 	}
 
+	//TODO: currently superseeded by replaceContents. Delete later if no use appears
 	/**
 	 * Replaces an object with a copy of another one
 	 */
@@ -186,6 +285,20 @@ public class CopyUtils {
 				}
 			}
 		}
+	}
+
+	public static String getId(EObject obj) {
+		if (obj.eResource() == null) {
+			throw new IllegalStateException("Object has no resource");
+		}
+		return ((XMIResource) obj.eResource()).getID(obj);
+	}
+
+	public static void setId(EObject obj, String id) {
+		if (obj.eResource() == null) {
+			throw new IllegalStateException("Object has no resource");
+		}
+		((XMIResource) obj.eResource()).setID(obj, id);
 	}
 
 	/**
