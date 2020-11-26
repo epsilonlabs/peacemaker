@@ -46,6 +46,15 @@ public class ConflictVersionResource extends XMIResourceImpl {
 		}
 	}
 
+	/**
+	 * Get the original id of previously detached objects
+	 * 
+	 * @returns The id, or null if the object was never attached to the resource
+	 */
+	public Object getDetachedId(EObject externalObj) {
+		return DETACHED_EOBJECT_TO_ID_MAP.get(externalObj);
+	}
+
 	public void setVersionHelper(ConflictVersionHelper versionHelper) {
 		this.versionHelper = versionHelper;
 	}

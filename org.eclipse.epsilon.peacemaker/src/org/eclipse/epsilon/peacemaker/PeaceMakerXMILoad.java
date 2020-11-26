@@ -53,7 +53,8 @@ public class PeaceMakerXMILoad extends XMILoadImpl {
 				"11-updateDelete",
 				"12-deleteUpdate",
 				"13-severalConflictSectionsSameObject",
-				"14-externalCrossReferencesIsMany" };
+				"14-externalCrossReferencesIsMany",
+				"15-crossReferencesToConflictedObject" };
 
 		// uncomment for specific cases
 		//		cases = new String[1];

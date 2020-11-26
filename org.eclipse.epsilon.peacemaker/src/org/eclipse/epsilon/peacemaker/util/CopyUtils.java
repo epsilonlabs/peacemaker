@@ -7,12 +7,44 @@ import java.util.Map;
 
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EReference;
+import org.eclipse.emf.ecore.EStructuralFeature;
 import org.eclipse.emf.ecore.EStructuralFeature.Setting;
+import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.emf.ecore.util.EcoreUtil.ExternalCrossReferencer;
 import org.eclipse.emf.ecore.xmi.XMIResource;
+import org.eclipse.epsilon.peacemaker.ConflictVersionResource;
 
 public class CopyUtils {
+
+	public static class DanglingCrossReferencer extends EcoreUtil.CrossReferencer {
+
+		private static final long serialVersionUID = 1L;
+
+		public DanglingCrossReferencer(ResourceSet resourceSet) {
+			super(resourceSet);
+		}
+
+		public DanglingCrossReferencer(Resource resource) {
+			super(resource);
+		}
+
+		public DanglingCrossReferencer(EObject obj) {
+			super(obj);
+		}
+
+		@Override
+		protected boolean crossReference(EObject eObject, EReference eReference, EObject crossReferencedEObject) {
+			return crossReferencedEObject.eResource() == null && !crossReferencedEObject.eIsProxy() && !eReference.isTransient();
+		}
+
+		public Map<EObject, Collection<EStructuralFeature.Setting>> findDanglingCrossReferences() {
+			crossReference();
+			done();
+			return this;
+		}
+	}
 
 	public static void copyToResource(EObject obj, XMIResource objResource, XMIResource otherResource) {
 		EObject copy = EcoreUtil.copy(obj);
@@ -42,7 +74,8 @@ public class CopyUtils {
 				otherParent.eSet(ref, copy);
 			}
 		}
-		finishCopy(obj, copy);
+		copyIds(obj, copy);
+		fixExternalReferences(obj, copy);
 	}
 
 	/**
@@ -73,12 +106,9 @@ public class CopyUtils {
 			contents.remove(index);
 			safeIndexAdd(contents, index, copy);
 		}
-		finishCopy(replacingObj, copy);
-	}
-
-	public static void finishCopy(EObject fromObject, EObject toObject) {
-		copyIds(fromObject, toObject);
-		fixCrossReferences(fromObject, toObject);
+		copyIds(replacingObj, copy);
+		fixExternalReferences(replacingObj, copy);
+		fixDanglingReferences(replacingObj, copy);
 	}
 
 	protected static void copyIds(EObject obj, EObject copy) {
@@ -99,7 +129,7 @@ public class CopyUtils {
 	 * Change cross-references to the previous resource with references to
 	 * objects in the current resource of the copy
 	 */
-	protected static void fixCrossReferences(EObject obj, EObject copy) {
+	protected static void fixExternalReferences(EObject obj, EObject copy) {
 		XMIResource objResource = (XMIResource) obj.eResource();
 		XMIResource copyResource = (XMIResource) copy.eResource();
 
@@ -132,6 +162,32 @@ public class CopyUtils {
 		}
 	}
 
+	protected static void fixDanglingReferences(EObject fromObject, EObject toObject) {
+		DanglingCrossReferencer referencer = new DanglingCrossReferencer(EcoreUtil.getRootContainer(toObject));
+		Map<EObject, Collection<Setting>> danglingReferences = referencer.findDanglingCrossReferences();
+		ConflictVersionResource toObjectResource = (ConflictVersionResource) toObject.eResource();
+
+		String toObjectId = toObjectResource.getID(toObject);
+		
+		for (EObject externalObj : danglingReferences.keySet()) {
+			if (toObjectId.equals(toObjectResource.getDetachedId(externalObj))) {
+				for (Setting setting : danglingReferences.get(externalObj)) {
+					if (!setting.getEStructuralFeature().isMany()) {
+						setting.set(toObject);
+					}
+					else {
+						@SuppressWarnings("unchecked")
+						List<EObject> list = (List<EObject>) setting.get(true);
+
+						int index = list.indexOf(externalObj);
+						list.remove(index);
+						safeIndexAdd(list, index, toObject);
+					}
+				}
+			}
+		}
+	}
+
 	/**
 	 * Adds object at the indicated index of the list if in range, or at the
 	 * end if not
@@ -150,7 +206,7 @@ public class CopyUtils {
 		for (EObject obj : from.getContents()) {
 			EObject copy = EcoreUtil.copy(obj);
 			to.getContents().add(copy);
-			finishCopy(obj, copy);
+			copyIds(obj, copy);
 		}
 	}
 }
