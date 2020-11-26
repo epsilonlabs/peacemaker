@@ -100,13 +100,13 @@ public class CopyUtils {
 	 * objects in the current resource of the copy
 	 */
 	protected static void fixCrossReferences(EObject obj, EObject copy) {
-		XMIResource objResource = getResource(obj);
-		XMIResource copyResource = getResource(copy);
+		XMIResource objResource = (XMIResource) obj.eResource();
+		XMIResource copyResource = (XMIResource) copy.eResource();
 
 		Map<EObject, Collection<Setting>> externalReferences = ExternalCrossReferencer.find(copy);
 
 		for (EObject externalObj : externalReferences.keySet()) {
-			if (getResource(externalObj) == objResource) {
+			if (externalObj.eResource() == objResource) {
 				EObject externalObjCopy = copyResource.getEObject(objResource.getID(externalObj));
 				if (externalObjCopy != null) {
 					for (Setting setting : externalReferences.get(externalObj)) {
@@ -152,9 +152,5 @@ public class CopyUtils {
 			to.getContents().add(copy);
 			finishCopy(obj, copy);
 		}
-	}
-
-	protected static XMIResource getResource(EObject obj) {
-		return (XMIResource) EcoreUtil.getRootContainer(obj).eResource();
 	}
 }

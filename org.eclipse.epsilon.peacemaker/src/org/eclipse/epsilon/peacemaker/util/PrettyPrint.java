@@ -6,7 +6,6 @@ import java.util.stream.Collectors;
 import org.eclipse.emf.ecore.EAttribute;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
-import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.emf.ecore.xmi.XMIResource;
 
 public class PrettyPrint {
@@ -50,7 +49,7 @@ public class PrettyPrint {
 	}
 
 	public static String typeAndId(EObject obj) {
-		return obj.eClass().getName() + " " + ((XMIResource) EcoreUtil.getRootContainer(obj).eResource()).getID(obj);
+		return obj.eClass().getName() + " " + ((XMIResource) obj.eResource()).getID(obj);
 	}
 
 	/**
