@@ -37,6 +37,7 @@ import org.eclipse.epsilon.peacemaker.util.PrettyPrint;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.layout.GridDataFactory;
+import org.eclipse.jface.resource.FontDescriptor;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
@@ -45,12 +46,11 @@ import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
-import org.eclipse.swt.custom.StyleRange;
-import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
@@ -63,6 +63,7 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.forms.widgets.ExpandableComposite;
 import org.eclipse.ui.views.properties.PropertySheetPage;
 
 public class PeaceMakerEditor extends EcoreEditor {
@@ -284,19 +285,20 @@ public class PeaceMakerEditor extends EcoreEditor {
 			conflictsList.setLayout(listLayout);
 
 			for (Conflict conflict : pmResource.getConflicts()) {
-				Composite conflictControl = new Composite(conflictsList, SWT.BORDER);
-				GridDataFactory.fillDefaults().grab(true, false).minSize(1, 1).applyTo(conflictControl);
+				ExpandableComposite expandableConflict = new ExpandableComposite(conflictsList, SWT.BORDER,
+								ExpandableComposite.EXPANDED | ExpandableComposite.TWISTIE);
+				GridDataFactory.fillDefaults().grab(true, false).minSize(1, 1).applyTo(expandableConflict);
+
+				FontDescriptor boldDescriptor = FontDescriptor.createFrom(expandableConflict.getFont()).setStyle(SWT.BOLD);
+				Font boldFont = boldDescriptor.createFont(expandableConflict.getDisplay());
+				expandableConflict.setFont(boldFont);
+				expandableConflict.setText(conflict.getTitle());
+
+				Composite conflictControl = new Composite(expandableConflict, SWT.NONE);
+				expandableConflict.setClient(conflictControl);
 
 				GridLayout conflictLayout = new GridLayout(1, false);
 				conflictControl.setLayout(conflictLayout);
-
-				StyledText title = new StyledText(conflictControl, SWT.NONE);
-				title.setText(conflict.getTitle());
-				StyleRange style = new StyleRange();
-				style.start = 0;
-				style.length = title.getText().length();
-				style.fontStyle = SWT.BOLD;
-				title.setStyleRange(style);
 
 				Text description = new Text(conflictControl, SWT.WRAP);
 				GridDataFactory.fillDefaults().grab(true, true).minSize(1, 1).applyTo(description);

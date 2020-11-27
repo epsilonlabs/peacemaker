@@ -9,6 +9,7 @@ Export-Package: org.eclipse.epsilon.peacemaker
 Require-Bundle: org.eclipse.emf.ecore.xmi,
  org.eclipse.emf.ecore.editor,
  org.eclipse.epsilon.common.dt;bundle-version="2.3.0",
- org.junit
+ org.junit,
+ org.eclipse.ui.forms
 Bundle-ActivationPolicy: lazy
 Bundle-Activator: org.eclipse.epsilon.peacemaker.dt.PeaceMakerPlugin
