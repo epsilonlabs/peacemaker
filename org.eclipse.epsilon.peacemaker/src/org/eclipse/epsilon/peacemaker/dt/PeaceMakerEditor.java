@@ -204,125 +204,18 @@ public class PeaceMakerEditor extends EcoreEditor {
 		// Creates the model from the editor input
 		createModel();
 
-		Composite conflictsPage = new Composite(getContainer(), SWT.BORDER);
-		conflictsPage.setBackground(getSite().getShell().getDisplay().getSystemColor(SWT.COLOR_WHITE));
-		int pageIndex = addPage(conflictsPage);
-		setPageText(pageIndex, "PeaceMaker Conflicts");
-
 		// Only creates contents if the resource has been loaded
 		if (!getEditingDomain().getResourceSet().getResources().isEmpty()) {
-
 			pmResource = (PeaceMakerXMIResource) editingDomain.getResourceSet().getResources().get(0);
-			mergedResource = createMergedResource();
-			notifiers = Arrays.asList(pmResource.getLeftResource(), pmResource.getRightResource());
-
-			initializeConflictObjectStatus();
-
-			GridLayout pageLayout = new GridLayout(1, false);
-			conflictsPage.setLayout(pageLayout);
-
-			// separates the resources from the conflicts list
-			SashForm resourceConflictsSash = new SashForm(conflictsPage, SWT.HORIZONTAL);
-			GridDataFactory.fillDefaults().grab(true, true).minSize(1, 1).applyTo(resourceConflictsSash);
-
-			// separates left and right versions from the merged one
-			SashForm topBottomVersionsSash = new SashForm(resourceConflictsSash, SWT.VERTICAL);
-			GridDataFactory.fillDefaults().grab(true, true).minSize(1, 1).applyTo(topBottomVersionsSash);
-
-			// separates left and right versions
-			SashForm leftRightVersionsSash = new SashForm(topBottomVersionsSash, SWT.HORIZONTAL);
-
-
-			// viewer for the left version resource (top left)
-			Composite leftVersion = new Composite(leftRightVersionsSash, SWT.BORDER);
-			leftVersion.setLayout(new GridLayout(1, false));
-
-			Label leftLabel = new Label(leftVersion, SWT.NONE);
-			leftLabel.setText("Our version" +
-					PrettyPrint.format(pmResource.getLeftResource().getVersionName(), " (", ")"));
-
-			Tree leftTree = new Tree(leftVersion, SWT.MULTI);
-			GridDataFactory.fillDefaults().grab(true, true).minSize(1, 1).applyTo(leftTree);
-
-			leftViewer = createVersionViewer(leftTree, pmResource.getLeftResource(), leftObjectStatus);
-			setCurrentViewer(leftViewer);
-
-
-			// viewer for the right version resource (right of left version viewer)
-			Composite rightVersion = new Composite(leftRightVersionsSash, SWT.BORDER);
-			rightVersion.setLayout(new GridLayout(1, false));
-
-			Label rightLabel = new Label(rightVersion, SWT.NONE);
-			rightLabel.setText("Being merged" +
-					PrettyPrint.format(pmResource.getRightResource().getVersionName(), " (", ")"));
-
-			Tree rightTree = new Tree(rightVersion, SWT.MULTI);
-			GridDataFactory.fillDefaults().grab(true, true).minSize(1, 1).applyTo(rightTree);
-
-			rightViewer = createVersionViewer(rightTree, pmResource.getRightResource(), rightObjectStatus);
-			rightViewer.addSelectionChangedListener(viewerChangedListener);
-
-
-			// viewer for the merged version (below left and right viewers)
-			Composite mergedVersion = new Composite(topBottomVersionsSash, SWT.BORDER);
-			mergedVersion.setLayout(new GridLayout(1, false));
-
-			Label mergedLabel = new Label(mergedVersion, SWT.NONE);
-			mergedLabel.setText("Result");
-
-			Tree mergedTree = new Tree(mergedVersion, SWT.MULTI);
-			GridDataFactory.fillDefaults().grab(true, true).minSize(1, 1).applyTo(mergedTree);
-
-			mergedViewer = createMergedViewer(mergedTree);
-			mergedViewer.addSelectionChangedListener(viewerChangedListener);
-
-
-			// list of conflicts along with the available actions (right side)
-			Composite conflictsList = new Composite(resourceConflictsSash, SWT.BORDER);
-			GridDataFactory.fillDefaults().grab(true, true).minSize(1, 1).applyTo(conflictsList);
-
-			GridLayout listLayout = new GridLayout(1, false);
-			conflictsList.setLayout(listLayout);
-
-			for (Conflict conflict : pmResource.getConflicts()) {
-				ExpandableComposite expandableConflict = new ExpandableComposite(conflictsList, SWT.BORDER,
-								ExpandableComposite.EXPANDED | ExpandableComposite.TWISTIE);
-				GridDataFactory.fillDefaults().grab(true, false).minSize(1, 1).applyTo(expandableConflict);
-
-				FontDescriptor boldDescriptor = FontDescriptor.createFrom(expandableConflict.getFont()).setStyle(SWT.BOLD);
-				Font boldFont = boldDescriptor.createFont(expandableConflict.getDisplay());
-				expandableConflict.setFont(boldFont);
-				expandableConflict.setText(conflict.getTitle());
-
-				Composite conflictControl = new Composite(expandableConflict, SWT.NONE);
-				expandableConflict.setClient(conflictControl);
-
-				GridLayout conflictLayout = new GridLayout(1, false);
-				conflictControl.setLayout(conflictLayout);
-
-				Text description = new Text(conflictControl, SWT.WRAP);
-				GridDataFactory.fillDefaults().grab(true, true).minSize(1, 1).applyTo(description);
-				description.setText(conflict.getDescription());
-
-				Link showInTreeViewers = new Link(conflictControl, SWT.WRAP);
-				GridDataFactory.fillDefaults().grab(true, false).minSize(1, 1).applyTo(showInTreeViewers);
-				showInTreeViewers.setText("<a>Show in tree viewers</a>");
-				showInTreeViewers.addSelectionListener(new SelectionAdapter() {
-
-					@Override
-					public void widgetSelected(SelectionEvent e) {
-						refreshViewers(conflict);
-					}
-				});
-
-				ResolveActionGroup resolveGroup = new ResolveActionGroup(conflictControl, SWT.NONE, conflict);
-				GridDataFactory.fillDefaults().grab(false, false).minSize(1, 1).applyTo(resolveGroup.getGroup());
-				resolveGroup.createActionButtons(conflict);
+			if (!pmResource.hasConflicts()) {
+				createSingleViewerPage();
 			}
+			else {
+				mergedResource = createMergedResource();
+				notifiers = Arrays.asList(pmResource.getLeftResource(), pmResource.getRightResource());
 
-			resourceConflictsSash.setWeights(new int[] { 2, 1 });
-			topBottomVersionsSash.setWeights(new int[] { 1, 1 });
-			leftRightVersionsSash.setWeights(new int[] { 1, 1 });
+				createConflictsPage(pmResource);
+			}
 
 			getSite().getShell().getDisplay().asyncExec(new Runnable() {
 
@@ -351,10 +244,154 @@ public class PeaceMakerEditor extends EcoreEditor {
 		});
 
 		getSite().getShell().getDisplay().asyncExec(new Runnable() {
+
 			public void run() {
 				updateProblemIndication();
 			}
 		});
+	}
+
+	protected void createSingleViewerPage() {
+
+		Composite page = new Composite(getContainer(), SWT.NONE);
+		page.setBackground(getSite().getShell().getDisplay().getSystemColor(SWT.COLOR_WHITE));
+		int pageIndex = addPage(page);
+		setPageText(pageIndex, "PeaceMaker Conflicts");
+
+		GridLayout pageLayout = new GridLayout(1, false);
+		page.setLayout(pageLayout);
+
+		Label label = new Label(page, SWT.NONE);
+		label.setText("No conflicts were found");
+
+		Tree tree = new Tree(page, SWT.MULTI);
+		GridDataFactory.fillDefaults().grab(true, true).minSize(1, 1).applyTo(tree);
+
+		selectionViewer = new TreeViewer(tree);
+		setCurrentViewer(selectionViewer);
+
+		selectionViewer.setUseHashlookup(true);
+		selectionViewer.setContentProvider(new AdapterFactoryContentProvider(adapterFactory));
+		selectionViewer.setLabelProvider(new AdapterFactoryLabelProvider(adapterFactory));
+		selectionViewer.setInput(pmResource);
+		selectionViewer.setSelection(new StructuredSelection(pmResource), true);
+		createContextMenuFor(selectionViewer);
+	}
+
+	protected void createConflictsPage(PeaceMakerXMIResource resource) {
+
+		Composite page = new Composite(getContainer(), SWT.NONE);
+		page.setBackground(getSite().getShell().getDisplay().getSystemColor(SWT.COLOR_WHITE));
+		int pageIndex = addPage(page);
+		setPageText(pageIndex, resource.getURI().lastSegment());
+
+		GridLayout pageLayout = new GridLayout(1, false);
+		page.setLayout(pageLayout);
+
+		initializeConflictObjectStatus();
+
+		// separates the resources from the conflicts list
+		SashForm resourceConflictsSash = new SashForm(page, SWT.HORIZONTAL);
+		GridDataFactory.fillDefaults().grab(true, true).minSize(1, 1).applyTo(resourceConflictsSash);
+
+		// separates left and right versions from the merged one
+		SashForm topBottomVersionsSash = new SashForm(resourceConflictsSash, SWT.VERTICAL);
+		GridDataFactory.fillDefaults().grab(true, true).minSize(1, 1).applyTo(topBottomVersionsSash);
+
+		// separates left and right versions
+		SashForm leftRightVersionsSash = new SashForm(topBottomVersionsSash, SWT.HORIZONTAL);
+
+
+		// viewer for the left version resource (top left)
+		Composite leftVersion = new Composite(leftRightVersionsSash, SWT.BORDER);
+		leftVersion.setLayout(new GridLayout(1, false));
+
+		Label leftLabel = new Label(leftVersion, SWT.NONE);
+		leftLabel.setText("Our version" +
+				PrettyPrint.format(pmResource.getLeftResource().getVersionName(), " (", ")"));
+
+		Tree leftTree = new Tree(leftVersion, SWT.MULTI);
+		GridDataFactory.fillDefaults().grab(true, true).minSize(1, 1).applyTo(leftTree);
+
+		leftViewer = createVersionViewer(leftTree, pmResource.getLeftResource(), leftObjectStatus);
+		setCurrentViewer(leftViewer);
+
+
+		// viewer for the right version resource (right of left version viewer)
+		Composite rightVersion = new Composite(leftRightVersionsSash, SWT.BORDER);
+		rightVersion.setLayout(new GridLayout(1, false));
+
+		Label rightLabel = new Label(rightVersion, SWT.NONE);
+		rightLabel.setText("Being merged" +
+				PrettyPrint.format(pmResource.getRightResource().getVersionName(), " (", ")"));
+
+		Tree rightTree = new Tree(rightVersion, SWT.MULTI);
+		GridDataFactory.fillDefaults().grab(true, true).minSize(1, 1).applyTo(rightTree);
+
+		rightViewer = createVersionViewer(rightTree, pmResource.getRightResource(), rightObjectStatus);
+		rightViewer.addSelectionChangedListener(viewerChangedListener);
+
+
+		// viewer for the merged version (below left and right viewers)
+		Composite mergedVersion = new Composite(topBottomVersionsSash, SWT.BORDER);
+		mergedVersion.setLayout(new GridLayout(1, false));
+
+		Label mergedLabel = new Label(mergedVersion, SWT.NONE);
+		mergedLabel.setText("Result");
+
+		Tree mergedTree = new Tree(mergedVersion, SWT.MULTI);
+		GridDataFactory.fillDefaults().grab(true, true).minSize(1, 1).applyTo(mergedTree);
+
+		mergedViewer = createMergedViewer(mergedTree);
+		mergedViewer.addSelectionChangedListener(viewerChangedListener);
+
+
+		// list of conflicts along with the available actions (right side)
+		Composite conflictsList = new Composite(resourceConflictsSash, SWT.BORDER);
+		GridDataFactory.fillDefaults().grab(true, true).minSize(1, 1).applyTo(conflictsList);
+
+		GridLayout listLayout = new GridLayout(1, false);
+		conflictsList.setLayout(listLayout);
+
+		for (Conflict conflict : pmResource.getConflicts()) {
+			ExpandableComposite expandableConflict = new ExpandableComposite(conflictsList, SWT.BORDER,
+					ExpandableComposite.EXPANDED | ExpandableComposite.TWISTIE);
+			GridDataFactory.fillDefaults().grab(true, false).minSize(1, 1).applyTo(expandableConflict);
+
+			FontDescriptor boldDescriptor = FontDescriptor.createFrom(expandableConflict.getFont()).setStyle(SWT.BOLD);
+			Font boldFont = boldDescriptor.createFont(expandableConflict.getDisplay());
+			expandableConflict.setFont(boldFont);
+			expandableConflict.setText(conflict.getTitle());
+
+			Composite conflictControl = new Composite(expandableConflict, SWT.NONE);
+			expandableConflict.setClient(conflictControl);
+
+			GridLayout conflictLayout = new GridLayout(1, false);
+			conflictControl.setLayout(conflictLayout);
+
+			Text description = new Text(conflictControl, SWT.WRAP);
+			GridDataFactory.fillDefaults().grab(true, true).minSize(1, 1).applyTo(description);
+			description.setText(conflict.getDescription());
+
+			Link showInTreeViewers = new Link(conflictControl, SWT.WRAP);
+			GridDataFactory.fillDefaults().grab(true, false).minSize(1, 1).applyTo(showInTreeViewers);
+			showInTreeViewers.setText("<a>Show in tree viewers</a>");
+			showInTreeViewers.addSelectionListener(new SelectionAdapter() {
+
+				@Override
+				public void widgetSelected(SelectionEvent e) {
+					refreshViewers(conflict);
+				}
+			});
+
+			ResolveActionGroup resolveGroup = new ResolveActionGroup(conflictControl, SWT.NONE, conflict);
+			GridDataFactory.fillDefaults().grab(false, false).minSize(1, 1).applyTo(resolveGroup.getGroup());
+			resolveGroup.createActionButtons(conflict);
+		}
+
+		resourceConflictsSash.setWeights(new int[] { 2, 1 });
+		topBottomVersionsSash.setWeights(new int[] { 1, 1 });
+		leftRightVersionsSash.setWeights(new int[] { 1, 1 });
 	}
 
 	protected void initializeConflictObjectStatus() {

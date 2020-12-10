@@ -84,6 +84,19 @@ public class PeaceMakerXMILoad extends XMILoadImpl {
 		ConflictsPreprocessor preprocessor = new ConflictsPreprocessor(inputStream);
 		preprocessor.run();
 
+		PeaceMakerXMIResource pmResource = (PeaceMakerXMIResource) resource;
+
+		if (!preprocessor.hasConflicts()) {
+			// load it as a standard XMI Resource
+			// We need to use the helper contents because the inputStream is used and non-resetable
+			super.load(resource, preprocessor.getLeftVersionHelper().getVersionContents(), options);
+		}
+		else {
+			load(pmResource, preprocessor);
+		}
+	}
+
+	public void load(PeaceMakerXMIResource pmResource, ConflictsPreprocessor preprocessor) throws IOException {
 		if (debug) {
 			System.out.println();
 			System.out.println("<<< Model with Conflicts >>>");
@@ -104,7 +117,6 @@ public class PeaceMakerXMILoad extends XMILoadImpl {
 			System.out.println();
 		}
 
-		PeaceMakerXMIResource pmResource = (PeaceMakerXMIResource) resource;
 		pmResource.loadLeft(preprocessor.getLeftVersionHelper(), preprocessor.getLeftVersionName());
 		pmResource.loadRight(preprocessor.getRightVersionHelper(), preprocessor.getRightVersionName());
 

@@ -184,4 +184,8 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 	public List<Conflict> getConflicts() {
 		return conflicts;
 	}
+
+	public boolean hasConflicts() {
+		return leftResource != null && rightResource != null && !conflicts.isEmpty();
+	}
 }

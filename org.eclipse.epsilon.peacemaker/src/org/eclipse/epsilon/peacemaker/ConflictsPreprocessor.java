@@ -126,6 +126,10 @@ public class ConflictsPreprocessor {
 		}
 	}
 
+	public boolean hasConflicts() {
+		return !line2conflictSection.isEmpty();
+	}
+
 	protected String getVersionName(String line, String regex) {
 		// we already know the line matches the regex
 		Matcher matcher = Pattern.compile(regex).matcher(line);

@@ -21,6 +21,17 @@ public class PeaceMakerXMISave extends XMISaveImpl {
 	public void save(XMLResource resource, OutputStream outputStream, Map<?, ?> options) throws IOException {
 		PeaceMakerXMIResource pmResource = (PeaceMakerXMIResource) resource;
 
+		if (!pmResource.hasConflicts()) {
+			super.save(pmResource, outputStream, options);
+		}
+		else {
+			doSave(pmResource, outputStream, options);
+		}
+	}
+
+	public void doSave(PeaceMakerXMIResource pmResource, OutputStream outputStream,
+			Map<?, ?> options) throws IOException {
+
 		ByteArrayOutputStream leftStream = new ByteArrayOutputStream();
 		pmResource.getLeftResource().save(leftStream, options);
 
