@@ -1,5 +1,6 @@
 package org.eclipse.epsilon.peacemaker.dt;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EventObject;
 import java.util.HashMap;
@@ -16,7 +17,6 @@ import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.presentation.EcoreEditor;
 import org.eclipse.emf.ecore.provider.EcoreItemProviderAdapterFactory;
 import org.eclipse.emf.ecore.resource.Resource;
-import org.eclipse.emf.ecore.xmi.XMIResource;
 import org.eclipse.emf.edit.domain.AdapterFactoryEditingDomain;
 import org.eclipse.emf.edit.provider.ComposedAdapterFactory;
 import org.eclipse.emf.edit.provider.ReflectiveItemProviderAdapterFactory;
@@ -26,6 +26,7 @@ import org.eclipse.emf.edit.ui.provider.AdapterFactoryLabelProvider;
 import org.eclipse.emf.edit.ui.provider.DiagnosticDecorator;
 import org.eclipse.emf.edit.ui.provider.UnwrappingSelectionProvider;
 import org.eclipse.epsilon.peacemaker.ConflictVersionResource;
+import org.eclipse.epsilon.peacemaker.ConflictVersionResourceFactory;
 import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResource;
 import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResourceFactory;
 import org.eclipse.epsilon.peacemaker.conflicts.Conflict;
@@ -67,6 +68,8 @@ import org.eclipse.ui.forms.widgets.ExpandableComposite;
 import org.eclipse.ui.views.properties.PropertySheetPage;
 
 public class PeaceMakerEditor extends EcoreEditor {
+
+	private static final String COPY_EXTENSION = "pmCopy";
 
 	public class ResolveActionGroup {
 
@@ -174,8 +177,10 @@ public class PeaceMakerEditor extends EcoreEditor {
 	protected TreeViewer rightViewer;
 	protected TreeViewer mergedViewer;
 
+	/** the main (i.e. the opened) resource */
 	protected PeaceMakerXMIResource pmResource;
-	protected XMIResource mergedResource;
+	/** referenced resources (might have conflicts too) */
+	protected List<PeaceMakerXMIResource> otherResources = new ArrayList<>();
 
 	protected Map<Group, ResolveActionGroup> resolveGroups = new HashMap<>();
 	protected List<Notifier> notifiers;
@@ -209,10 +214,17 @@ public class PeaceMakerEditor extends EcoreEditor {
 			pmResource = (PeaceMakerXMIResource) editingDomain.getResourceSet().getResources().get(0);
 			if (!pmResource.hasConflicts()) {
 				createSingleViewerPage();
+
+				setReadOnly(pmResource);
 			}
 			else {
-				mergedResource = createMergedResource();
 				notifiers = Arrays.asList(pmResource.getLeftResource(), pmResource.getRightResource());
+
+				if (pmResource.getBaseResource() != null) {
+					setReadOnly(pmResource.getBaseResource());
+				}
+				setReadOnly(pmResource.getLeftResource());
+				setReadOnly(pmResource.getRightResource());
 
 				createConflictsPage(pmResource);
 			}
@@ -301,6 +313,8 @@ public class PeaceMakerEditor extends EcoreEditor {
 		// separates left and right versions
 		SashForm leftRightVersionsSash = new SashForm(topBottomVersionsSash, SWT.HORIZONTAL);
 
+		resource.getResourceSet().getResourceFactoryRegistry().getExtensionToFactoryMap().put(
+				COPY_EXTENSION, new ConflictVersionResourceFactory());
 
 		// viewer for the left version resource (top left)
 		Composite leftVersion = new Composite(leftRightVersionsSash, SWT.BORDER);
@@ -433,16 +447,14 @@ public class PeaceMakerEditor extends EcoreEditor {
 		}
 	}
 
-	protected XMIResource createMergedResource() {
-		return pmResource.getLeftResource();
-	}
-
 	protected TreeViewer createVersionViewer(Tree tree, ConflictVersionResource resource,
 			Map<String, ConflictObjectStatus> objectStatus) {
 		TreeViewer viewer = new TreeViewer(tree);
 
-		ConflictVersionResource copy = new ConflictVersionResource(URI.createURI("" + resource.getURI() + ".copy"));
+		ConflictVersionResource copy = (ConflictVersionResource) resource.getResourceSet().createResource(
+				URI.createURI("" + resource.getURI() + "." + COPY_EXTENSION));
 		CopyUtils.copyContents(resource, copy);
+		setReadOnly(copy);
 
 		viewer.setUseHashlookup(true);
 		viewer.setContentProvider(new AdapterFactoryContentProvider(adapterFactory));
@@ -460,8 +472,8 @@ public class PeaceMakerEditor extends EcoreEditor {
 		viewer.setUseHashlookup(true);
 		viewer.setContentProvider(new AdapterFactoryContentProvider(adapterFactory));
 		viewer.setLabelProvider(new ResultLabelProvider(
-				new AdapterFactoryLabelProvider(adapterFactory), mergedResource, leftObjectStatus));
-		viewer.setInput(mergedResource);
+				new AdapterFactoryLabelProvider(adapterFactory), pmResource.getLeftResource(), leftObjectStatus));
+		viewer.setInput(pmResource.getLeftResource());
 		createContextMenuFor(viewer);
 
 		return viewer;
@@ -482,17 +494,6 @@ public class PeaceMakerEditor extends EcoreEditor {
 	
 	@Override
 	protected void handleActivateGen() {
-		// Recompute the read only state.
-		//
-		if (editingDomain.getResourceToReadOnlyMap() != null) {
-			// PEACEMAKER: single changed line with respect to superclass
-			initReadOnlyResources();
-
-			// Refresh any actions that may become enabled or disabled.
-			//
-			setSelection(getSelection());
-		}
-
 		if (!removedResources.isEmpty()) {
 			if (handleDirtyConflict()) {
 				getSite().getPage().closeEditor(PeaceMakerEditor.this, false);
@@ -606,17 +607,6 @@ public class PeaceMakerEditor extends EcoreEditor {
 				};
 	}
 
-	/**
-	 * Disable manual edition of certain resources of the view
-	 */
-	protected void initReadOnlyResources() {
-		editingDomain.getResourceToReadOnlyMap().clear();
-		editingDomain.getResourceToReadOnlyMap().put(pmResource.getLeftResource(), true);
-		editingDomain.getResourceToReadOnlyMap().put(pmResource.getBaseResource(), true);
-		editingDomain.getResourceToReadOnlyMap().put(pmResource.getRightResource(), true);
-		editingDomain.getResourceToReadOnlyMap().put(mergedResource, true);
-	}
-
 	public void setCurrentViewer(Viewer viewer) {
 		// If it is changing...
 		if (currentViewer != viewer) {
@@ -653,5 +643,9 @@ public class PeaceMakerEditor extends EcoreEditor {
 
 	public ConflictsCommandStack getCommandStack() {
 		return (ConflictsCommandStack) editingDomain.getCommandStack();
+	}
+
+	public void setReadOnly(Resource resource) {
+		editingDomain.getResourceToReadOnlyMap().put(resource, true);
 	}
 }

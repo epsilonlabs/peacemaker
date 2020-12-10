@@ -22,6 +22,10 @@ import org.eclipse.epsilon.peacemaker.conflicts.UpdateDelete;
 
 public class PeaceMakerXMIResource extends XMIResourceImpl {
 
+	private static final String LEFT_VERSION_EXTENSION = "pmLeftVersion";
+	private static final String BASE_VERSION_EXTENSION = "pmBaseVersion";
+	private static final String RIGHT_VERSION_EXTENSION = "pmRightVersion";
+
 	protected ConflictVersionResource leftResource;
 	protected ConflictVersionResource baseResource;
 	protected ConflictVersionResource rightResource;
@@ -43,17 +47,17 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 	}
 
 	public void loadLeft(ConflictVersionHelper versionHelper, String versionName) throws IOException {
-		leftResource = loadVersionResource("leftVersion", versionHelper);
+		leftResource = loadVersionResource(LEFT_VERSION_EXTENSION, versionHelper);
 		leftResource.setVersionName(versionName);
 	}
 
 	public void loadBase(ConflictVersionHelper versionHelper, String versionName) throws IOException {
-		baseResource = loadVersionResource("baseVersion", versionHelper);
+		baseResource = loadVersionResource(BASE_VERSION_EXTENSION, versionHelper);
 		baseResource.setVersionName(versionName);
 	}
 
 	public void loadRight(ConflictVersionHelper versionHelper, String versionName) throws IOException {
-		rightResource = loadVersionResource("rightVersion", versionHelper);
+		rightResource = loadVersionResource(RIGHT_VERSION_EXTENSION, versionHelper);
 		rightResource.setVersionName(versionName);
 	}
 
