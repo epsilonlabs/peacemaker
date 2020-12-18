@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="ASCII"?>
+<Project xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns="psl" xmi:id="project1" name="Blog">
+  <tasks xmi:id="task1" title="Requirements" duration="2">
+    <effort xmi:id="e1" person="aliceID"/>
+  </tasks>
+  <tasks xmi:id="task2" title="Development" start="2" duration="3">
+    <effort xmi:id="e2" person="aliceID" percentage="50"/>
+    <effort xmi:id="e3" person="bobID" percentage="50"/>
+  </tasks>
+  <tasks xmi:id="task3" title="Deployment" start="5" duration="1">
+    <effort xmi:id="e4" person="bobID"/>
+  </tasks>
+  <people xmi:id="aliceID" name="Alice"/>
+  <people xmi:id="bobID" name="Bob"/>
+</Project>
