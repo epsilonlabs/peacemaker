@@ -20,7 +20,7 @@ import org.eclipse.epsilon.peacemaker.util.StreamUtils;
 
 public class PeaceMakerXMILoad extends XMILoadImpl {
 
-	public static final boolean debug = true;
+	public static final boolean debug = false;
 
 	public static void main(String[] args) throws Exception {
 
