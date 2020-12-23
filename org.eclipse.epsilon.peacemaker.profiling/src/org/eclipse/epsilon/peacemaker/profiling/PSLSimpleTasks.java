@@ -21,10 +21,11 @@ public class PSLSimpleTasks extends PSLPerformanceProfiling {
 	@Override
 	public List<List<Object>> getExperiments() {
 		List<List<Object>> experiments = new ArrayList<>();
-		for (int i = 0; i < PSLConflictModelsGenerator.SIMPLE_TASKS_EXPERIMENTS.length; i++) {
+		int[][] simpleTaskExperiments = PSLConflictModelsGenerator.getSimpleTasksExperiments();
+		for (int i = 0; i < simpleTaskExperiments.length; i++) {
 			experiments.add(Arrays.asList(
-					PSLConflictModelsGenerator.SIMPLE_TASKS_EXPERIMENTS[i][0],
-					PSLConflictModelsGenerator.SIMPLE_TASKS_EXPERIMENTS[i][1]));
+					simpleTaskExperiments[i][0],
+					simpleTaskExperiments[i][1]));
 		}
 		return experiments;
 	}

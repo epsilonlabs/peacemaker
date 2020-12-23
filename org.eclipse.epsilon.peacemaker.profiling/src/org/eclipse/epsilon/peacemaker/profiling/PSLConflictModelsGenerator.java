@@ -21,11 +21,21 @@ import psl.Task;
 
 public class PSLConflictModelsGenerator {
 
+	public static void main(String[] args) throws Exception {
+		PSLConflictModelsGenerator generator = new PSLConflictModelsGenerator();
+
+		int[][] simpleTaskExperiments = getSimpleTasksExperiments();
+		for (int i = 0; i < simpleTaskExperiments.length; i++) {
+			generator.createSimpleTasksConflictModels(
+					simpleTaskExperiments[i][0], simpleTaskExperiments[i][1]);
+		}
+		System.out.println("Done");
+	}
+
 	public static final String LEFT = "left";
 	public static final String ANCESTOR = "ancestor";
 	public static final String RIGHT = "right";
 	public static final String CONFLICTED = "conflicted";
-
 
 	@FunctionalInterface
 	public interface SimpleTasksPath {
@@ -37,21 +47,26 @@ public class PSLConflictModelsGenerator {
 					numTasks, numConflicts, suffix);
 
 	/** number of tasks and conflicts per experiment */
-	public static final int[][] SIMPLE_TASKS_EXPERIMENTS = {
-			{ 100, 1 },
-			{ 1000, 1 },
-			{ 10000, 1 }
-	};
+	public static int[][] SIMPLE_TASKS_EXPERIMENTS = null;
 
-
-	public static void main(String[] args) throws Exception {
-		PSLConflictModelsGenerator generator = new PSLConflictModelsGenerator();
-
-		for (int i = 0; i < SIMPLE_TASKS_EXPERIMENTS.length; i++) {
-			generator.createSimpleTasksConflictModels(
-					SIMPLE_TASKS_EXPERIMENTS[i][0], SIMPLE_TASKS_EXPERIMENTS[i][1]);
+	public static int[][] getSimpleTasksExperiments() {
+		if (SIMPLE_TASKS_EXPERIMENTS != null) {
+			return SIMPLE_TASKS_EXPERIMENTS;
 		}
-		System.out.println("Done");
+		int[] numTasks = { 1000, 2000, 5000, 10000, 20000 };
+		int[] numConflicts = { 0, 1, 5, 10 };
+		int numExperiments = numConflicts.length * numTasks.length;
+
+		SIMPLE_TASKS_EXPERIMENTS = new int[numExperiments][2];
+
+		for (int tasks = 0; tasks < numTasks.length; tasks++) {
+			for (int conflicts = 0; conflicts < numConflicts.length; conflicts++) {
+				int position = tasks * numConflicts.length + conflicts;
+				SIMPLE_TASKS_EXPERIMENTS[position][0] = numTasks[tasks];
+				SIMPLE_TASKS_EXPERIMENTS[position][1] = numConflicts[conflicts];
+			}
+		}
+		return SIMPLE_TASKS_EXPERIMENTS;
 	}
 
 
@@ -65,7 +80,7 @@ public class PSLConflictModelsGenerator {
 		pslFactory = PslPackage.eINSTANCE.getPslFactory();
 	}
 
-	protected void createSimpleTasksConflictModels(int numTasks, int numConflicts) throws Exception {
+	public void createSimpleTasksConflictModels(int numTasks, int numConflicts) throws Exception {
 		String ancestorPath = SIMPLE_TASKS_PATH.getPath(numTasks, numConflicts, ANCESTOR);
 		String leftPath = SIMPLE_TASKS_PATH.getPath(numTasks, numConflicts, LEFT);
 		String rightPath = SIMPLE_TASKS_PATH.getPath(numTasks, numConflicts, RIGHT);
