@@ -4,9 +4,9 @@ package psl;
 class Project {
   attr String name;
   attr String description;
-  val Task[*] tasks;
-  val Person[*] people;
   val Skill[*] skills;
+  val Person[*] people;
+  val Task[*] tasks;
 }
 
 class Task {
