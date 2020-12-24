@@ -30,10 +30,13 @@ public abstract class MDBench {
 
 	public void run() throws Exception {
 		results.add(getResultsHeader());
+		System.out.println(results.get(0));
 		for (int warmupRep = 0; warmupRep < warmupReps; warmupRep++) {
+			System.out.println("Warmup rep " + warmupRep);
 			runIteration(false);
 		}
 		for (int rep = 0; rep < repetitions; rep++) {
+			System.out.println("Rep " + rep);
 			runIteration(true);
 		}
 	}
@@ -45,6 +48,7 @@ public abstract class MDBench {
 				result.add(parameter.toString());
 			}
 			doRunIteration(parameters, result);
+			System.out.println(result);
 			if (recordResults) {
 				results.add(result);
 			}
