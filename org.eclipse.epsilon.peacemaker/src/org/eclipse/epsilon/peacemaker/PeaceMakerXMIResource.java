@@ -27,8 +27,11 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 	private static final String RIGHT_VERSION_EXTENSION = "pmRightVersion";
 
 	protected ConflictVersionResource leftResource;
-	protected ConflictVersionResource baseResource;
 	protected ConflictVersionResource rightResource;
+
+	protected ConflictVersionResource baseResource;
+	protected ConflictVersionHelper baseVersionHelper;
+	protected String baseVersionName;
 
 	protected List<Conflict> conflicts = new ArrayList<>();
 
@@ -47,22 +50,35 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 	}
 
 	public void loadLeft(ConflictVersionHelper versionHelper, String versionName) throws IOException {
-		leftResource = loadVersionResource(LEFT_VERSION_EXTENSION, versionHelper);
-		leftResource.setVersionName(versionName);
+		leftResource = loadVersionResource(LEFT_VERSION_EXTENSION, versionHelper, versionName);
+	}
+
+	/**
+	 * Checks if there is ancestor version information, also loads it if not loaded yet
+	 */
+	protected boolean hasBaseVersion() throws IOException {
+		if (baseVersionHelper != null) {
+			if (baseResource == null) {
+				// demand-load of the resource
+				baseResource = loadVersionResource(BASE_VERSION_EXTENSION, baseVersionHelper, baseVersionName);
+			}
+			return true;
+		}
+		return false;
 	}
 
 	public void loadBase(ConflictVersionHelper versionHelper, String versionName) throws IOException {
-		baseResource = loadVersionResource(BASE_VERSION_EXTENSION, versionHelper);
-		baseResource.setVersionName(versionName);
+		// this version is loaded on demand (i.e. if needed for the tests)
+		baseVersionHelper = versionHelper;
+		baseVersionName = versionName;
 	}
 
 	public void loadRight(ConflictVersionHelper versionHelper, String versionName) throws IOException {
-		rightResource = loadVersionResource(RIGHT_VERSION_EXTENSION, versionHelper);
-		rightResource.setVersionName(versionName);
+		rightResource = loadVersionResource(RIGHT_VERSION_EXTENSION, versionHelper, versionName);
 	}
 
 	protected ConflictVersionResource loadVersionResource(String extension,
-			ConflictVersionHelper versionHelper) throws IOException {
+			ConflictVersionHelper versionHelper, String versionName) throws IOException {
 
 		URI versionURI = uri.appendFileExtension(extension);
 		getResourceSet().getResourceFactoryRegistry().getExtensionToFactoryMap().put(
@@ -72,79 +88,75 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 				(ConflictVersionResource) getResourceSet().createResource(versionURI);
 		resource.setVersionHelper(versionHelper);
 		resource.load(versionHelper.getVersionContents(), Collections.EMPTY_MAP);
+		resource.setVersionName(versionName);
 
 		return resource;
 	}
 
-	public void identifyConflicts(List<ConflictSection> conflictSections) {
+	public void identifyConflicts(List<ConflictSection> conflictSections) throws IOException {
 		for (ConflictSection cs : conflictSections) {
 			identifyConflicts(cs);
 		}
 	}
 
-	protected void identifyConflicts(ConflictSection conflictSection) {
-		for (String id : new ArrayList<>(conflictSection.getLeftIds())) {
+	protected void identifyConflicts(ConflictSection conflictSection) throws IOException {
+		for (String id : conflictSection.getLeftIds()) {
 
 			EObject leftObj = getLeftEObject(id);
 			
 			if (conflictSection.rightContains(id)) {
-				// TODO: include here a more fine-grained analysis that can
-				//       detect concrete changes (e.g. AttributeRedefinitions)
 				addConflict(new ObjectRedefinition(id, this));
-				conflictSection.removeLeft(id);
 				conflictSection.removeRight(id);
 			}
-			else if (conflictSection.baseContains(id)) {
+			else if (checkContainmentReference(id, leftObj, conflictSection)) {
+				// special object redefinition case
+			}
+			else if (hasBaseVersion() && conflictSection.baseContains(id)) {
 				// object updated in left version, and deleted in the right one
 				addConflict(new UpdateDelete(id, this, true));
-				conflictSection.removeLeft(id);
 			}
 			else {
-				// check containing ref again
-				EStructuralFeature feature = leftObj.eContainingFeature();
-
-				if (feature != null && isContainmentNotManyReference(feature)) {
-					EReference ref = (EReference) feature;
-					
-					String rightParentId = getLeftId(leftObj.eContainer());
-					EObject rightParent = getRightEObject(rightParentId);
-					if (rightParent == null) {
-						throw new RuntimeException("complicated reference case, study deeper");
-					}
-
-					EObject rightObj = (EObject) rightParent.eGet(ref);
-
-					if (rightObj != null) {
-						ReferenceRedefinition redef = new ReferenceRedefinition(rightParentId, this, ref);
-						addConflict(redef);
-						conflictSection.removeLeft(id);
-						conflictSection.removeRight(getRightId(rightObj));
-					}
-					else {
-						throw new RuntimeException("changed reference in left, deleted in right?");
-					}
-				}
+				// not identified as part of a conflict: "free" element to keep or remove
+				addConflict(new UnconflictedObject(id, this, true));
 			}
 		}
 
 		// UpdateDelete conflicts can appear the other way (update in right version, delete in left)
 		// loop over right ids to detect those cases
-		for (String id : new ArrayList<>(conflictSection.getRightIds())) {
-			if (conflictSection.baseContains(id)) {
+		for (String id : conflictSection.getRightIds()) {
+			if (hasBaseVersion() && conflictSection.baseContains(id)) {
 				// object updated in right version, and deleted in the left one
 				addConflict(new UpdateDelete(id, this, false));
-				conflictSection.removeRight(id);
+			}
+			else {
+				// not identified as part of a conflict: "free" element to keep or remove
+				addConflict(new UnconflictedObject(id, this, false));
 			}
 		}
-		
-		// Any element remaining on the conflict section has not been identified
-		//   as part of a conflict. Indicate them as "free" elements to keep or remove
-		for (String id : new ArrayList<>(conflictSection.getLeftIds())) {
-			addConflict(new UnconflictedObject(id, this, true));
+	}
+
+	protected boolean checkContainmentReference(String leftId, EObject leftObj, ConflictSection conflictSection) {
+		EStructuralFeature feature = leftObj.eContainingFeature();
+
+		if (feature != null && isContainmentNotManyReference(feature)) {
+			EReference ref = (EReference) feature;
+
+			String rightParentId = getLeftId(leftObj.eContainer());
+			EObject rightParent = getRightEObject(rightParentId);
+			if (rightParent == null) {
+				throw new RuntimeException("complicated reference case, study deeper");
+			}
+
+			EObject rightObj = (EObject) rightParent.eGet(ref);
+
+			if (rightObj != null) {
+				ReferenceRedefinition redef = new ReferenceRedefinition(rightParentId, this, ref);
+				addConflict(redef);
+				conflictSection.removeRight(getRightId(rightObj));
+				return true;
+			}
 		}
-		for (String id : new ArrayList<>(conflictSection.getRightIds())) {
-			addConflict(new UnconflictedObject(id, this, false));
-		}
+		return false;
 	}
 
 	protected boolean isContainmentNotManyReference(EStructuralFeature feature) {

@@ -3,6 +3,8 @@
   <comics xmi:id="comic1" title="Bad Weekend">
 <<<<<<< HEAD
     <prologue xmi:id="prologue1" author="Alan Moore" text="A good one indeed (this is left)"/>
+|||||||
+    <prologue xmi:id="prologue1" author="Alan Moore" text="A good one indeed (this is ancestor)"/>
 =======
     <prologue xmi:id="prologue2" author="Joe Hill" text="Buy this one for sure (this is right)"/>
 >>>>>>> branch
@@ -10,6 +12,8 @@
   <comics xmi:id="comic2" title="Worse Weekend">
 <<<<<<< HEAD
     <prologue xmi:id="prologue3" author="Alan Moore" text="A good one indeed (this is left)"/>
+|||||||
+    <prologue xmi:id="prologue3" author="Alan Moore" text="A good one indeed (this is ancestor"/>
 =======
     <prologue xmi:id="prologue3" author="Joe Hill" text="Buy this one for sure (this is right)"/>
 >>>>>>> branch
