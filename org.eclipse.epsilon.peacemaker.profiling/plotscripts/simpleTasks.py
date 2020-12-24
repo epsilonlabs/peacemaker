@@ -62,6 +62,9 @@ conflicts = df[c_conflicts].unique()
 f = plt.figure(figsize=(6,6*len(conflicts)))
 axes = f.subplots(nrows=len(conflicts), ncols=1)
 
+if type(axes) != np.ndarray:
+    axes = [axes]
+
 # for 4 graphs
 # f = plt.figure(figsize=(10,10))
 # axes = [item for sublist in f.subplots(nrows=2, ncols=2) for item in sublist]
@@ -76,15 +79,26 @@ for conflict, ax in zip(conflicts, axes):
             df_conflict["{}_mean".format(c_emfcompare)],
             marker="^",
             label="EMF Compare")
-    # ax.plot(df_conflict[c_elems],
-    #         df_conflict["{}_mean".format(c_emfdiffmerge)],
-    #         marker="s",
-    #         label="EMF DiffMerge")
+    ax.plot(df_conflict[c_elems],
+            df_conflict["{}_mean".format(c_emfdiffmerge)],
+            marker="s",
+            label="EMF DiffMerge")
     ax.set_ylim(bottom=0)
-    ax.set_xlabel("Number of elements")
+    ax.set_xlabel("Number of project tasks")
     ax.set_ylabel("Conflict detection time (ms)")
-    ax.set_title("{} Conflicts".format(conflict))
+    ax.set_title("Psl models with {} Conflicts".format(conflict))
     ax.legend()
 
 f.tight_layout()
 f.savefig("{}_times.pdf".format(filename), bbox_inches='tight')
+
+#%%
+df_norm = df[["{}_mean".format(m) for m in measurements]].copy()
+df_norm["{}_mean".format(c_emfcompare)] = df_norm["{}_mean".format(c_emfcompare)] /df_norm["{}_mean".format(c_pm)]
+df_norm["{}_mean".format(c_emfdiffmerge)] = df_norm["{}_mean".format(c_emfdiffmerge)] /df_norm["{}_mean".format(c_pm)]
+df_norm["{}_mean".format(c_pm)] = 1
+
+print(df_norm["{}_mean".format(c_emfcompare)].mean())
+print(df_norm["{}_mean".format(c_emfdiffmerge)].mean())
+
+df_norm.to_csv("{}_normalised.csv".format(filename), index=False)
