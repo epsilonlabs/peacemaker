@@ -56,19 +56,25 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 	/**
 	 * Checks if there is ancestor version information, also loads it if not loaded yet
 	 */
-	protected boolean hasBaseVersion() throws IOException {
+	protected boolean hasBaseVersion() {
 		if (baseVersionHelper != null) {
 			if (baseResource == null) {
 				// demand-load of the resource
-				baseResource = loadVersionResource(BASE_VERSION_EXTENSION, baseVersionHelper, baseVersionName);
+				try {
+					baseResource = loadVersionResource(BASE_VERSION_EXTENSION, baseVersionHelper, baseVersionName);
+				}
+				catch (IOException ex) {
+					ex.printStackTrace();
+					return false;
+				}
 			}
 			return true;
 		}
 		return false;
 	}
 
-	public void loadBase(ConflictVersionHelper versionHelper, String versionName) throws IOException {
-		// this version is loaded on demand (i.e. if needed for the tests)
+	public void loadBase(ConflictVersionHelper versionHelper, String versionName) {
+		// this version is loaded on demand (i.e. if needed to identify conflicts)
 		baseVersionHelper = versionHelper;
 		baseVersionName = versionName;
 	}
@@ -93,13 +99,13 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 		return resource;
 	}
 
-	public void identifyConflicts(List<ConflictSection> conflictSections) throws IOException {
+	public void identifyConflicts(List<ConflictSection> conflictSections) {
 		for (ConflictSection cs : conflictSections) {
 			identifyConflicts(cs);
 		}
 	}
 
-	protected void identifyConflicts(ConflictSection conflictSection) throws IOException {
+	protected void identifyConflicts(ConflictSection conflictSection) {
 		for (String id : conflictSection.getLeftIds()) {
 
 			EObject leftObj = getLeftEObject(id);
@@ -141,16 +147,15 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 		if (feature != null && isContainmentNotManyReference(feature)) {
 			EReference ref = (EReference) feature;
 
-			String rightParentId = getLeftId(leftObj.eContainer());
-			EObject rightParent = getRightEObject(rightParentId);
+			String parentId = getLeftId(leftObj.eContainer());
+			EObject rightParent = getRightEObject(parentId);
 			if (rightParent == null) {
 				throw new RuntimeException("complicated reference case, study deeper");
 			}
 
 			EObject rightObj = (EObject) rightParent.eGet(ref);
-
-			if (rightObj != null) {
-				ReferenceRedefinition redef = new ReferenceRedefinition(rightParentId, this, ref);
+			if (rightObj != null && conflictSection.rightContains(getRightId(rightObj))) {
+				ReferenceRedefinition redef = new ReferenceRedefinition(parentId, this, ref);
 				addConflict(redef);
 				conflictSection.removeRight(getRightId(rightObj));
 				return true;
@@ -174,7 +179,10 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 	}
 
 	public ConflictVersionResource getBaseResource() {
-		return baseResource;
+		if (hasBaseVersion()) {
+			return baseResource;
+		}
+		return null;
 	}
 
 	public ConflictVersionResource getRightResource() {
