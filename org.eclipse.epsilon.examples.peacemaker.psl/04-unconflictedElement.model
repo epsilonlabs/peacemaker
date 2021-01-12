@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="ASCII"?>
+<Project xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns="psl" xmi:id="project1" name="Blog">
+  <tasks xmi:id="task1" title="Preparation" start="0"/>
+<<<<<<< left.model
+  <tasks xmi:id="task2" title="Analysis" start="1"/>
+  <tasks xmi:id="task3" title="Distribution" start="2"/>
+||||||| base.model
+  <tasks xmi:id="task2" title="Analysis" start="2"/>
+=======
+>>>>>>> right.model
+  <people xmi:id="aliceID" name="Alice"/>
+  <people xmi:id="bobID" name="Bob"/>
+</Project>
