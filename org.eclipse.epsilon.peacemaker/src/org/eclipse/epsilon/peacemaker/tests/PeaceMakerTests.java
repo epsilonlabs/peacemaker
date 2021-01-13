@@ -36,18 +36,25 @@ public class PeaceMakerTests {
 
 	@BeforeClass
 	public static void init() throws IOException {
+
+		resourceSet = new ResourceSetImpl();
+
 		ResourceSet ecoreResourceSet = new ResourceSetImpl();
 		ecoreResourceSet.getResourceFactoryRegistry().getExtensionToFactoryMap().put(
 				"*", new XMIResourceFactoryImpl());
-		Resource ecoreResource = ecoreResourceSet.createResource(
-				URI.createFileURI(new File("models/comicshop.ecore").getAbsolutePath()));
-		ecoreResource.load(null);
 
-		resourceSet = new ResourceSetImpl();
-		for (EObject o : ecoreResource.getContents()) {
-			EPackage ePackage = (EPackage) o;
-			resourceSet.getPackageRegistry().put(ePackage.getNsURI(), ePackage);
+		String[] ecoreFiles = { "models/comicshop.ecore", "models/comicshopIds.ecore" };
+		for (String ecoreFile : ecoreFiles) {
+			Resource ecoreResource = ecoreResourceSet.createResource(
+					URI.createFileURI(new File(ecoreFile).getAbsolutePath()));
+			ecoreResource.load(null);
+
+			for (EObject o : ecoreResource.getContents()) {
+				EPackage ePackage = (EPackage) o;
+				resourceSet.getPackageRegistry().put(ePackage.getNsURI(), ePackage);
+			}
 		}
+
 		resourceSet.getResourceFactoryRegistry().getExtensionToFactoryMap().put(
 				"model", new PeaceMakerXMIResourceFactory());
 	}
@@ -205,6 +212,27 @@ public class PeaceMakerTests {
 		resource.getConflicts().get(0).resolve(ResolveAction.KEEP_RIGHT);
 
 		assertTrue(ExternalCrossReferencer.find(resource.getRightResource()).isEmpty());
+	}
+
+	@Test
+	public void testEcoreIds() throws IOException {
+		String inputCase = "17-attribute-EcoreIds";
+		displayCase(inputCase);
+
+		PeaceMakerXMIResource resource = loadConflictResource(String.format(CONFLICTS_LOCATION, inputCase));
+
+		// getEObject works because after checking for the XMI id, it looks for Ecore ids
+		assertTrue(resource.getLeftEObject("shop1") != null);
+		assertTrue(resource.getLeftEObject("comic1") != null);
+		assertTrue(resource.getLeftEObject("comic2") != null);
+
+		// getID should only return an id if it is an XMI one
+		assertTrue(resource.getLeftResource().getID(resource.getLeftEObject("shop1")) == null);
+		assertTrue(resource.getLeftResource().getID(resource.getLeftEObject("comic1")) == null);
+		assertTrue(resource.getLeftResource().getID(resource.getLeftEObject("comic2")) == null);
+
+		assertTrue(resource.getConflicts().size() == 1);
+		assertTrue(resource.getConflicts().get(0) instanceof ObjectRedefinition);
 	}
 
 	public static void displayCase(String inputCase) {

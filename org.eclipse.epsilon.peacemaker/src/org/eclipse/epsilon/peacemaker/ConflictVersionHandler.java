@@ -2,7 +2,6 @@ package org.eclipse.epsilon.peacemaker;
 
 import java.util.Map;
 
-import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.xmi.XMLHelper;
 import org.eclipse.emf.ecore.xmi.XMLResource;
 import org.eclipse.emf.ecore.xmi.impl.SAXXMIHandler;
@@ -33,7 +32,7 @@ public class ConflictVersionHandler extends SAXXMIHandler {
 		int start = currentLine;
 		int end = locator.getLineNumber();
 
-		versionHelper.addToConflictSections(start, end, getId(objects.peek()));
+		versionHelper.addToConflictSections(start, end, versionResource.getAvailableId(objects.peek()));
 
 		currentLine = end + 1;
 	}
@@ -43,18 +42,5 @@ public class ConflictVersionHandler extends SAXXMIHandler {
 		super.endElement(uri, localName, name);
 
 		currentLine = locator.getLineNumber() + 1;
-	}
-
-	@Override
-	public void endDocument() {
-		super.endDocument();
-	}
-
-	public String getId(EObject obj) {
-		return versionResource.getID(obj);
-	}
-
-	public EObject getEObject(String id) {
-		return versionResource.getEObject(id);
 	}
 }

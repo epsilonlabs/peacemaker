@@ -190,11 +190,11 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 	}
 
 	public String getLeftId(EObject obj) {
-		return leftResource.getID(obj);
+		return leftResource.getAvailableId(obj);
 	}
 
 	public String getRightId(EObject obj) {
-		return rightResource.getID(obj);
+		return rightResource.getAvailableId(obj);
 	}
 
 	public EObject getLeftEObject(String id) {

@@ -50,10 +50,14 @@ public class CopyUtils {
 					}
 				}
 			}
-			
-			String replacingObjId = getId(replacingObj);
-			if (!replacingObjId.equals(getId(replacedObj))) {
-				setId(replacedObj, replacingObjId);
+
+			ConflictVersionResource resource = 
+					(ConflictVersionResource) replacingObj.eResource();
+			if (resource.hasXMIID(replacingObj)) {
+				String replacingObjId = resource.getID(replacingObj);
+				if (!replacingObjId.equals(getXMIId(replacedObj))) {
+					setXMIId(replacedObj, replacingObjId);
+				}
 			}
 		}
 
@@ -211,16 +215,20 @@ public class CopyUtils {
 	}
 
 	protected static void copyIds(EObject obj, EObject copy) {
-		XMIResource objResource = (XMIResource)obj.eResource();
-		XMIResource copyResource = (XMIResource)copy.eResource();
-		
-		copyResource.setID(copy, objResource.getID(obj));
+		ConflictVersionResource objResource = (ConflictVersionResource) obj.eResource();
 
-		Iterator<EObject> objContents = obj.eAllContents();
-		Iterator<EObject> copyContents = copy.eAllContents();
+		// here it is asumed that if an object of the model has an XMI id, then
+		// all objects have one
+		if (objResource.hasXMIID(obj)) {
+			XMIResource copyResource = (XMIResource) copy.eResource();
+			copyResource.setID(copy, objResource.getID(obj));
 
-		while (objContents.hasNext()) {
-			copyResource.setID(copyContents.next(), objResource.getID(objContents.next()));
+			Iterator<EObject> objContents = obj.eAllContents();
+			Iterator<EObject> copyContents = copy.eAllContents();
+
+			while (objContents.hasNext()) {
+				copyResource.setID(copyContents.next(), objResource.getID(objContents.next()));
+			}
 		}
 	}
 
@@ -287,14 +295,14 @@ public class CopyUtils {
 		}
 	}
 
-	public static String getId(EObject obj) {
+	public static String getXMIId(EObject obj) {
 		if (obj.eResource() == null) {
 			throw new IllegalStateException("Object has no resource");
 		}
 		return ((XMIResource) obj.eResource()).getID(obj);
 	}
 
-	public static void setId(EObject obj, String id) {
+	public static void setXMIId(EObject obj, String id) {
 		if (obj.eResource() == null) {
 			throw new IllegalStateException("Object has no resource");
 		}
