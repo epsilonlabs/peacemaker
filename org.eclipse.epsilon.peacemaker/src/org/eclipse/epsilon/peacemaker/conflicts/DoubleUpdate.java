@@ -7,20 +7,20 @@ import org.eclipse.epsilon.peacemaker.util.PrettyPrint;
 
 /**
  * A conflict indicating that an object with the same id has been modified in
- * each segment of a conflict section
+ * the left and right segments of a conflict section
  *
  * @author alfonsodelavega
  *
  */
-public class ObjectRedefinition extends Conflict {
+public class DoubleUpdate extends Conflict {
 
 	protected EObject leftObject;
 	protected EObject rightObject;
 
 	/**
-	 * Create a object redefinition conflict
+	 * Create a double update conflict
 	 */
-	public ObjectRedefinition(String objectId, PeaceMakerXMIResource pmResource) {
+	public DoubleUpdate(String objectId, PeaceMakerXMIResource pmResource) {
 		super(objectId, pmResource);
 		leftObject = pmResource.getLeftEObject(eObjectId);
 		rightObject = pmResource.getRightEObject(eObjectId);
@@ -88,13 +88,13 @@ public class ObjectRedefinition extends Conflict {
 
 	@Override
 	public String getTitle() {
-		return "Object Redefinition";
+		return "Double Update";
 	}
 
 	@Override
 	public String getDescription() {
 		return String.format(
-				"A %s object with the same id (%s) has been redefined in the left and right versions",
+				"A %s object with the same id (%s) has been updated in the left and right versions",
 				leftObject.eClass().getName(), eObjectId);
 	}
 }

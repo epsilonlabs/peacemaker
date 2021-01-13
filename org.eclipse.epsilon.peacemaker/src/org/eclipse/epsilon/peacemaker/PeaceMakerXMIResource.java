@@ -15,8 +15,8 @@ import org.eclipse.emf.ecore.xmi.impl.XMIResourceImpl;
 import org.eclipse.epsilon.peacemaker.ConflictsPreprocessor.ConflictVersionHelper;
 import org.eclipse.epsilon.peacemaker.conflicts.Conflict;
 import org.eclipse.epsilon.peacemaker.conflicts.ConflictSection;
-import org.eclipse.epsilon.peacemaker.conflicts.ObjectRedefinition;
-import org.eclipse.epsilon.peacemaker.conflicts.ReferenceRedefinition;
+import org.eclipse.epsilon.peacemaker.conflicts.DoubleUpdate;
+import org.eclipse.epsilon.peacemaker.conflicts.ReferenceDoubleUpdate;
 import org.eclipse.epsilon.peacemaker.conflicts.UnconflictedObject;
 import org.eclipse.epsilon.peacemaker.conflicts.UpdateDelete;
 
@@ -111,11 +111,12 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 			EObject leftObj = getLeftEObject(id);
 			
 			if (conflictSection.rightContains(id)) {
-				addConflict(new ObjectRedefinition(id, this));
+				addConflict(new DoubleUpdate(id, this));
 				conflictSection.removeRight(id);
 			}
 			else if (checkContainmentReference(id, leftObj, conflictSection)) {
-				// special object redefinition case
+				// special double update case: single containment reference
+				// that contains objects with distinct ids in left and right
 			}
 			else if (hasBaseVersion() && conflictSection.baseContains(id)) {
 				// object updated in left version, and deleted in the right one
@@ -155,8 +156,7 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 
 			EObject rightObj = (EObject) rightParent.eGet(ref);
 			if (rightObj != null && conflictSection.rightContains(getRightId(rightObj))) {
-				ReferenceRedefinition redef = new ReferenceRedefinition(parentId, this, ref);
-				addConflict(redef);
+				addConflict(new ReferenceDoubleUpdate(parentId, this, ref));
 				conflictSection.removeRight(getRightId(rightObj));
 				return true;
 			}

@@ -8,10 +8,12 @@ import org.eclipse.epsilon.peacemaker.util.CopyUtils;
 import org.eclipse.epsilon.peacemaker.util.PrettyPrint;
 
 /**
- * Conflict caused by redefining a single (i.e. !isMany()) containment reference
+ * A special case of a double update conflict where the changes happen in a
+ * single (i.e. !isMany()) containment reference
+ * 
  * @author alfonsodelavega
  */
-public class ReferenceRedefinition extends Conflict {
+public class ReferenceDoubleUpdate extends Conflict {
 
 	protected EReference reference;
 
@@ -22,13 +24,14 @@ public class ReferenceRedefinition extends Conflict {
 	protected String rightValueId;
 
 	/**
-	 * Create a reference redefinition conflict
+	 * Create a reference double update conflict
 	 *
 	 * @param parentId  The parent that contains the reference feature
 	 * @param reference
 	 */
-	public ReferenceRedefinition(String parentId, PeaceMakerXMIResource pmResource,
+	public ReferenceDoubleUpdate(String parentId, PeaceMakerXMIResource pmResource,
 			EReference reference) {
+		
 		super(parentId, pmResource);
 		this.reference = reference;
 
@@ -121,7 +124,7 @@ public class ReferenceRedefinition extends Conflict {
 
 	@Override
 	public String getTitle() {
-		return "Reference Redefinition";
+		return "Reference Update";
 	}
 
 	@Override
@@ -129,7 +132,7 @@ public class ReferenceRedefinition extends Conflict {
 		String referenceEClass = ((EClass)reference.eContainer()).getName();
 		return String.format(
 				"The single-bounded and containment reference \"%s\" from type %s" +
-				" was redefined on the left and right versions of a %s object with id %s",
+				" was updated on the left and right versions of a %s object with id %s",
 				reference.getName(), referenceEClass, referenceEClass, eObjectId);
 	}
 }

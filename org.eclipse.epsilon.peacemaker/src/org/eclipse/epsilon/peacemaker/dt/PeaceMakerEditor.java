@@ -32,7 +32,6 @@ import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResourceFactory;
 import org.eclipse.epsilon.peacemaker.conflicts.Conflict;
 import org.eclipse.epsilon.peacemaker.conflicts.Conflict.ConflictObjectStatus;
 import org.eclipse.epsilon.peacemaker.conflicts.Conflict.ResolveAction;
-import org.eclipse.epsilon.peacemaker.conflicts.ReferenceRedefinition;
 import org.eclipse.epsilon.peacemaker.util.CopyUtils;
 import org.eclipse.epsilon.peacemaker.util.PrettyPrint;
 import org.eclipse.jface.action.MenuManager;
@@ -415,14 +414,8 @@ public class PeaceMakerEditor extends EcoreEditor {
 	}
 
 	protected void updateConflictObjectStatus(Conflict conflict, ResolveAction action) {
-		if (conflict instanceof ReferenceRedefinition) {
-			leftObjectStatus.put(conflict.getLeftVersionId(), conflict.getLeftStatus(action));
-			rightObjectStatus.put(conflict.getRightVersionId(), conflict.getRightStatus(action));
-		}
-		else {
-			leftObjectStatus.put(conflict.getEObjectId(), conflict.getLeftStatus(action));
-			rightObjectStatus.put(conflict.getEObjectId(), conflict.getRightStatus(action));
-		}
+		leftObjectStatus.put(conflict.getLeftVersionId(), conflict.getLeftStatus(action));
+		rightObjectStatus.put(conflict.getRightVersionId(), conflict.getRightStatus(action));
 	}
 
 	protected void refreshViewers(Conflict conflict) {

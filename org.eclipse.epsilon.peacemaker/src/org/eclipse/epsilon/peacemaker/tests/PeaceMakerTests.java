@@ -20,8 +20,8 @@ import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResource;
 import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResourceFactory;
 import org.eclipse.epsilon.peacemaker.conflicts.Conflict;
 import org.eclipse.epsilon.peacemaker.conflicts.Conflict.ResolveAction;
-import org.eclipse.epsilon.peacemaker.conflicts.ObjectRedefinition;
-import org.eclipse.epsilon.peacemaker.conflicts.ReferenceRedefinition;
+import org.eclipse.epsilon.peacemaker.conflicts.DoubleUpdate;
+import org.eclipse.epsilon.peacemaker.conflicts.ReferenceDoubleUpdate;
 import org.eclipse.epsilon.peacemaker.conflicts.UpdateDelete;
 import org.eclipse.epsilon.peacemaker.dt.ConflictResolveCommand;
 import org.eclipse.epsilon.peacemaker.util.FormatModels;
@@ -68,7 +68,7 @@ public class PeaceMakerTests {
 		PeaceMakerXMIResource resource = loadConflictResource(String.format(CONFLICTS_LOCATION, inputCase));
 
 		assertTrue(resource.getConflicts().size() == 2);
-		assertTrue(resource.getConflicts().get(0) instanceof ReferenceRedefinition);
+		assertTrue(resource.getConflicts().get(0) instanceof ReferenceDoubleUpdate);
 
 		System.out.println("\nKeep left in both (FULL RESOLUTION)");
 		resource.getConflicts().get(0).resolve(ResolveAction.KEEP_LEFT);
@@ -184,7 +184,7 @@ public class PeaceMakerTests {
 		PeaceMakerXMIResource resource = loadConflictResource(String.format(CONFLICTS_LOCATION, inputCase));
 
 		assertTrue(resource.getConflicts().size() == 1);
-		assertTrue(resource.getConflicts().get(0) instanceof ObjectRedefinition);
+		assertTrue(resource.getConflicts().get(0) instanceof DoubleUpdate);
 	}
 
 	@Test
@@ -195,7 +195,7 @@ public class PeaceMakerTests {
 		PeaceMakerXMIResource resource = loadConflictResource(String.format(CONFLICTS_LOCATION, inputCase));
 
 		assertTrue(resource.getConflicts().size() == 1);
-		assertTrue(resource.getConflicts().get(0) instanceof ObjectRedefinition);
+		assertTrue(resource.getConflicts().get(0) instanceof DoubleUpdate);
 
 		resource.getConflicts().get(0).resolve(ResolveAction.KEEP_LEFT);
 
@@ -207,7 +207,7 @@ public class PeaceMakerTests {
 		resource = loadConflictResource(String.format(CONFLICTS_LOCATION, inputCase));
 
 		assertTrue(resource.getConflicts().size() == 1);
-		assertTrue(resource.getConflicts().get(0) instanceof ObjectRedefinition);
+		assertTrue(resource.getConflicts().get(0) instanceof DoubleUpdate);
 
 		resource.getConflicts().get(0).resolve(ResolveAction.KEEP_RIGHT);
 
@@ -232,7 +232,7 @@ public class PeaceMakerTests {
 		assertTrue(resource.getLeftResource().getID(resource.getLeftEObject("comic2")) == null);
 
 		assertTrue(resource.getConflicts().size() == 1);
-		assertTrue(resource.getConflicts().get(0) instanceof ObjectRedefinition);
+		assertTrue(resource.getConflicts().get(0) instanceof DoubleUpdate);
 	}
 
 	public static void displayCase(String inputCase) {
