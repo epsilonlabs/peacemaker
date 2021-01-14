@@ -42,18 +42,10 @@ public class ConflictVersionResource extends XMIResourceImpl {
 	/**
 	 * Returns the XMI id of an EObject, or the value of an EAttribute marked as
 	 * id if the first is not present
-	 * 
-	 * @throws RuntimeException When no ids could be found
 	 */
 	public String getAvailableId(EObject eObject) {
 		String id = super.getID(eObject);
-		if (id == null) {
-			id = EcoreUtil.getID(eObject);
-		}
-		if (id == null) {
-			throw new RuntimeException("Peacemaker requires all objects to have an id");
-		}
-		return id;
+		return id != null ? id : EcoreUtil.getID(eObject);
 	}
 
 	@Override

@@ -29,12 +29,17 @@ public class PeaceMakerXMILoad extends XMILoadImpl {
 		ResourceSet ecoreResourceSet = new ResourceSetImpl();
 		ecoreResourceSet.getResourceFactoryRegistry().getExtensionToFactoryMap().put(
 				"*", new XMIResourceFactoryImpl());
-		Resource ecoreResource = ecoreResourceSet.createResource(
-				URI.createFileURI(new File("models/comicshop.ecore").getAbsolutePath()));
-		ecoreResource.load(null);
-		for (EObject o : ecoreResource.getContents()) {
-			EPackage ePackage = (EPackage) o;
-			resourceSet.getPackageRegistry().put(ePackage.getNsURI(), ePackage);
+
+		String[] ecoreFiles = { "models/comicshop.ecore", "models/comicshopIds.ecore" };
+		for (String ecoreFile : ecoreFiles) {
+			Resource ecoreResource = ecoreResourceSet.createResource(
+					URI.createFileURI(new File(ecoreFile).getAbsolutePath()));
+			ecoreResource.load(null);
+
+			for (EObject o : ecoreResource.getContents()) {
+				EPackage ePackage = (EPackage) o;
+				resourceSet.getPackageRegistry().put(ePackage.getNsURI(), ePackage);
+			}
 		}
 
 		resourceSet.getResourceFactoryRegistry().getExtensionToFactoryMap().put(
@@ -54,7 +59,9 @@ public class PeaceMakerXMILoad extends XMILoadImpl {
 				"12-deleteUpdate",
 				"13-severalConflictSectionsSameObject",
 				"14-externalCrossReferencesIsMany",
-				"15-crossReferencesToConflictedObject" };
+				"15-crossReferencesToConflictedObject",
+				"16-externalResourceNotInConflicts",
+				"17-attribute-EcoreIds" };
 
 		// uncomment for specific cases
 		//		cases = new String[1];
