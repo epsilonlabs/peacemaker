@@ -235,6 +235,44 @@ public class PeaceMakerTests {
 		assertTrue(resource.getConflicts().get(0) instanceof DoubleUpdate);
 	}
 
+	@Test
+	public void testIdsWhenUndoingInContainmentReference() throws IOException {
+		String inputCase = "05-contained1boundedRef";
+		displayCase(inputCase + "-UndoIds");
+
+		// This test is useful to detect if XMI ids are properly being reset to
+		//   the original value after performing an undo. Mainly relevant for the
+		//   ReferenceDoubleUpdate conflicts, where the conflicting objects can
+		//   have different XMI ids (single containment reference)
+
+		PeaceMakerXMIResource resource = loadConflictResource(String.format(CONFLICTS_LOCATION, inputCase));
+
+		assertTrue(resource.getConflicts().size() == 2);
+
+		Conflict firstConflict = resource.getConflicts().get(0);
+		ConflictResolveCommand command = new ConflictResolveCommand(
+				Arrays.asList(resource.getLeftResource(), resource.getRightResource()),
+				firstConflict, ResolveAction.KEEP_LEFT, null);
+
+		ByteArrayOutputStream beforeStream = new ByteArrayOutputStream();
+		System.out.println("\nBefore executing command:");
+		resource.save(beforeStream, Collections.EMPTY_MAP);
+		System.out.println(beforeStream.toString());
+
+		command.execute();
+		System.out.println("\nAfter executing command (keep left in first conflict):");
+		resource.save(System.out, Collections.EMPTY_MAP);
+
+		command.undo();
+		System.out.println("\nAfter undoing command:");
+		ByteArrayOutputStream afterStream = new ByteArrayOutputStream();
+		resource.save(afterStream, Collections.EMPTY_MAP);
+		System.out.println(afterStream.toString());
+		System.out.println("\n");
+
+		assertTrue(Arrays.equals(beforeStream.toByteArray(), afterStream.toByteArray()));
+	}
+
 	public static void displayCase(String inputCase) {
 		System.out.println("############################################");
 		System.out.println(inputCase);

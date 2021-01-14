@@ -5,6 +5,7 @@ import java.util.Collection;
 import org.eclipse.emf.common.notify.Notifier;
 import org.eclipse.emf.edit.command.ChangeCommand;
 import org.eclipse.epsilon.peacemaker.conflicts.Conflict;
+import org.eclipse.epsilon.peacemaker.conflicts.ReferenceDoubleUpdate;
 import org.eclipse.epsilon.peacemaker.conflicts.Conflict.ResolveAction;
 
 public class ConflictResolveCommand extends ChangeCommand {
@@ -55,6 +56,10 @@ public class ConflictResolveCommand extends ChangeCommand {
 	public void undo() {
 		if (isExecuted) {
 			super.undo();
+			if (conflict instanceof ReferenceDoubleUpdate) {
+				// XMI ids are not recorded and restored; we do it manually
+				((ReferenceDoubleUpdate) conflict).resetXMIIds();
+			}
 			isExecuted = false;
 		}
 	}

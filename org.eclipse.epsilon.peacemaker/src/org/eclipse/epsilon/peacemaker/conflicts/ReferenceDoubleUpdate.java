@@ -104,14 +104,12 @@ public class ReferenceDoubleUpdate extends Conflict {
 
 	@Override
 	public EObject getLeftVersionObject() {
-		// objectId is the parent in this case, get the reference value from it
-		return (EObject) pmResource.getLeftEObject(eObjectId).eGet(reference);
+		return leftValue;
 	}
 
 	@Override
 	public EObject getRightVersionObject() {
-		// objectId is the parent in this case, get the reference value from it
-		return (EObject) pmResource.getRightEObject(eObjectId).eGet(reference);
+		return rightValue;
 	}
 
 	public String getLeftVersionId() {
@@ -120,6 +118,13 @@ public class ReferenceDoubleUpdate extends Conflict {
 
 	public String getRightVersionId() {
 		return rightValueId;
+	}
+
+	public void resetXMIIds() {
+		if (pmResource.getLeftResource().hasXMIID(leftValue)) {
+			pmResource.getLeftResource().setID(leftValue, leftValueId);
+			pmResource.getRightResource().setID(rightValue, rightValueId);
+		}
 	}
 
 	@Override
