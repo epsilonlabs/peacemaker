@@ -8,9 +8,9 @@ import org.eclipse.emf.compare.Comparison;
 import org.eclipse.emf.compare.EMFCompare;
 import org.eclipse.emf.compare.scope.DefaultComparisonScope;
 import org.eclipse.emf.compare.scope.IComparisonScope;
-import org.eclipse.emf.diffmerge.api.IComparison;
 import org.eclipse.emf.diffmerge.api.scopes.IEditableModelScope;
 import org.eclipse.emf.diffmerge.diffdata.impl.EComparisonImpl;
+import org.eclipse.emf.diffmerge.generic.api.IComparison;
 import org.eclipse.emf.diffmerge.impl.policies.DefaultDiffPolicy;
 import org.eclipse.emf.diffmerge.impl.policies.DefaultMatchPolicy;
 import org.eclipse.emf.diffmerge.impl.policies.DefaultMergePolicy;
@@ -89,7 +89,7 @@ public abstract class PSLPerformanceProfiling extends MDBench {
 		IEditableModelScope referenceScope = new FragmentedModelScope(resourceSet.getResource(rightURI, true), false);
 		IEditableModelScope ancestorScope = new FragmentedModelScope(resourceSet.getResource(ancestorURI, true), false);
 
-		IComparison comparison = new EComparisonImpl(targetScope, referenceScope, ancestorScope);
+		IComparison<EObject> comparison = new EComparisonImpl(targetScope, referenceScope, ancestorScope);
 
 		comparison.compute(new DefaultMatchPolicy(), new DefaultDiffPolicy(), new DefaultMergePolicy(), null);
 
