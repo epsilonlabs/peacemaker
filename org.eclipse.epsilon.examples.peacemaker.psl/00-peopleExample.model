@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="ASCII"?>
+<Project xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns="psl" xmi:id="project1" name="Blog">
+  <people xmi:id="p1" name="Ibrahim"/>
+<<<<<<<
+  <people xmi:id="p2" name="Beth"/>
+=======
+  <people xmi:id="p2" name="Joyce"/>
+>>>>>>>
+</Project>
