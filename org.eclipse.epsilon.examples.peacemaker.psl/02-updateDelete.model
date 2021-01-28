@@ -11,7 +11,7 @@
     <effort xmi:id="e2" person="aliceID" percentage="50"/>
     <effort xmi:id="e3" person="bobID" percentage="50"/>
 =======
-    <effort xmi:id="e2" person="aliceID" percentage="100"/>
+    <effort xmi:id="e2" person="aliceID"/>
 >>>>>>> right.model
   </tasks>
   <tasks xmi:id="task3" title="Deployment" start="5" duration="1">
