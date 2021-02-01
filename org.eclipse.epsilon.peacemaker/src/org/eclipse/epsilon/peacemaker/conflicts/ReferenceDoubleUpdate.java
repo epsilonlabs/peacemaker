@@ -4,8 +4,6 @@ import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EReference;
 import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResource;
-import org.eclipse.epsilon.peacemaker.util.CopyUtils;
-import org.eclipse.epsilon.peacemaker.util.PrettyPrint;
 
 /**
  * A special case of a double update conflict where the changes happen in a
@@ -13,15 +11,18 @@ import org.eclipse.epsilon.peacemaker.util.PrettyPrint;
  * 
  * @author alfonsodelavega
  */
-public class ReferenceDoubleUpdate extends Conflict {
+public class ReferenceDoubleUpdate extends DoubleUpdate {
 
 	protected EReference reference;
 
-	protected EObject leftValue;
-	protected EObject rightValue;
-
-	protected String leftValueId;
-	protected String rightValueId;
+	/*
+	 * Each object version contained in the reference might or might not have
+	 * the same id, so we need to store them separately
+	 * 
+	 * The inherited objectId marks the parent object owning the reference value
+	 */
+	protected String leftObjectId;
+	protected String rightObjectId;
 
 	/**
 	 * Create a reference double update conflict
@@ -35,95 +36,37 @@ public class ReferenceDoubleUpdate extends Conflict {
 		super(parentId, pmResource);
 		this.reference = reference;
 
-		leftValue = (EObject) pmResource.getLeftEObject(eObjectId)
+		leftObject = (EObject) pmResource.getLeftEObject(eObjectId)
 				.eGet(reference);
-		rightValue = (EObject) pmResource.getRightEObject(eObjectId)
+		rightObject = (EObject) pmResource.getRightEObject(eObjectId)
 				.eGet(reference);
 
-		leftValueId = pmResource.getLeftId(leftValue);
-		rightValueId = pmResource.getRightId(rightValue);
-	}
-
-	public String toString() {
-		StringBuilder s = new StringBuilder();
-		
-		s.append(getTitle()).append("\n").append(getDescription()).append("\n");
-		s.append("Left: ").append(PrettyPrint.featuresMap(leftValue)).append("\n");
-		s.append("Right: ").append(PrettyPrint.featuresMap(rightValue));
-
-		return s.toString();
-	}
-
-	public boolean supports(ResolveAction action) {
-		switch (action) {
-		case KEEP_LEFT:
-		case KEEP_RIGHT:
-			return true;
-		default:
-			return super.supports(action);
-		}
-	}
-
-	@Override
-	public void resolve(ResolveAction action) {
-		switch (action) {
-		case KEEP_LEFT:
-			CopyUtils.replace(leftValue, rightValue);
-			break;
-		case KEEP_RIGHT:
-			CopyUtils.replace(rightValue, leftValue);
-			break;
-		default:
-			super.resolve(action);
-		}
-	}
-
-	@Override
-	public ConflictObjectStatus getLeftStatus(ResolveAction action) {
-		switch (action) {
-		case KEEP_LEFT:
-			return ConflictObjectStatus.ACCEPTED;
-		case KEEP_RIGHT:
-			return ConflictObjectStatus.DISCARDED;
-		default:
-			return super.getLeftStatus(action);
-		}
-	}
-
-	@Override
-	public ConflictObjectStatus getRightStatus(ResolveAction action) {
-		switch (action) {
-		case KEEP_LEFT:
-			return ConflictObjectStatus.DISCARDED;
-		case KEEP_RIGHT:
-			return ConflictObjectStatus.ACCEPTED;
-		default:
-			return super.getRightStatus(action);
-		}
+		leftObjectId = pmResource.getLeftId(leftObject);
+		rightObjectId = pmResource.getRightId(rightObject);
 	}
 
 	@Override
 	public EObject getLeftVersionObject() {
-		return leftValue;
+		return leftObject;
 	}
 
 	@Override
 	public EObject getRightVersionObject() {
-		return rightValue;
+		return rightObject;
 	}
 
 	public String getLeftVersionId() {
-		return leftValueId;
+		return leftObjectId;
 	}
 
 	public String getRightVersionId() {
-		return rightValueId;
+		return rightObjectId;
 	}
 
 	public void resetXMIIds() {
-		if (pmResource.getLeftResource().hasXMIID(leftValue)) {
-			pmResource.getLeftResource().setID(leftValue, leftValueId);
-			pmResource.getRightResource().setID(rightValue, rightValueId);
+		if (pmResource.getLeftResource().hasXMIID(leftObject)) {
+			pmResource.getLeftResource().setID(leftObject, leftObjectId);
+			pmResource.getRightResource().setID(rightObject, rightObjectId);
 		}
 	}
 
