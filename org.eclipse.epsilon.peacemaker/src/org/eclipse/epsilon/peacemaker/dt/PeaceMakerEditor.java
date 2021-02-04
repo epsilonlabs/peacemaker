@@ -215,6 +215,7 @@ public class PeaceMakerEditor extends EcoreEditor {
 				createSingleViewerPage();
 
 				setReadOnly(pmResource);
+				setReadOnly(pmResource.getUnconflictedResource());
 			}
 			else {
 				notifiers = Arrays.asList(pmResource.getLeftResource(), pmResource.getRightResource());
@@ -284,8 +285,8 @@ public class PeaceMakerEditor extends EcoreEditor {
 		selectionViewer.setUseHashlookup(true);
 		selectionViewer.setContentProvider(new AdapterFactoryContentProvider(adapterFactory));
 		selectionViewer.setLabelProvider(new AdapterFactoryLabelProvider(adapterFactory));
-		selectionViewer.setInput(pmResource);
-		selectionViewer.setSelection(new StructuredSelection(pmResource), true);
+		selectionViewer.setInput(pmResource.getUnconflictedResource());
+		selectionViewer.setSelection(new StructuredSelection(pmResource.getUnconflictedResource()), true);
 		createContextMenuFor(selectionViewer);
 	}
 

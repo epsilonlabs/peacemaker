@@ -9,6 +9,7 @@ import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EReference;
 import org.eclipse.emf.ecore.EStructuralFeature;
+import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.xmi.XMLLoad;
 import org.eclipse.emf.ecore.xmi.XMLSave;
 import org.eclipse.emf.ecore.xmi.impl.XMIResourceImpl;
@@ -25,6 +26,9 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 	private static final String LEFT_VERSION_EXTENSION = "pmLeftVersion";
 	private static final String BASE_VERSION_EXTENSION = "pmBaseVersion";
 	private static final String RIGHT_VERSION_EXTENSION = "pmRightVersion";
+
+	// placeholder for those resources where no conflicts are found
+	protected Resource unconflictedResource;
 
 	protected ConflictVersionResource leftResource;
 	protected ConflictVersionResource rightResource;
@@ -211,5 +215,13 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 
 	public boolean hasConflicts() {
 		return leftResource != null && rightResource != null && !conflicts.isEmpty();
+	}
+
+	public void setUnconflictedResource(Resource resource) {
+		this.unconflictedResource = resource;
+	}
+
+	public Resource getUnconflictedResource() {
+		return unconflictedResource;
 	}
 }
