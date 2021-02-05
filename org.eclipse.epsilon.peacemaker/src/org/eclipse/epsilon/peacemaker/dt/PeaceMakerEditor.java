@@ -17,6 +17,7 @@ import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.presentation.EcoreEditor;
 import org.eclipse.emf.ecore.provider.EcoreItemProviderAdapterFactory;
 import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.emf.ecore.xmi.XMIResource;
 import org.eclipse.emf.edit.domain.AdapterFactoryEditingDomain;
 import org.eclipse.emf.edit.provider.ComposedAdapterFactory;
 import org.eclipse.emf.edit.provider.ReflectiveItemProviderAdapterFactory;
@@ -25,8 +26,6 @@ import org.eclipse.emf.edit.ui.provider.AdapterFactoryContentProvider;
 import org.eclipse.emf.edit.ui.provider.AdapterFactoryLabelProvider;
 import org.eclipse.emf.edit.ui.provider.DiagnosticDecorator;
 import org.eclipse.emf.edit.ui.provider.UnwrappingSelectionProvider;
-import org.eclipse.epsilon.peacemaker.ConflictVersionResource;
-import org.eclipse.epsilon.peacemaker.ConflictVersionResourceFactory;
 import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResource;
 import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResourceFactory;
 import org.eclipse.epsilon.peacemaker.conflicts.Conflict;
@@ -313,16 +312,13 @@ public class PeaceMakerEditor extends EcoreEditor {
 		// separates left and right versions
 		SashForm leftRightVersionsSash = new SashForm(topBottomVersionsSash, SWT.HORIZONTAL);
 
-		resource.getResourceSet().getResourceFactoryRegistry().getExtensionToFactoryMap().put(
-				COPY_EXTENSION, new ConflictVersionResourceFactory());
-
 		// viewer for the left version resource (top left)
 		Composite leftVersion = new Composite(leftRightVersionsSash, SWT.BORDER);
 		leftVersion.setLayout(new GridLayout(1, false));
 
 		Label leftLabel = new Label(leftVersion, SWT.NONE);
 		leftLabel.setText("Our version" +
-				PrettyPrint.format(pmResource.getLeftResource().getVersionName(), " (", ")"));
+				PrettyPrint.format(pmResource.getLeftVersionName(), " (", ")"));
 
 		Tree leftTree = new Tree(leftVersion, SWT.MULTI);
 		GridDataFactory.fillDefaults().grab(true, true).minSize(1, 1).applyTo(leftTree);
@@ -337,7 +333,7 @@ public class PeaceMakerEditor extends EcoreEditor {
 
 		Label rightLabel = new Label(rightVersion, SWT.NONE);
 		rightLabel.setText("Being merged" +
-				PrettyPrint.format(pmResource.getRightResource().getVersionName(), " (", ")"));
+				PrettyPrint.format(pmResource.getRightVersionName(), " (", ")"));
 
 		Tree rightTree = new Tree(rightVersion, SWT.MULTI);
 		GridDataFactory.fillDefaults().grab(true, true).minSize(1, 1).applyTo(rightTree);
@@ -420,14 +416,14 @@ public class PeaceMakerEditor extends EcoreEditor {
 	}
 
 	protected void refreshViewers(Conflict conflict) {
-		ConflictVersionResource leftVersion = (ConflictVersionResource) leftViewer.getInput();
+		XMIResource leftVersion = (XMIResource) leftViewer.getInput();
 		EObject leftVersionObject = leftVersion.getEObject(conflict.getLeftVersionId());
 		if (leftVersionObject != null) {
 			leftViewer.setSelection(new StructuredSelection(leftVersionObject), true);
 			leftViewer.refresh(leftVersionObject, true);
 		}
 
-		ConflictVersionResource rightVersion = (ConflictVersionResource) rightViewer.getInput();
+		XMIResource rightVersion = (XMIResource) rightViewer.getInput();
 		EObject rightVersionObject = rightVersion.getEObject(conflict.getRightVersionId());
 		if (rightVersionObject != null) {
 			rightViewer.setSelection(new StructuredSelection(rightVersionObject), true);
@@ -441,11 +437,11 @@ public class PeaceMakerEditor extends EcoreEditor {
 		}
 	}
 
-	protected TreeViewer createVersionViewer(Tree tree, ConflictVersionResource resource,
+	protected TreeViewer createVersionViewer(Tree tree, XMIResource resource,
 			Map<String, ConflictObjectStatus> objectStatus) {
 		TreeViewer viewer = new TreeViewer(tree);
 
-		ConflictVersionResource copy = (ConflictVersionResource) resource.getResourceSet().createResource(
+		XMIResource copy = (XMIResource) resource.getResourceSet().createResource(
 				URI.createURI("" + resource.getURI() + "." + COPY_EXTENSION));
 		CopyUtils.copyContents(resource, copy);
 		setReadOnly(copy);

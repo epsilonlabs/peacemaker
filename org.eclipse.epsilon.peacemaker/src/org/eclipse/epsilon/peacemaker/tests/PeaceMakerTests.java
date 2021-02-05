@@ -37,11 +37,12 @@ public class PeaceMakerTests {
 	@BeforeClass
 	public static void init() throws IOException {
 
+		Resource.Factory.Registry.INSTANCE.getExtensionToFactoryMap().put(
+				"*", new XMIResourceFactoryImpl());
+		
 		resourceSet = new ResourceSetImpl();
 
 		ResourceSet ecoreResourceSet = new ResourceSetImpl();
-		ecoreResourceSet.getResourceFactoryRegistry().getExtensionToFactoryMap().put(
-				"*", new XMIResourceFactoryImpl());
 
 		String[] ecoreFiles = { "models/comicshop.ecore", "models/comicshopIds.ecore" };
 		for (String ecoreFile : ecoreFiles) {
@@ -56,7 +57,7 @@ public class PeaceMakerTests {
 		}
 
 		resourceSet.getResourceFactoryRegistry().getExtensionToFactoryMap().put(
-				"model", new PeaceMakerXMIResourceFactory());
+				"*", new PeaceMakerXMIResourceFactory());
 	}
 
 	@Test
@@ -166,6 +167,7 @@ public class PeaceMakerTests {
 
 		assertTrue(resource.getConflicts().size() == 1);
 		assertTrue(resource.getConflicts().get(0) instanceof UpdateDelete);
+		assertTrue(resource.getConflicts().get(0).getEObjectId().equals("comic2"));
 
 		inputCase = "12-deleteUpdate";
 		displayCase(inputCase);
@@ -174,6 +176,7 @@ public class PeaceMakerTests {
 
 		assertTrue(resource.getConflicts().size() == 1);
 		assertTrue(resource.getConflicts().get(0) instanceof UpdateDelete);
+		assertTrue(resource.getConflicts().get(0).getEObjectId().equals("comic2"));
 	}
 
 	@Test

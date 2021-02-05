@@ -45,14 +45,14 @@ public class PeaceMakerXMISave extends XMISaveImpl {
 			StreamUtils.merge(
 					leftStream.toString(), baseStream.toString(), rightStream.toString(),
 					outputStream,
-					pmResource.getLeftResource().getVersionName(),
-					pmResource.getBaseResource().getVersionName(),
-					pmResource.getRightResource().getVersionName());
+					pmResource.getLeftVersionName(),
+					pmResource.getBaseVersionName(),
+					pmResource.getRightVersionName());
 		}
 		else {
 			StreamUtils.merge(leftStream.toString(), rightStream.toString(), outputStream,
-					pmResource.getLeftResource().getVersionName(),
-					pmResource.getRightResource().getVersionName());
+					pmResource.getLeftVersionName(),
+					pmResource.getRightVersionName());
 		}
 	}
 }

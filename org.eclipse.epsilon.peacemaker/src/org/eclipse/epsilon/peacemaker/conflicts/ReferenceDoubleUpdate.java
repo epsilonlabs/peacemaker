@@ -4,6 +4,7 @@ import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EReference;
 import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResource;
+import org.eclipse.epsilon.peacemaker.util.IdUtils;
 
 /**
  * A special case of a double update conflict where the changes happen in a
@@ -64,7 +65,7 @@ public class ReferenceDoubleUpdate extends DoubleUpdate {
 	}
 
 	public void resetXMIIds() {
-		if (pmResource.getLeftResource().hasXMIID(leftObject)) {
+		if (IdUtils.hasXMIId(pmResource.getLeftResource(), leftObject)) {
 			pmResource.getLeftResource().setID(leftObject, leftObjectId);
 			pmResource.getRightResource().setID(rightObject, rightObjectId);
 		}

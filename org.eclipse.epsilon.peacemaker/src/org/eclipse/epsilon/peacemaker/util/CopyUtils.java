@@ -51,16 +51,13 @@ public class CopyUtils {
 				}
 			}
 
-			ConflictVersionResource resource = 
-					(ConflictVersionResource) replacingObj.eResource();
-			if (resource.hasXMIID(replacingObj)) {
-				String replacingObjId = resource.getID(replacingObj);
-				if (!replacingObjId.equals(getXMIId(replacedObj))) {
-					setXMIId(replacedObj, replacingObjId);
-				}
+			String replacingObjId = getXMIId(replacingObj);
+			if (replacingObjId != null && !replacingObjId.equals(getXMIId(replacedObj))) {
+				setXMIId(replacedObj, replacingObjId);
 			}
 		}
 
+		@Override
 		protected void copyReference(EReference eReference, EObject replacingObj, EObject replacedObj) {
 			XMIResource replacingObjResource = (XMIResource) replacingObj.eResource();
 			XMIResource replacedObjResource = (XMIResource) replacedObj.eResource();
@@ -215,11 +212,11 @@ public class CopyUtils {
 	}
 
 	protected static void copyIds(EObject obj, EObject copy) {
-		ConflictVersionResource objResource = (ConflictVersionResource) obj.eResource();
+		XMIResource objResource = (XMIResource) obj.eResource();
 
 		// here it is asumed that if an object of the model has an XMI id, then
 		// all objects have one
-		if (objResource.hasXMIID(obj)) {
+		if (objResource.getID(obj) != null) {
 			XMIResource copyResource = (XMIResource) copy.eResource();
 			copyResource.setID(copy, objResource.getID(obj));
 

@@ -3,14 +3,18 @@ package org.eclipse.epsilon.peacemaker;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EReference;
 import org.eclipse.emf.ecore.EStructuralFeature;
 import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.emf.ecore.xmi.XMIResource;
 import org.eclipse.emf.ecore.xmi.XMLLoad;
+import org.eclipse.emf.ecore.xmi.XMLResource;
 import org.eclipse.emf.ecore.xmi.XMLSave;
 import org.eclipse.emf.ecore.xmi.impl.XMIResourceImpl;
 import org.eclipse.epsilon.peacemaker.ConflictsPreprocessor.ConflictVersionHelper;
@@ -20,6 +24,7 @@ import org.eclipse.epsilon.peacemaker.conflicts.DoubleUpdate;
 import org.eclipse.epsilon.peacemaker.conflicts.ReferenceDoubleUpdate;
 import org.eclipse.epsilon.peacemaker.conflicts.UnconflictedObject;
 import org.eclipse.epsilon.peacemaker.conflicts.UpdateDelete;
+import org.eclipse.epsilon.peacemaker.util.IdUtils;
 
 public class PeaceMakerXMIResource extends XMIResourceImpl {
 
@@ -30,12 +35,17 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 	// placeholder for those resources where no conflicts are found
 	protected Resource unconflictedResource;
 
-	protected ConflictVersionResource leftResource;
-	protected ConflictVersionResource rightResource;
+	protected Map<?, ?> versionLoadOptions = Collections.EMPTY_MAP;
 
-	protected ConflictVersionResource baseResource;
+	protected XMIResource leftResource;
+	protected XMIResource rightResource;
+
+	protected XMIResource baseResource;
 	protected ConflictVersionHelper baseVersionHelper;
-	protected String baseVersionName;
+
+	protected String baseVersionName = "";
+	protected String leftVersionName = "";
+	protected String rightVersionName = "";
 
 	protected List<Conflict> conflicts = new ArrayList<>();
 
@@ -53,8 +63,8 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 		return new PeaceMakerXMISave(createXMLHelper());
 	}
 
-	public void loadLeft(ConflictVersionHelper versionHelper, String versionName) throws IOException {
-		leftResource = loadVersionResource(LEFT_VERSION_EXTENSION, versionHelper, versionName);
+	public void loadLeft(ConflictVersionHelper versionHelper) throws IOException {
+		leftResource = loadVersionResource(LEFT_VERSION_EXTENSION, versionHelper);
 	}
 
 	/**
@@ -64,43 +74,54 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 		if (baseVersionHelper != null) {
 			if (baseResource == null) {
 				// demand-load of the resource
-				try {
-					baseResource = loadVersionResource(BASE_VERSION_EXTENSION, baseVersionHelper, baseVersionName);
-				}
-				catch (IOException ex) {
-					ex.printStackTrace();
-					return false;
-				}
+				doLoadBase();
 			}
 			return true;
 		}
 		return false;
 	}
 
-	public void loadBase(ConflictVersionHelper versionHelper, String versionName) {
+	public void loadBase(ConflictVersionHelper versionHelper) {
 		// this version is loaded on demand (i.e. if needed to identify conflicts)
 		baseVersionHelper = versionHelper;
-		baseVersionName = versionName;
 	}
 
-	public void loadRight(ConflictVersionHelper versionHelper, String versionName) throws IOException {
-		rightResource = loadVersionResource(RIGHT_VERSION_EXTENSION, versionHelper, versionName);
+	protected void doLoadBase() {
+		try {
+			baseResource = loadVersionResource(BASE_VERSION_EXTENSION, baseVersionHelper);
+		}
+		catch (IOException ex) {
+			ex.printStackTrace();
+		}
 	}
 
-	protected ConflictVersionResource loadVersionResource(String extension,
-			ConflictVersionHelper versionHelper, String versionName) throws IOException {
+	public void loadRight(ConflictVersionHelper versionHelper) throws IOException {
+		rightResource = loadVersionResource(RIGHT_VERSION_EXTENSION, versionHelper);
+	}
+
+	protected XMIResource loadVersionResource(String extension,
+			ConflictVersionHelper versionHelper) throws IOException {
 
 		URI versionURI = uri.appendFileExtension(extension);
-		getResourceSet().getResourceFactoryRegistry().getExtensionToFactoryMap().put(
-				versionURI.fileExtension(), new ConflictVersionResourceFactory());
 
-		ConflictVersionResource resource =
-				(ConflictVersionResource) getResourceSet().createResource(versionURI);
-		resource.setVersionHelper(versionHelper);
-		resource.load(versionHelper.getVersionContents(), Collections.EMPTY_MAP);
-		resource.setVersionName(versionName);
+		// load it as a standard XMI Resource (using specific factories if registered)
+		Resource.Factory.Registry factoryRegistry = getResourceSet().getResourceFactoryRegistry();
+		if (!(factoryRegistry.getExtensionToFactoryMap().get("*") instanceof PeaceMakerXMIResourceFactory)) {
+			throw new RuntimeException("A peacemaker factory should be locally registered");
+		}
+		Object peacemakerFactory = factoryRegistry.getExtensionToFactoryMap().remove("*");
+		Resource.Factory specificFactory = factoryRegistry.getFactory(getURI());
+		factoryRegistry.getExtensionToFactoryMap().put("*", peacemakerFactory);
 
-		return resource;
+		XMIResourceImpl specificResource = (XMIResourceImpl) specificFactory.createResource(versionURI);
+		specificResource.basicSetResourceSet(getResourceSet(), null);
+
+		// the pool allows decorating the xml handler to get element lines
+		Map<Object, Object> loadOptions = new HashMap<Object, Object>(versionLoadOptions);
+		loadOptions.put(XMLResource.OPTION_USE_PARSER_POOL, new PeacemakerXMLParserPoolImpl(this, versionHelper));
+		specificResource.load(versionHelper.getVersionContents(), loadOptions);
+
+		return specificResource;
 	}
 
 	public void identifyConflicts(List<ConflictSection> conflictSections) {
@@ -178,27 +199,27 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 		conflicts.add(conflict);
 	}
 
-	public ConflictVersionResource getLeftResource() {
+	public XMIResource getLeftResource() {
 		return leftResource;
 	}
 
-	public ConflictVersionResource getBaseResource() {
+	public XMIResource getBaseResource() {
 		if (hasBaseVersion()) {
 			return baseResource;
 		}
 		return null;
 	}
 
-	public ConflictVersionResource getRightResource() {
+	public XMIResource getRightResource() {
 		return rightResource;
 	}
 
 	public String getLeftId(EObject obj) {
-		return leftResource.getAvailableId(obj);
+		return IdUtils.getAvailableId(leftResource, obj);
 	}
 
 	public String getRightId(EObject obj) {
-		return rightResource.getAvailableId(obj);
+		return IdUtils.getAvailableId(rightResource, obj);
 	}
 
 	public EObject getLeftEObject(String id) {
@@ -223,5 +244,35 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 
 	public Resource getUnconflictedResource() {
 		return unconflictedResource;
+	}
+
+	public void setVersionLoadOptions(Map<?, ?> options) {
+		if (options != null) {
+			this.versionLoadOptions = options;
+		}
+	}
+
+	public String getBaseVersionName() {
+		return baseVersionName;
+	}
+
+	public String getLeftVersionName() {
+		return leftVersionName;
+	}
+
+	public String getRightVersionName() {
+		return rightVersionName;
+	}
+
+	public void setBaseVersionName(String baseVersionName) {
+		this.baseVersionName = baseVersionName;
+	}
+
+	public void setLeftVersionName(String leftVersionName) {
+		this.leftVersionName = leftVersionName;
+	}
+
+	public void setRightVersionName(String rightVersionName) {
+		this.rightVersionName = rightVersionName;
 	}
 }

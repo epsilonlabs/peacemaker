@@ -99,7 +99,7 @@ public class PeaceMakerXMILoad extends XMILoadImpl {
 			noConflictsLoad(pmResource, preprocessor.getLeftVersionHelper().getVersionContents(), options);
 		}
 		else {
-			load(pmResource, preprocessor);
+			load(pmResource, preprocessor, options);
 		}
 	}
 
@@ -109,21 +109,23 @@ public class PeaceMakerXMILoad extends XMILoadImpl {
 		Resource.Factory.Registry factoryRegistry = pmResource.getResourceSet().getResourceFactoryRegistry();
 
 		// load it as a standard XMI Resource (using specific factories if registered)
-		if (factoryRegistry.getExtensionToFactoryMap().get("*") instanceof PeaceMakerXMIResourceFactory) {
-			Object peacemakerFactory = factoryRegistry.getExtensionToFactoryMap().remove("*");
-
-			Resource.Factory specificFactory = factoryRegistry.getFactory(pmResource.getURI());
-			XMIResourceImpl specificResource = (XMIResourceImpl) specificFactory.createResource(pmResource.getURI());
-			specificResource.load(contents, options);
-
-			specificResource.basicSetResourceSet(pmResource.getResourceSet(), null);
-			pmResource.setUnconflictedResource(specificResource);
-
-			factoryRegistry.getExtensionToFactoryMap().put("*", peacemakerFactory);
+		if (!(factoryRegistry.getExtensionToFactoryMap().get("*") instanceof PeaceMakerXMIResourceFactory)) {
+			throw new RuntimeException("A peacemaker factory should be locally registered");
 		}
+		Object peacemakerFactory = factoryRegistry.getExtensionToFactoryMap().remove("*");
+		Resource.Factory specificFactory = factoryRegistry.getFactory(pmResource.getURI());
+		factoryRegistry.getExtensionToFactoryMap().put("*", peacemakerFactory);
+
+		XMIResourceImpl specificResource = (XMIResourceImpl) specificFactory.createResource(pmResource.getURI());
+		specificResource.load(contents, options);
+
+		specificResource.basicSetResourceSet(pmResource.getResourceSet(), null);
+		pmResource.setUnconflictedResource(specificResource);
 	}
 
-	public void load(PeaceMakerXMIResource pmResource, ConflictsPreprocessor preprocessor) throws IOException {
+	public void load(PeaceMakerXMIResource pmResource, ConflictsPreprocessor preprocessor,
+			Map<?, ?> options) throws IOException {
+
 		if (debug) {
 			System.out.println();
 			System.out.println("<<< Model with Conflicts >>>");
@@ -144,11 +146,17 @@ public class PeaceMakerXMILoad extends XMILoadImpl {
 			System.out.println();
 		}
 
-		pmResource.loadLeft(preprocessor.getLeftVersionHelper(), preprocessor.getLeftVersionName());
-		pmResource.loadRight(preprocessor.getRightVersionHelper(), preprocessor.getRightVersionName());
+		pmResource.setVersionLoadOptions(options);
+
+		pmResource.setLeftVersionName(preprocessor.getLeftVersionName());
+		pmResource.setRightVersionName(preprocessor.getRightVersionName());
+
+		pmResource.loadLeft(preprocessor.getLeftVersionHelper());
+		pmResource.loadRight(preprocessor.getRightVersionHelper());
 
 		if (preprocessor.hasBaseVersion()) {
-			pmResource.loadBase(preprocessor.getBaseVersionHelper(), preprocessor.getBaseVersionName());
+			pmResource.setBaseVersionName(preprocessor.getBaseVersionName());
+			pmResource.loadBase(preprocessor.getBaseVersionHelper());
 		}
 
 		pmResource.identifyConflicts(preprocessor.getConflictSections());

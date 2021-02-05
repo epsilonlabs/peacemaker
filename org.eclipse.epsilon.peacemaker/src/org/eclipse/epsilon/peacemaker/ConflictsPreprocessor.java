@@ -192,6 +192,15 @@ public class ConflictsPreprocessor {
 				}
 			}
 		}
+
+		public boolean inConflictSection(int start, int end) {
+			for (int line = originalLine(start); line <= originalLine(end); line++) {
+				if (lineTypes[line] == versionType) {
+					return true;
+				}
+			}
+			return false;
+		}
 	}
 
 	public ConflictVersionHelper getLeftVersionHelper() {
