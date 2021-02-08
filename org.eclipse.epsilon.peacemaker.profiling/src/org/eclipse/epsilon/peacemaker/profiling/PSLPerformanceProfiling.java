@@ -20,6 +20,7 @@ import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
+import org.eclipse.emf.ecore.xmi.XMLResource;
 import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
 import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResource;
 import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResourceFactory;
@@ -36,12 +37,13 @@ public abstract class PSLPerformanceProfiling extends MDBench {
 		result.add("" + runPeacemaker(parameters));
 		result.add("" + runEMFCompare(parameters));
 		result.add("" + runEMFDiffMerge(parameters));
+		result.add("" + runXMILoad(parameters));
 	}
 
 	protected long runPeacemaker(List<Object> parameters) throws Exception {
 		ResourceSet resourceSet = getResourceSet();
 		resourceSet.getResourceFactoryRegistry().getExtensionToFactoryMap().put(
-				"model", new PeaceMakerXMIResourceFactory());
+				"*", new PeaceMakerXMIResourceFactory());
 		
 		Stopwatch stopwatch = new Stopwatch();
 		stopwatch.resume();
@@ -97,8 +99,30 @@ public abstract class PSLPerformanceProfiling extends MDBench {
 		return stopwatch.getElapsed();
 	}
 
+	/**
+	 * Measure the time it takes for one of the models to load (for reference)
+	 */
+	protected long runXMILoad(List<Object> parameters) throws Exception {
+
+		URI leftURI = getLeftURI(parameters);
+
+		ResourceSet resourceSet = getResourceSet();
+
+		Stopwatch stopwatch = new Stopwatch();
+		stopwatch.resume();
+
+		resourceSet.getResource(leftURI, true);
+
+		stopwatch.pause();
+		return stopwatch.getElapsed();
+	}
+
 	@Override
 	protected ResourceSet getResourceSet() throws Exception {
+
+		Resource.Factory.Registry.INSTANCE.getExtensionToFactoryMap().put(
+				"*", new XMIResourceFactoryImpl());
+
 		ResourceSet resourceSet = super.getResourceSet();
 
 		ResourceSet ecoreResourceSet = new ResourceSetImpl();
@@ -111,6 +135,8 @@ public abstract class PSLPerformanceProfiling extends MDBench {
 			EPackage ePackage = (EPackage) o;
 			resourceSet.getPackageRegistry().put(ePackage.getNsURI(), ePackage);
 		}
+
+		resourceSet.getLoadOptions().put(XMLResource.OPTION_DEFER_IDREF_RESOLUTION, Boolean.TRUE);
 
 		return resourceSet;
 	}

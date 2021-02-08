@@ -15,7 +15,7 @@ public class PSLSimpleTasks extends PSLPerformanceProfiling {
 	@Override
 	public List<String> getResultsHeader() {
 		return Arrays.asList("numElements", "numConflicts",
-				"Peacemaker", "EMFCompare", "EMFDiffMerge");
+				"Peacemaker", "EMFCompare", "EMFDiffMerge", "XMILoad");
 	}
 
 	@Override
