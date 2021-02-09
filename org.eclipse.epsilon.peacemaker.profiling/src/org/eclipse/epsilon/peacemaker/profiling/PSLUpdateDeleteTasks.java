@@ -6,9 +6,9 @@ import java.util.List;
 
 import org.eclipse.emf.common.util.URI;
 
-public class PSLSimpleTasks extends PSLPerformanceProfiling {
+public class PSLUpdateDeleteTasks extends PSLPerformanceProfiling {
 
-	public PSLSimpleTasks(int repetitions, int warmupReps) {
+	public PSLUpdateDeleteTasks(int repetitions, int warmupReps) {
 		super(repetitions, warmupReps);
 	}
 
@@ -21,18 +21,18 @@ public class PSLSimpleTasks extends PSLPerformanceProfiling {
 	@Override
 	public List<List<Object>> getExperiments() {
 		List<List<Object>> experiments = new ArrayList<>();
-		int[][] simpleTaskExperiments = PSLConflictModelsGenerator.getSimpleTasksExperiments();
-		for (int i = 0; i < simpleTaskExperiments.length; i++) {
+		int[][] taskExperiments = PSLConflictModelsGenerator.getTaskExperiments();
+		for (int i = 0; i < taskExperiments.length; i++) {
 			experiments.add(Arrays.asList(
-					simpleTaskExperiments[i][0],
-					simpleTaskExperiments[i][1]));
+					taskExperiments[i][0],
+					taskExperiments[i][1]));
 		}
 		return experiments;
 	}
 
 	@Override
 	public String getOutputFile() {
-		return "results/simpleTasksResults.csv";
+		return "results/updatedeleteTasksResults.csv";
 	}
 
 	@Override
@@ -40,7 +40,7 @@ public class PSLSimpleTasks extends PSLPerformanceProfiling {
 		int numTasks = (int) parameters.get(0);
 		int numConflicts = (int) parameters.get(1);
 
-		return URI.createFileURI(PSLConflictModelsGenerator.SIMPLE_TASKS_PATH.getPath(
+		return URI.createFileURI(PSLConflictModelsGenerator.UPDATEDELETE_TAKS_PATH.getPath(
 				numTasks, numConflicts, PSLConflictModelsGenerator.LEFT));
 	}
 
@@ -48,7 +48,7 @@ public class PSLSimpleTasks extends PSLPerformanceProfiling {
 	protected URI getAncestorURI(List<Object> parameters) {
 		int numTasks = (int) parameters.get(0);
 		int numConflicts = (int) parameters.get(1);
-		return URI.createFileURI(PSLConflictModelsGenerator.SIMPLE_TASKS_PATH.getPath(
+		return URI.createFileURI(PSLConflictModelsGenerator.UPDATEDELETE_TAKS_PATH.getPath(
 				numTasks, numConflicts, PSLConflictModelsGenerator.ANCESTOR));
 	}
 
@@ -56,7 +56,7 @@ public class PSLSimpleTasks extends PSLPerformanceProfiling {
 	protected URI getRightURI(List<Object> parameters) {
 		int numTasks = (int) parameters.get(0);
 		int numConflicts = (int) parameters.get(1);
-		return URI.createFileURI(PSLConflictModelsGenerator.SIMPLE_TASKS_PATH.getPath(
+		return URI.createFileURI(PSLConflictModelsGenerator.UPDATEDELETE_TAKS_PATH.getPath(
 				numTasks, numConflicts, PSLConflictModelsGenerator.RIGHT));
 	}
 
@@ -64,7 +64,7 @@ public class PSLSimpleTasks extends PSLPerformanceProfiling {
 	protected URI getConflictedURI(List<Object> parameters) {
 		int numTasks = (int) parameters.get(0);
 		int numConflicts = (int) parameters.get(1);
-		return URI.createFileURI(PSLConflictModelsGenerator.SIMPLE_TASKS_PATH.getPath(
+		return URI.createFileURI(PSLConflictModelsGenerator.UPDATEDELETE_TAKS_PATH.getPath(
 				numTasks, numConflicts, PSLConflictModelsGenerator.CONFLICTED));
 	}
 }

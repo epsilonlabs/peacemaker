@@ -9,7 +9,8 @@ import numpy as np
 if len(sys.argv) == 2:
     filename = sys.argv[1]
 else:
-    filename = "../results/simpleTasksResults.csv"
+    filename = "../results/updatedeleteTasksResults.csv"
+    # filename = "../results/doubleupdateTasksResults.csv"
 
 c_elems = "numElements"
 c_conflicts = "numConflicts"
@@ -17,8 +18,9 @@ c_conflicts = "numConflicts"
 c_pm = "Peacemaker"
 c_emfcompare = "EMFCompare"
 c_emfdiffmerge = "EMFDiffMerge"
+c_xmiload = "XMILoad"
 
-measurements = [c_pm, c_emfcompare, c_emfdiffmerge]
+measurements = [c_pm, c_emfcompare, c_emfdiffmerge, c_xmiload]
 
 #%%
 df = pd.read_csv(filename)
@@ -72,6 +74,10 @@ if type(axes) != np.ndarray:
 for conflict, ax in zip(conflicts, axes):
     df_conflict = df[df[c_conflicts] == conflict]
     ax.plot(df_conflict[c_elems],
+            df_conflict["{}_mean".format(c_xmiload)],
+            marker="x",
+            label="XMI Load")
+    ax.plot(df_conflict[c_elems],
             df_conflict["{}_mean".format(c_pm)],
             marker="o",
             label="Peacemaker")
@@ -94,10 +100,12 @@ f.savefig("{}_times.pdf".format(filename), bbox_inches='tight')
 
 #%%
 df_norm = df[["{}_mean".format(m) for m in measurements]].copy()
-df_norm["{}_mean".format(c_emfcompare)] = df_norm["{}_mean".format(c_emfcompare)] /df_norm["{}_mean".format(c_pm)]
-df_norm["{}_mean".format(c_emfdiffmerge)] = df_norm["{}_mean".format(c_emfdiffmerge)] /df_norm["{}_mean".format(c_pm)]
-df_norm["{}_mean".format(c_pm)] = 1
+df_norm["{}_mean".format(c_emfcompare)] = df_norm["{}_mean".format(c_emfcompare)] /df_norm["{}_mean".format(c_xmiload)]
+df_norm["{}_mean".format(c_emfdiffmerge)] = df_norm["{}_mean".format(c_emfdiffmerge)] /df_norm["{}_mean".format(c_xmiload)]
+df_norm["{}_mean".format(c_pm)] = df_norm["{}_mean".format(c_pm)] /df_norm["{}_mean".format(c_xmiload)]
+df_norm["{}_mean".format(c_xmiload)] = 1
 
+print(df_norm["{}_mean".format(c_pm)].mean())
 print(df_norm["{}_mean".format(c_emfcompare)].mean())
 print(df_norm["{}_mean".format(c_emfdiffmerge)].mean())
 
