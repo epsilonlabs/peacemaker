@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Stack;
 
+import org.eclipse.emf.ecore.EAttribute;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.EReference;
@@ -24,6 +25,8 @@ import org.xml.sax.helpers.DefaultHandler;
 public class PeacemakerHandlerDecorator extends DefaultHandler implements XMLDefaultHandler {
 
 	public static final String ID_ATTRIB = XMIResource.XMI_NS + ":" + XMIResource.XMI_ID;
+	public static final String TYPE_ATTRIB = "xsi:type";
+	public static final String XMI_TYPE_ATTRIB = "xmi:type";
 
 	protected int currentLine;
 	protected Stack<EClass> types = new Stack<>();
@@ -75,8 +78,7 @@ public class PeacemakerHandlerDecorator extends DefaultHandler implements XMLDef
 			elementType = (EClass) epackage.getEClassifier(localName);
 		}
 		else {
-			// contained object, localName is a reference of types.peek()
-			elementType = ((EReference) types.peek().getEStructuralFeature(localName)).getEReferenceType();
+			elementType = getType(types.peek(), localName, atts);
 		}
 
 		if (elementType == null) {
@@ -105,10 +107,52 @@ public class PeacemakerHandlerDecorator extends DefaultHandler implements XMLDef
 		if (objectId == null) {
 			// find Ecore attribute id (if applicable)
 			// TODO: cache eclasses and id attributes?
-			objectId = atts.getValue(type.getEIDAttribute().getName());
+			EAttribute idAttribute = type.getEIDAttribute();
+			if (idAttribute != null) {
+				objectId = atts.getValue(idAttribute.getName());
+			}
 		}
 
 		return objectId;
+	}
+
+	protected EClass getType(EClass parentType, String refName, Attributes atts) {
+
+		EClass type = null;
+
+		String typeName = atts.getValue(TYPE_ATTRIB);
+
+		if (typeName == null) {
+			typeName = atts.getValue(XMI_TYPE_ATTRIB);
+		}
+
+		if (typeName != null) {
+
+			String prefix = null;
+			int index = typeName.indexOf(':', 0);
+			if (index != -1) {
+				prefix = typeName.substring(0, index);
+				typeName = typeName.substring(index + 1);
+			}
+			
+			if (prefix != null) {
+				String packageUri = xmiHelper.getURI(prefix);
+				EPackage epackage =
+						pmResource.getResourceSet().getPackageRegistry().getEPackage(packageUri);
+				type = (EClass) epackage.getEClassifier(typeName);
+			}
+			else {
+				type = (EClass) parentType.getEPackage().getEClassifier(typeName);
+			}
+		}
+		else {
+			EReference ref = (EReference) parentType.getEStructuralFeature(refName);
+			if (ref != null) {
+				type = ref.getEReferenceType();
+			}
+		}
+
+		return type;
 	}
 
 	@Override
