@@ -8,6 +8,7 @@ import org.eclipse.emf.ecore.EAttribute;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.EReference;
+import org.eclipse.emf.ecore.EStructuralFeature;
 import org.eclipse.emf.ecore.xmi.XMIResource;
 import org.eclipse.emf.ecore.xmi.XMLDefaultHandler;
 import org.eclipse.emf.ecore.xmi.XMLHelper;
@@ -30,9 +31,10 @@ public class PeacemakerHandlerDecorator extends DefaultHandler implements XMLDef
 
 	protected int currentLine;
 	protected Stack<EClass> types = new Stack<>();
+	protected boolean needsTypePop = false;
 
 	protected PeaceMakerXMIResource pmResource;
-	protected XMIHelperImpl xmiHelper;
+	protected XMLHelper xmiHelper;
 	protected XMLDefaultHandler target;
 	protected ConflictVersionHelper versionHelper;
 
@@ -55,6 +57,7 @@ public class PeacemakerHandlerDecorator extends DefaultHandler implements XMLDef
 		//   initial tag (not the whole element)
 		int start = currentLine;
 		int end = locator.getLineNumber();
+		currentLine = end + 1;
 
 		// this is as far as the handler's decorator gets us, so now we need to
 		//   keep track of the current EClass type of the element being parsed,
@@ -63,41 +66,57 @@ public class PeacemakerHandlerDecorator extends DefaultHandler implements XMLDef
 
 		EClass elementType = null;
 		if (types.isEmpty()) {
-			// top object, localName is the EClass name
+			// top object
+			gatherXMLNamespaces(atts);
 
 			String prefix = "";
+			String name = qName;
 			int index = qName.indexOf(':', 0);
 			if (index != -1) {
 				prefix = qName.substring(0, index);
+				name = qName.substring(index + 1);
 			}
 
 			// if a package is accessible through extended metadata, this is not
 			//   a valid enough solution
 			String packageUri = xmiHelper.getURI(prefix);
 			EPackage epackage = pmResource.getResourceSet().getPackageRegistry().getEPackage(packageUri);
-			elementType = (EClass) epackage.getEClassifier(localName);
+			if (epackage != null) {
+				elementType = (EClass) epackage.getEClassifier(name);
+			}
 		}
 		else {
-			elementType = getType(types.peek(), localName, atts);
+			elementType = getType(types.peek(), qName, atts);
 		}
 
-		if (elementType == null) {
-			throw new RuntimeException("" + start + ": element type not found");
-		}
-		types.push(elementType);
+		if (elementType != null) {
+			types.push(elementType);
+			needsTypePop = true;
 
-		if (versionHelper.inConflictSection(start, end)) {
-			String objectId = getObjectId(elementType, atts);
-			if (objectId != null) {
-				versionHelper.addToConflictSections(start, end, objectId);
+			if (versionHelper.inConflictSection(start, end)) {
+				String objectId = getObjectId(elementType, atts);
+				if (objectId != null) {
+					versionHelper.addToConflictSections(start, end, objectId);
+				}
+				else {
+					throw new RuntimeException("" + start + ": Model object in conflict section does not have a valid Id");
+				}
 			}
-			else {
-				throw new RuntimeException("" + start + ": Model object in conflict section does not have a valid Id");
-			}
-
 		}
+		else {
+			needsTypePop = false;
+		}
+	}
 
-		currentLine = end + 1;
+	protected void gatherXMLNamespaces(Attributes atts) {
+		for (int i = 0, size = atts.getLength(); i < size; ++i) {
+			String attrib = atts.getQName(i);
+			if (attrib.startsWith(XMLResource.XML_NS)) {
+				int index = attrib.indexOf(':', 0);
+				String prefix = index == -1 ? "" : attrib.substring(index + 1);
+				xmiHelper.addPrefix(prefix, atts.getValue(i));
+			}
+		}
 	}
 
 	protected String getObjectId(EClass type, Attributes atts) {
@@ -116,39 +135,41 @@ public class PeacemakerHandlerDecorator extends DefaultHandler implements XMLDef
 		return objectId;
 	}
 
-	protected EClass getType(EClass parentType, String refName, Attributes atts) {
+	protected EClass getType(EClass parentType, String featName, Attributes atts) {
 
 		EClass type = null;
 
-		String typeName = atts.getValue(TYPE_ATTRIB);
+		EStructuralFeature feature = parentType.getEStructuralFeature(featName);
+		if (feature instanceof EReference) {
 
-		if (typeName == null) {
-			typeName = atts.getValue(XMI_TYPE_ATTRIB);
-		}
-
-		if (typeName != null) {
-
-			String prefix = null;
-			int index = typeName.indexOf(':', 0);
-			if (index != -1) {
-				prefix = typeName.substring(0, index);
-				typeName = typeName.substring(index + 1);
+			String xsiType = atts.getValue(TYPE_ATTRIB);
+			if (xsiType == null) {
+				xsiType = atts.getValue(XMI_TYPE_ATTRIB);
 			}
-			
-			if (prefix != null) {
-				String packageUri = xmiHelper.getURI(prefix);
-				EPackage epackage =
-						pmResource.getResourceSet().getPackageRegistry().getEPackage(packageUri);
-				type = (EClass) epackage.getEClassifier(typeName);
+
+			if (xsiType != null) {
+
+				String prefix = null;
+				int index = xsiType.indexOf(':', 0);
+				if (index != -1) {
+					prefix = xsiType.substring(0, index);
+					xsiType = xsiType.substring(index + 1);
+				}
+
+				if (prefix != null) {
+					String packageUri = xmiHelper.getURI(prefix);
+					EPackage epackage =
+							pmResource.getResourceSet().getPackageRegistry().getEPackage(packageUri);
+					if (epackage != null) {
+						type = (EClass) epackage.getEClassifier(xsiType);
+					}
+				}
+				else {
+					type = (EClass) parentType.getEPackage().getEClassifier(xsiType);
+				}
 			}
 			else {
-				type = (EClass) parentType.getEPackage().getEClassifier(typeName);
-			}
-		}
-		else {
-			EReference ref = (EReference) parentType.getEStructuralFeature(refName);
-			if (ref != null) {
-				type = ref.getEReferenceType();
+				type = ((EReference) feature).getEReferenceType();
 			}
 		}
 
@@ -159,7 +180,9 @@ public class PeacemakerHandlerDecorator extends DefaultHandler implements XMLDef
 	public void endElement(String uri, String localName, String qName) throws SAXException {
 		target.endElement(uri, localName, qName);
 
-		types.pop();
+		if (needsTypePop && !types.isEmpty()) {
+			types.pop();
+		}
 
 		currentLine = locator.getLineNumber() + 1;
 	}
@@ -291,5 +314,6 @@ public class PeacemakerHandlerDecorator extends DefaultHandler implements XMLDef
 	@Override
 	public void prepare(XMLResource resource, XMLHelper helper, Map<?, ?> options) {
 		target.prepare(resource, helper, options);
+		this.xmiHelper = helper;
 	}
 }
