@@ -146,20 +146,7 @@ public class PeaceMakerXMILoad extends XMILoadImpl {
 			System.out.println();
 		}
 
-		pmResource.setVersionLoadOptions(options);
-
-		pmResource.setLeftVersionName(preprocessor.getLeftVersionName());
-		pmResource.setRightVersionName(preprocessor.getRightVersionName());
-
-		pmResource.loadLeft(preprocessor.getLeftVersionHelper());
-		pmResource.loadRight(preprocessor.getRightVersionHelper());
-
-		if (preprocessor.hasBaseVersion()) {
-			pmResource.setBaseVersionName(preprocessor.getBaseVersionName());
-			pmResource.loadBase(preprocessor.getBaseVersionHelper());
-		}
-
-		pmResource.identifyConflicts(preprocessor.getConflictSections());
+		pmResource.loadVersions(preprocessor, options);
 
 		if (debug) {
 			for (Conflict c : pmResource.getConflicts()) {

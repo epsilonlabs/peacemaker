@@ -63,8 +63,10 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 		return new PeaceMakerXMISave(createXMLHelper());
 	}
 
-	public void loadLeft(ConflictVersionHelper versionHelper) throws IOException {
-		leftResource = loadVersionResource(LEFT_VERSION_EXTENSION, versionHelper);
+	protected void loadLeft(ConflictsPreprocessor preprocessor) throws IOException {
+		leftVersionName = preprocessor.getLeftVersionName();
+		leftResource = loadVersionResource(
+				LEFT_VERSION_EXTENSION, preprocessor.getLeftVersionHelper());
 	}
 
 	/**
@@ -81,9 +83,10 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 		return false;
 	}
 
-	public void loadBase(ConflictVersionHelper versionHelper) {
+	protected void prepareBase(ConflictsPreprocessor preprocessor) {
 		// this version is loaded on demand (i.e. if needed to identify conflicts)
-		baseVersionHelper = versionHelper;
+		baseVersionName = preprocessor.getBaseVersionName();
+		baseVersionHelper = preprocessor.getBaseVersionHelper();
 	}
 
 	protected void doLoadBase() {
@@ -95,8 +98,10 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 		}
 	}
 
-	public void loadRight(ConflictVersionHelper versionHelper) throws IOException {
-		rightResource = loadVersionResource(RIGHT_VERSION_EXTENSION, versionHelper);
+	protected void loadRight(ConflictsPreprocessor preprocessor) throws IOException {
+		rightVersionName = preprocessor.getRightVersionName();
+		rightResource = loadVersionResource(RIGHT_VERSION_EXTENSION,
+				preprocessor.getRightVersionHelper());
 	}
 
 	protected XMIResource loadVersionResource(String extension,
@@ -124,8 +129,8 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 		return specificResource;
 	}
 
-	public void identifyConflicts(List<ConflictSection> conflictSections) {
-		for (ConflictSection cs : conflictSections) {
+	protected void identifyConflicts(ConflictsPreprocessor preprocessor) {
+		for (ConflictSection cs : preprocessor.getConflictSections()) {
 			identifyConflicts(cs);
 		}
 	}
@@ -264,15 +269,18 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 		return rightVersionName;
 	}
 
-	public void setBaseVersionName(String baseVersionName) {
-		this.baseVersionName = baseVersionName;
-	}
+	public void loadVersions(ConflictsPreprocessor preprocessor, Map<?, ?> loadOptions)
+			throws IOException {
 
-	public void setLeftVersionName(String leftVersionName) {
-		this.leftVersionName = leftVersionName;
-	}
+		setVersionLoadOptions(loadOptions);
 
-	public void setRightVersionName(String rightVersionName) {
-		this.rightVersionName = rightVersionName;
+		loadLeft(preprocessor);
+		loadRight(preprocessor);
+
+		if (preprocessor.hasBaseVersion()) {
+			prepareBase(preprocessor);
+		}
+
+		identifyConflicts(preprocessor);
 	}
 }
