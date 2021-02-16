@@ -24,6 +24,7 @@ import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
 import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
 import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResource;
 import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResourceFactory;
+import org.eclipse.epsilon.peacemaker.conflicts.Conflict;
 
 public class ProgrammaticLaunchesPlayground {
 
@@ -39,11 +40,17 @@ public class ProgrammaticLaunchesPlayground {
 		ResourceSet resourceSet = getResourceSet();
 
 		resourceSet.getResourceFactoryRegistry().getExtensionToFactoryMap().put(
-				"model", new PeaceMakerXMIResourceFactory());
+				"*", new PeaceMakerXMIResourceFactory());
 
 		PeaceMakerXMIResource resource = (PeaceMakerXMIResource) resourceSet.createResource(
 				URI.createFileURI(new File("models/psl/conflicted.model").getAbsolutePath()));
 		resource.load(null);
+		
+		for (Conflict c : resource.getConflicts()) {
+			System.out.println(c.getTitle());
+			System.out.println(c.getDescription());
+			System.out.println("---");
+		}
 	}
 
 	public void testEMFCompare() throws Exception {
@@ -52,9 +59,6 @@ public class ProgrammaticLaunchesPlayground {
 		URI ancestorURI = URI.createFileURI("models/psl/ancestor.model");
 
 		ResourceSet resourceSet = getResourceSet();
-
-		resourceSet.getResourceFactoryRegistry().getExtensionToFactoryMap().put(
-				"*", new XMIResourceFactoryImpl());
 
 		IComparisonScope scope = new DefaultComparisonScope(
 				resourceSet.getResource(leftURI, true),
@@ -81,9 +85,6 @@ public class ProgrammaticLaunchesPlayground {
 
 		ResourceSet resourceSet = getResourceSet();
 
-		resourceSet.getResourceFactoryRegistry().getExtensionToFactoryMap().put(
-				"*", new XMIResourceFactoryImpl());
-
 		IEditableModelScope targetScope = new FragmentedModelScope(resourceSet.getResource(leftURI, true), false);
 		IEditableModelScope referenceScope = new FragmentedModelScope(resourceSet.getResource(rightURI, true), false);
 		IEditableModelScope ancestorScope = new FragmentedModelScope(resourceSet.getResource(ancestorURI, true), false);
@@ -101,11 +102,13 @@ public class ProgrammaticLaunchesPlayground {
 	}
 
 	public ResourceSet getResourceSet() throws Exception {
+
+		Resource.Factory.Registry.INSTANCE.getExtensionToFactoryMap().put(
+				"*", new XMIResourceFactoryImpl());
+
 		ResourceSet resourceSet = new ResourceSetImpl();
 
 		ResourceSet ecoreResourceSet = new ResourceSetImpl();
-		ecoreResourceSet.getResourceFactoryRegistry().getExtensionToFactoryMap().put(
-				"*", new XMIResourceFactoryImpl());
 		Resource ecoreResource = ecoreResourceSet.createResource(
 				URI.createFileURI(new File("metamodels/psl.ecore").getAbsolutePath()));
 		ecoreResource.load(null);
