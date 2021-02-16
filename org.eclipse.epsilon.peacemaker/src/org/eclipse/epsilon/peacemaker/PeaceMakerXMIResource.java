@@ -20,11 +20,13 @@ import org.eclipse.emf.ecore.xmi.impl.XMIResourceImpl;
 import org.eclipse.epsilon.peacemaker.ConflictsPreprocessor.ConflictVersionHelper;
 import org.eclipse.epsilon.peacemaker.conflicts.Conflict;
 import org.eclipse.epsilon.peacemaker.conflicts.ConflictSection;
+import org.eclipse.epsilon.peacemaker.conflicts.ContainingFeatureUpdate;
 import org.eclipse.epsilon.peacemaker.conflicts.DoubleUpdate;
 import org.eclipse.epsilon.peacemaker.conflicts.ReferenceDoubleUpdate;
 import org.eclipse.epsilon.peacemaker.conflicts.UnconflictedObject;
 import org.eclipse.epsilon.peacemaker.conflicts.UpdateDelete;
 import org.eclipse.epsilon.peacemaker.util.IdUtils;
+import org.eclipse.epsilon.peacemaker.util.TagBasedEqualityHelper;
 
 public class PeaceMakerXMIResource extends XMIResourceImpl {
 
@@ -141,7 +143,44 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 			EObject leftObj = getLeftEObject(id);
 			
 			if (conflictSection.rightContains(id)) {
-				addConflict(new DoubleUpdate(id, this));
+				EObject rightObj = getRightEObject(id);
+
+				Conflict conflict = new DoubleUpdate(id, this);
+
+				if (leftObj.eContents().isEmpty() != rightObj.eContents().isEmpty()) {
+					// a false positive might be happening because of the end of
+					// the starting tag (i.e. ">" vs "/>")
+
+					// TODO: determine if a line comparison here would be worth
+					//   to save some comparison time. If not, simplify code
+
+					TagBasedEqualityHelper equalityHelper = new TagBasedEqualityHelper();
+					if (equalityHelper.equals(leftObj, rightObj)) {
+						// features are equal, so false positive
+						conflict = null;
+					}
+				}
+				else {
+					EStructuralFeature leftFeature = leftObj.eContainingFeature();
+					EStructuralFeature rightFeature = rightObj.eContainingFeature();
+
+					if (leftFeature != null && rightFeature != null && leftFeature != rightFeature) {
+						conflict = new ContainingFeatureUpdate(id, this,
+								leftObj.eContainingFeature(), rightObj.eContainingFeature());
+					}
+					else {
+						// check attributes and non-containment references
+						TagBasedEqualityHelper equalityHelper = new TagBasedEqualityHelper();
+						if (equalityHelper.equals(leftObj, rightObj)) {
+							// features are equal, so false positive
+							conflict = null;
+						}
+					}
+				}
+
+				if (conflict != null) {
+					addConflict(conflict);
+				}
 				conflictSection.removeRight(id);
 			}
 			else if (checkContainmentReference(id, leftObj, conflictSection)) {
