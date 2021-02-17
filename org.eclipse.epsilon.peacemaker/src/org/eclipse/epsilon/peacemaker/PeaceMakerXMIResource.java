@@ -52,6 +52,9 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 
 	protected List<Conflict> conflicts = new ArrayList<>();
 
+	protected boolean hasDuplicatedIds = false;
+	protected DuplicatedIdsException duplicatedIdsException;
+
 	public PeaceMakerXMIResource(URI uri) {
 		super(uri);
 	}
@@ -327,13 +330,27 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 
 		setVersionLoadOptions(loadOptions);
 
-		loadLeft(preprocessor);
-		loadRight(preprocessor);
+		try {
+			loadLeft(preprocessor);
+			loadRight(preprocessor);
 
-		if (preprocessor.hasBaseVersion()) {
-			prepareBase(preprocessor);
+			if (preprocessor.hasBaseVersion()) {
+				prepareBase(preprocessor);
+			}
+
+			identifyConflicts(preprocessor);
 		}
+		catch (DuplicatedIdsException ex) {
+			hasDuplicatedIds = true;
+			duplicatedIdsException = ex;
+		}
+	}
 
-		identifyConflicts(preprocessor);
+	public boolean hasDuplicatedIds() {
+		return hasDuplicatedIds;
+	}
+
+	public DuplicatedIdsException getDuplicatedIdException() {
+		return duplicatedIdsException;
 	}
 }

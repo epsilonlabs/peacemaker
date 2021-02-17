@@ -55,6 +55,7 @@ import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Link;
@@ -210,7 +211,10 @@ public class PeaceMakerEditor extends EcoreEditor {
 		// Only creates contents if the resource has been loaded
 		if (!getEditingDomain().getResourceSet().getResources().isEmpty()) {
 			pmResource = (PeaceMakerXMIResource) editingDomain.getResourceSet().getResources().get(0);
-			if (!pmResource.hasConflicts()) {
+			if (pmResource.hasDuplicatedIds()) {
+				createDuplicatedIdsPage();
+			}
+			else if (!pmResource.hasConflicts()) {
 				createSingleViewerPage();
 
 				setReadOnly(pmResource);
@@ -260,6 +264,32 @@ public class PeaceMakerEditor extends EcoreEditor {
 				updateProblemIndication();
 			}
 		});
+	}
+
+	protected void createDuplicatedIdsPage() {
+		Composite page = new Composite(getContainer(), SWT.NONE);
+		page.setBackground(getSite().getShell().getDisplay().getSystemColor(SWT.COLOR_WHITE));
+		int pageIndex = addPage(page);
+		setPageText(pageIndex, "Duplicated ids");
+
+		GridLayout pageLayout = new GridLayout(1, false);
+		page.setLayout(pageLayout);
+
+		Label title = new Label(page, SWT.NONE);
+		title.setText("Conflict Resolution aborted");
+
+		FontDescriptor boldDescriptor = FontDescriptor.createFrom(title.getFont()).setStyle(SWT.BOLD);
+		Font boldFont = boldDescriptor.createFont(title.getDisplay());
+		title.setFont(boldFont);
+
+		Text description = new Text(page, SWT.WRAP);
+		GridDataFactory.fillDefaults().grab(true, true).minSize(1, 1).applyTo(description);
+		description.setText(String.format(
+				"A duplicated id \"%s\" has been found (lines %d-%d)",
+				pmResource.getDuplicatedIdException().getId(),
+				pmResource.getDuplicatedIdException().getStartLine(),
+				pmResource.getDuplicatedIdException().getEndLine()));
+		description.setForeground(Display.getCurrent().getSystemColor(SWT.COLOR_RED));
 	}
 
 	protected void createSingleViewerPage() {

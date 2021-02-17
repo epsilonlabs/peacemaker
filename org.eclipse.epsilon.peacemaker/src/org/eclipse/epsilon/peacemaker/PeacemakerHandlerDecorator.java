@@ -1,7 +1,9 @@
 package org.eclipse.epsilon.peacemaker;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.Stack;
 
 import org.eclipse.emf.ecore.EAttribute;
@@ -32,6 +34,8 @@ public class PeacemakerHandlerDecorator extends DefaultHandler implements XMLDef
 	protected int currentLine;
 	protected Stack<EClass> types = new Stack<>();
 	protected boolean needsTypePop = false;
+
+	protected Set<String> ids = new HashSet<>();
 
 	protected PeaceMakerXMIResource pmResource;
 	protected XMLHelper xmiHelper;
@@ -93,8 +97,20 @@ public class PeacemakerHandlerDecorator extends DefaultHandler implements XMLDef
 			types.push(elementType);
 			needsTypePop = true;
 
+			String objectId = getObjectId(elementType, atts);
+
+			if (objectId != null) {
+				if (ids.contains(objectId)) {
+					throw new DuplicatedIdsException(objectId,
+							versionHelper.originalLine(start),
+							versionHelper.originalLine(end));
+				}
+				else {
+					ids.add(objectId);
+				}
+			}
+
 			if (versionHelper.inConflictSection(start, end)) {
-				String objectId = getObjectId(elementType, atts);
 				if (objectId != null) {
 					versionHelper.addToConflictSections(start, end, objectId);
 				}
