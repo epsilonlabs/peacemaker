@@ -22,6 +22,7 @@ import org.eclipse.epsilon.peacemaker.conflicts.Conflict;
 import org.eclipse.epsilon.peacemaker.conflicts.ConflictSection;
 import org.eclipse.epsilon.peacemaker.conflicts.ContainingFeatureUpdate;
 import org.eclipse.epsilon.peacemaker.conflicts.DoubleUpdate;
+import org.eclipse.epsilon.peacemaker.conflicts.KeepDelete;
 import org.eclipse.epsilon.peacemaker.conflicts.ReferenceDoubleUpdate;
 import org.eclipse.epsilon.peacemaker.conflicts.UnconflictedObject;
 import org.eclipse.epsilon.peacemaker.conflicts.UpdateDelete;
@@ -138,6 +139,7 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 	}
 
 	protected void identifyConflicts(ConflictSection conflictSection) {
+		TagBasedEqualityHelper equalityHelper = new TagBasedEqualityHelper();
 		for (String id : conflictSection.getLeftIds()) {
 
 			EObject leftObj = getLeftEObject(id);
@@ -154,7 +156,6 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 					// TODO: determine if a line comparison here would be worth
 					//   to save some comparison time. If not, simplify code
 
-					TagBasedEqualityHelper equalityHelper = new TagBasedEqualityHelper();
 					if (equalityHelper.equals(leftObj, rightObj)) {
 						// features are equal, so false positive
 						conflict = null;
@@ -170,7 +171,6 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 					}
 					else {
 						// check attributes and non-containment references
-						TagBasedEqualityHelper equalityHelper = new TagBasedEqualityHelper();
 						if (equalityHelper.equals(leftObj, rightObj)) {
 							// features are equal, so false positive
 							conflict = null;
@@ -188,8 +188,13 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 				// that contains objects with distinct ids in left and right
 			}
 			else if (hasBaseVersion() && conflictSection.baseContains(id)) {
-				// object updated in left version, and deleted in the right one
-				addConflict(new UpdateDelete(id, this, true));
+				// object kept(no changes)/updated in left version, and deleted in the right one
+				if (equalityHelper.equals(leftObj, getBaseEObject(id))) {
+					addConflict(new KeepDelete(id, this, true));
+				}
+				else {
+					addConflict(new UpdateDelete(id, this, true));
+				}
 			}
 			else {
 				// not identified as part of a conflict: "free" element to keep or remove
@@ -201,8 +206,13 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 		// loop over right ids to detect those cases
 		for (String id : conflictSection.getRightIds()) {
 			if (hasBaseVersion() && conflictSection.baseContains(id)) {
-				// object updated in right version, and deleted in the left one
-				addConflict(new UpdateDelete(id, this, false));
+				// object kept(no changes)/updated in right version, and deleted in the left one
+				if (equalityHelper.equals(getRightEObject(id), getBaseEObject(id))) {
+					addConflict(new KeepDelete(id, this, false));
+				}
+				else {
+					addConflict(new UpdateDelete(id, this, false));
+				}
 			}
 			else {
 				// not identified as part of a conflict: "free" element to keep or remove
@@ -268,6 +278,10 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 
 	public EObject getLeftEObject(String id) {
 		return leftResource.getEObject(id);
+	}
+
+	public EObject getBaseEObject(String id) {
+		return baseResource.getEObject(id);
 	}
 
 	public EObject getRightEObject(String id) {

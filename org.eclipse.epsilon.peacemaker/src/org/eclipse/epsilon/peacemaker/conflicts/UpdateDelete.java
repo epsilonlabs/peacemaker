@@ -8,7 +8,7 @@ import org.eclipse.epsilon.peacemaker.util.PrettyPrint;
 
 public class UpdateDelete extends Conflict {
 
-	protected boolean updateInLeft;
+	protected boolean deleteInRight;
 
 	/** where the object has been updated */
 	protected XMIResource resourceWithUpdate;
@@ -16,11 +16,11 @@ public class UpdateDelete extends Conflict {
 	protected XMIResource resourceWithDelete;
 
 	public UpdateDelete(String eObjectId, PeaceMakerXMIResource pmResource,
-			boolean updateInLeft) {
+			boolean deleteInRight) {
 		super(eObjectId, pmResource);
-		this.updateInLeft = updateInLeft;
+		this.deleteInRight = deleteInRight;
 
-		if (updateInLeft) {
+		if (deleteInRight) {
 			resourceWithUpdate = pmResource.getLeftResource();
 			resourceWithDelete = pmResource.getRightResource();
 		}
@@ -94,6 +94,6 @@ public class UpdateDelete extends Conflict {
 				"%s object with id %s updated in the %s version while deleted in the other one",
 				resourceWithUpdate.getEObject(eObjectId).eClass().getName(),
 				eObjectId,
-				updateInLeft ? "left" : "right");
+				deleteInRight ? "left" : "right");
 	}
 }
