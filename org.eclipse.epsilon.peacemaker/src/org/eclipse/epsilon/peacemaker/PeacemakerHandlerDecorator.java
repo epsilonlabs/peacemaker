@@ -33,7 +33,7 @@ public class PeacemakerHandlerDecorator extends DefaultHandler implements XMLDef
 
 	protected int currentLine;
 	protected Stack<EClass> types = new Stack<>();
-	protected boolean needsTypePop = false;
+	protected Stack<Boolean> needsTypePop = new Stack<>();
 
 	protected Set<String> ids = new HashSet<>();
 
@@ -95,7 +95,7 @@ public class PeacemakerHandlerDecorator extends DefaultHandler implements XMLDef
 
 		if (elementType != null) {
 			types.push(elementType);
-			needsTypePop = true;
+			needsTypePop.push(Boolean.TRUE);
 
 			String objectId = getObjectId(elementType, atts);
 
@@ -120,7 +120,7 @@ public class PeacemakerHandlerDecorator extends DefaultHandler implements XMLDef
 			}
 		}
 		else {
-			needsTypePop = false;
+			needsTypePop.push(Boolean.FALSE);
 		}
 	}
 
@@ -196,7 +196,7 @@ public class PeacemakerHandlerDecorator extends DefaultHandler implements XMLDef
 	public void endElement(String uri, String localName, String qName) throws SAXException {
 		target.endElement(uri, localName, qName);
 
-		if (needsTypePop && !types.isEmpty()) {
+		if (needsTypePop.pop()) {
 			types.pop();
 		}
 
