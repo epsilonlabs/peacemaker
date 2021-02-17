@@ -1,0 +1,3 @@
+The use cases (see the `emfCompareUseCases` file) originate from the EMF Compare Eclipse project. Precisely, they come from the `org.eclipse.emf.compare.tests` plugin of the project.
+
+Although the original plugin offers ways to load the resources into a Java program, Peacemaker works with the files resulting from a conflicting merge, so it was easier to generate these from the original resource files than from a loaded resource in Eclipse. The generation of files with conflicts is performed by the `generate_conflict_files.py` script.

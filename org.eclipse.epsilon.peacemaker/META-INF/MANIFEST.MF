@@ -7,11 +7,12 @@ Bundle-Version: 1.0.0.qualifier
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Export-Package: org.eclipse.epsilon.peacemaker,
  org.eclipse.epsilon.peacemaker.conflicts,
+ org.eclipse.epsilon.peacemaker.dt,
  org.eclipse.epsilon.peacemaker.util
-Require-Bundle: org.eclipse.emf.ecore.xmi,
- org.eclipse.emf.ecore.editor,
- org.eclipse.epsilon.common.dt,
+Require-Bundle: org.eclipse.emf.ecore.xmi;visibility:=reexport,
+ org.eclipse.emf.ecore.editor;visibility:=reexport,
  org.junit,
- org.eclipse.ui.forms
+ org.eclipse.ui.forms,
+ org.eclipse.epsilon.common.dt
 Bundle-ActivationPolicy: lazy
 Bundle-Activator: org.eclipse.epsilon.peacemaker.dt.PeaceMakerPlugin

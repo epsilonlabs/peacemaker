@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<<<<<<< models/emfcompare/a3/conflict_a3_attribute_left.nodes
+<nodes:Node xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:nodes="http://www.eclipse.org/emf/compare/tests/nodes" xmi:id="_zXeX0JQ1EeGUu8zWDEISZA" name="root">
+  <containmentRef1 xsi:type="nodes:NodeSingleValueAttribute" xmi:id="_zXeX0ZQ1EeGUu8zWDEISZA" name="conflictHolder"/>
+</nodes:Node>
+||||||| models/emfcompare/a3/conflict_a3_attribute_origin.nodes
+<nodes:Node xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:nodes="http://www.eclipse.org/emf/compare/tests/nodes" xmi:id="_zXeX0JQ1EeGUu8zWDEISZA" name="root">
+  <containmentRef1 xsi:type="nodes:NodeSingleValueAttribute" xmi:id="_zXeX0ZQ1EeGUu8zWDEISZA" name="conflictHolder" singleValuedAttribute="origin"/>
+</nodes:Node>
+=======
+<nodes:Node xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:nodes="http://www.eclipse.org/emf/compare/tests/nodes" xmi:id="_zXeX0JQ1EeGUu8zWDEISZA" name="root"/>
+>>>>>>> models/emfcompare/a3/conflict_a3_attribute_right.nodes

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<nodes:Node xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:nodes="http://www.eclipse.org/emf/compare/tests/nodes" xmi:id="_-TyUYJQ1EeGUu8zWDEISZA" name="root">
+  <containmentRef1 xmi:id="_-TyUYZQ1EeGUu8zWDEISZA" name="left"/>
+<<<<<<< models/emfcompare/a2/conflict_a2_reference_left.nodes
+  <containmentRef1 xsi:type="nodes:NodeSingleValueReference" xmi:id="_-TyUYpQ1EeGUu8zWDEISZA" name="conflictHolder" singleValuedReference="_-TyUYZQ1EeGUu8zWDEISZA"/>
+||||||| models/emfcompare/a2/conflict_a2_reference_origin.nodes
+  <containmentRef1 xsi:type="nodes:NodeSingleValueReference" xmi:id="_-TyUYpQ1EeGUu8zWDEISZA" name="conflictHolder"/>
+=======
+>>>>>>> models/emfcompare/a2/conflict_a2_reference_right.nodes
+</nodes:Node>
