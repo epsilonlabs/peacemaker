@@ -25,11 +25,12 @@ public class PeaceMakerXMILoad extends XMILoadImpl {
 
 	public static void main(String[] args) throws Exception {
 
+		Resource.Factory.Registry.INSTANCE.getExtensionToFactoryMap().put(
+				"*", new XMIResourceFactoryImpl());
+
 		ResourceSet resourceSet = new ResourceSetImpl();
 
 		ResourceSet ecoreResourceSet = new ResourceSetImpl();
-		ecoreResourceSet.getResourceFactoryRegistry().getExtensionToFactoryMap().put(
-				"*", new XMIResourceFactoryImpl());
 
 		String[] ecoreFiles = { "models/comicshop.ecore", "models/comicshopIds.ecore" };
 		for (String ecoreFile : ecoreFiles) {
@@ -44,7 +45,7 @@ public class PeaceMakerXMILoad extends XMILoadImpl {
 		}
 
 		resourceSet.getResourceFactoryRegistry().getExtensionToFactoryMap().put(
-				"model", new PeaceMakerXMIResourceFactory());
+				"*", new PeaceMakerXMIResourceFactory());
 
 		String[] cases = {
 				"01-newInLeft",

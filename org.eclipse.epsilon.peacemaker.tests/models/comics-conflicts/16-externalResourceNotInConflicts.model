@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="ASCII"?>
+<comicshop:Shop xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:comicshop="comicshop" xmi:id="shop1" name="Travelling Man">
+  <comics xmi:id="comic1" title="Bad Weekend">
+    <publisher href="16-publishers.model#publisher1"/>
+  </comics>
+<<<<<<< HEAD
+  <comics xmi:id="comic2" title="Cruel Summer"/>
+=======
+  <comics xmi:id="comic2" title="Bad Weekend"/>
+>>>>>>> branch
+</comicshop:Shop>

@@ -28,9 +28,9 @@ import org.eclipse.epsilon.peacemaker.util.FormatModels;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class PeaceMakerTests {
+public class ComicTests {
 
-	private static String CONFLICTS_LOCATION = "modelconflicts/%s.model";
+	private static String CONFLICTS_LOCATION = "models/comics-conflicts/%s.model";
 
 	protected static ResourceSet resourceSet;
 
@@ -44,7 +44,7 @@ public class PeaceMakerTests {
 
 		ResourceSet ecoreResourceSet = new ResourceSetImpl();
 
-		String[] ecoreFiles = { "models/comicshop.ecore", "models/comicshopIds.ecore" };
+		String[] ecoreFiles = { "metamodels/comicshop.ecore", "metamodels/comicshopIds.ecore" };
 		for (String ecoreFile : ecoreFiles) {
 			Resource ecoreResource = ecoreResourceSet.createResource(
 					URI.createFileURI(new File(ecoreFile).getAbsolutePath()));

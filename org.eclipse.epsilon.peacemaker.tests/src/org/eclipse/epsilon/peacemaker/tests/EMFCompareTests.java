@@ -1,4 +1,4 @@
-package org.eclipse.epsilon.peacemaker.tests.emfcompare;
+package org.eclipse.epsilon.peacemaker.tests;
 
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;

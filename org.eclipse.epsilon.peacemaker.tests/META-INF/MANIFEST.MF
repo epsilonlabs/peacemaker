@@ -5,6 +5,6 @@ Bundle-SymbolicName: org.eclipse.epsilon.peacemaker.tests
 Bundle-Version: 1.0.0.qualifier
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Automatic-Module-Name: org.eclipse.epsilon.peacemaker.tests
-Export-Package: org.eclipse.epsilon.peacemaker.tests.emfcompare
+Export-Package: org.eclipse.epsilon.peacemaker.tests
 Require-Bundle: org.eclipse.epsilon.peacemaker,
  org.junit

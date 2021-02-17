@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="ASCII"?>
+<comicshop:Shop
+    xmi:version="2.0"
+    xmlns:xmi="http://www.omg.org/XMI"
+    xmlns:comicshop="comicshop"
+    xmi:id="_rqtZkBUPEeut3qj6TjgmMQ"
+    name="Travelling Man">
+  <comics
+      xmi:id="_tq4hkBUPEeut3qj6TjgmMQ"
+      title="A Basketful of Heads"/>
+  <comics
+      xmi:id="_RFBCcBUREeut3qj6TjgmMQ"
+      title="Cruel Summer"/>
+  <comics
+      xmi:id="_WsmOoBUUEeut3qj6TjgmMQ"
+      title="Bad Weekend">
+    <prologue
+        xmi:id="prologue1"
+<<<<<<< left.model
+        author="Ed Brubaker"
+=======
+        author="Joe Hill"
+>>>>>>> right.model
+        text="A good one indeed"/>
+  </comics>
+  <publishers
+      xmi:id="publisher1"
+<<<<<<< left.model
+      name="Dark Horse"/>
+=======
+      name="Vertigo"/>
+>>>>>>> right.model
+</comicshop:Shop>

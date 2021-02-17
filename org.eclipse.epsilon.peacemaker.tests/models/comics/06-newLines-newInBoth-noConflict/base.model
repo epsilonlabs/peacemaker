@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="ASCII"?>
+<comicshop:Shop
+    xmi:version="2.0"
+    xmlns:xmi="http://www.omg.org/XMI"
+    xmlns:comicshop="comicshop"
+    xmi:id="_rqtZkBUPEeut3qj6TjgmMQ"
+    name="Travelling Man">
+  <comics
+      xmi:id="_tq4hkBUPEeut3qj6TjgmMQ"
+      title="A Basketful of Heads"/>
+  <comics
+      xmi:id="_RFBCcBUREeut3qj6TjgmMQ"
+      title="Cruel Summer"/>
+  <comics
+      xmi:id="_WsmOoBUUEeut3qj6TjgmMQ"
+      title="Bad Weekend">
+    <prologue
+        xmi:id="_FiUMwBU8EeuMv6w_qu0ZJA"
+        author="Alan Moore"
+        text="A good one indeed"/>
+  </comics>
+  <publishers
+      xmi:id="_YX-ykBU5EeuMv6w_qu0ZJA"
+      name="Image Comics"/>
+</comicshop:Shop>

@@ -1,0 +1,15 @@
+@namespace(uri="comicshopIds", prefix="comicshopIds")
+package comicshopIds;
+
+class IdentifiableObject {
+	id attr String objId;
+}
+
+class Shop extends IdentifiableObject {
+	attr String name;
+	val Comic[*] comics;
+}
+
+class Comic extends IdentifiableObject {
+	attr String title;
+}

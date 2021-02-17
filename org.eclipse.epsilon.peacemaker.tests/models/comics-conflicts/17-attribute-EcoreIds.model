@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="ASCII"?>
+<comicshopIds:Shop xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:comicshopIds="comicshopIds" objId="shop1" name="Travelling Man">
+  <comics objId="comic1" title="A Basketful of Heads"/>
+<<<<<<< HEAD
+  <comics objId="comic2" title="Cruel Summer"/>
+=======
+  <comics objId="comic2" title="Sentient"/>
+>>>>>>> branch
+</comicshopIds:Shop>
