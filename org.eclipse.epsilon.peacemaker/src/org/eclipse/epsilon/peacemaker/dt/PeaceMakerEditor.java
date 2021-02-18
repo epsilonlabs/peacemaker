@@ -380,7 +380,8 @@ public class PeaceMakerEditor extends EcoreEditor {
 
 		if (pmResource.hasBaseResource()) {
 			Label baseLabel = new Label(baseVersion, SWT.NONE);
-			baseLabel.setText("Ancestor");
+			baseLabel.setText("Ancestor"+
+					PrettyPrint.format(pmResource.getBaseVersionName(), " (", ")"));
 
 			Tree baseTree = new Tree(baseVersion, SWT.MULTI);
 			GridDataFactory.fillDefaults().grab(true, true).minSize(1, 1).applyTo(baseTree);
