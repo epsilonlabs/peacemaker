@@ -62,28 +62,35 @@ public class StreamUtils {
 				rightIndex++;
 			}
 			else {
-				String nextCommonLine = findNextCommonline(leftLines, leftIndex, rightLines, rightIndex);
 				writer.println(leftSeparator);
-				while (!leftLines[leftIndex].equals(nextCommonLine)) {
-					writer.println(leftLines[leftIndex]);
-					leftIndex++;
+
+				String nextCommonLine = findNextCommonline(leftLines, leftIndex, rightLines, rightIndex);
+				if (nextCommonLine == null) {
+					// the end of the files does not match (i.e. empty root elem)
+					while (leftIndex < leftLines.length) {
+						writer.println(leftLines[leftIndex]);
+						leftIndex++;
+					}
+					writer.println("=======");
+					while (rightIndex < rightLines.length) {
+						writer.println(rightLines[rightIndex]);
+						rightIndex++;
+					}
+					writer.println(rightSeparator);
 				}
-				writer.println("=======");
-				while (!rightLines[rightIndex].equals(nextCommonLine)) {
-					writer.println(rightLines[rightIndex]);
-					rightIndex++;
+				else {
+					while (!leftLines[leftIndex].equals(nextCommonLine)) {
+						writer.println(leftLines[leftIndex]);
+						leftIndex++;
+					}
+					writer.println("=======");
+					while (!rightLines[rightIndex].equals(nextCommonLine)) {
+						writer.println(rightLines[rightIndex]);
+						rightIndex++;
+					}
+					writer.println(rightSeparator);
 				}
-				writer.println(rightSeparator);
 			}
-		}
-		// one of the sides has ended, only one of the following loops may be entered
-		while (leftIndex < leftLines.length) {
-			writer.println(leftLines[leftIndex]);
-			leftIndex++;
-		}
-		while (rightIndex < rightLines.length) {
-			writer.println(rightLines[rightIndex]);
-			rightIndex++;
 		}
 		writer.flush();
 	}
@@ -112,49 +119,58 @@ public class StreamUtils {
 			}
 			else {
 				// similar to the merge method without a base version (above); here we
-				//   need to print first up to a common line between left and base,
-				//   and then up to a common line between base and right
+				//   need to find a line common to the three versions
 
 				writer.println(leftSeparator);
 
-				String nextCommonLine = findNextCommonline(leftLines, leftIndex, baseLines, baseIndex);
-				while (!leftLines[leftIndex].equals(nextCommonLine)) {
-					writer.println(leftLines[leftIndex]);
-					leftIndex++;
+				String nextCommonLine = findNextCommonline(
+						leftLines, leftIndex,
+						baseLines, baseIndex,
+						rightLines, rightIndex);
+
+				if (nextCommonLine == null) {
+					// the end of the files does not match (i.e. empty root elem)
+					while (leftIndex < leftLines.length) {
+						writer.println(leftLines[leftIndex]);
+						leftIndex++;
+					}
+					writer.println(baseSeparator);
+					while (baseIndex < baseLines.length) {
+						writer.println(baseLines[baseIndex]);
+						baseIndex++;
+					}
+					writer.println("=======");
+					while (rightIndex < rightLines.length) {
+						writer.println(rightLines[rightIndex]);
+						rightIndex++;
+					}
+					writer.println(rightSeparator);
 				}
-
-				writer.println(baseSeparator);
-
-				nextCommonLine = findNextCommonline(baseLines, baseIndex, rightLines, rightIndex);
-				while (!baseLines[baseIndex].equals(nextCommonLine)) {
-					writer.println(baseLines[baseIndex]);
-					baseIndex++;
+				else {
+					while (!leftLines[leftIndex].equals(nextCommonLine)) {
+						writer.println(leftLines[leftIndex]);
+						leftIndex++;
+					}
+					writer.println(baseSeparator);
+					while (!baseLines[baseIndex].equals(nextCommonLine)) {
+						writer.println(baseLines[baseIndex]);
+						baseIndex++;
+					}
+					writer.println("=======");
+					while (!rightLines[rightIndex].equals(nextCommonLine)) {
+						writer.println(rightLines[rightIndex]);
+						rightIndex++;
+					}
+					writer.println(rightSeparator);
 				}
-
-				writer.println("=======");
-
-				while (!rightLines[rightIndex].equals(nextCommonLine)) {
-					writer.println(rightLines[rightIndex]);
-					rightIndex++;
-				}
-
-				writer.println(rightSeparator);
 			}
 		}
-		// one of the sides has ended, only one of the following loops may be entered
-		while (leftIndex < leftLines.length) {
-			writer.println(leftLines[leftIndex]);
-			leftIndex++;
-		}
-		while (rightIndex < rightLines.length) {
-			writer.println(rightLines[rightIndex]);
-			rightIndex++;
-		}
 		writer.flush();
-
 	}
 
-	private static String findNextCommonline(String[] leftLines, int leftIndex, String[] rightLines, int rightIndex) {
+	private static String findNextCommonline(String[] leftLines, int leftIndex,
+			String[] rightLines, int rightIndex) {
+
 		Set<String> bucket = new HashSet<>();
 		//TODO: improve performance by filling the bucket with the array that
 		//  has less remaining lines
@@ -168,7 +184,35 @@ public class StreamUtils {
 			}
 			rightIndex++;
 		}
-		throw new RuntimeException("There must be a final common line in all cases");
+		return null;
+	}
+
+	private static String findNextCommonline(String[] leftLines, int leftIndex,
+			String[] baseLines, int baseIndex,
+			String[] rightLines, int rightIndex) {
+
+		Set<String> leftBucket = new HashSet<>();
+		while (leftIndex < leftLines.length) {
+			leftBucket.add(leftLines[leftIndex]);
+			leftIndex++;
+		}
+
+		Set<String> rightBucket = new HashSet<>();
+		while (rightIndex < rightLines.length) {
+			rightBucket.add(rightLines[rightIndex]);
+			rightIndex++;
+		}
+
+		// calculate the intersection of left and right
+		leftBucket.retainAll(rightBucket);
+
+		while (baseIndex < baseLines.length) {
+			if (leftBucket.contains(baseLines[baseIndex])) {
+				return baseLines[baseIndex];
+			}
+			baseIndex++;
+		}
+		return null;
 	}
 
 }

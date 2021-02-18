@@ -5,8 +5,11 @@ import static org.junit.Assert.assertTrue;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Map;
 
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
@@ -308,6 +311,49 @@ public class ComicTests {
 		comic = (Comic) (objectInLeft ? resource.getLeftEObject(firstConflict.getEObjectId())
 				: resource.getRightEObject(firstConflict.getEObjectId()));
 		assertTrue(comic != null && comic.getTitle().equals(comicTitle));
+	}
+
+	@Test
+	public void testFullSuiteSave() throws IOException {
+		String[] cases = {
+				"01-newInLeft",
+				"02-newInBoth-noConflict",
+				"03-attribute",
+				"04-nonContained1boundedRef",
+				"05-contained1boundedRef",
+				"11-updateDelete",
+				"12-deleteUpdate",
+				"14-externalCrossReferencesIsMany",
+				"15-crossReferencesToConflictedObject",
+				"16-externalResourceNotInConflicts",
+				"17-attribute-EcoreIds" };
+		
+		for (String inputCase : cases) {
+			testSave(inputCase, Collections.EMPTY_MAP);
+		}
+		
+		String[] newLinesCases = {
+				"06-newLines-newInBoth-noConflict",
+				"07-newLines-attributes",
+				"08-newLines-severalAttributes",
+				"10-newLines-contained1boundedRef",
+				"13-severalConflictSectionsSameObject" };
+		
+		for (String inputCase : newLinesCases) {
+			testSave(inputCase, FormatModels.getBreakAttributesSaveOptions());
+		}
+	}
+
+	public void testSave(String inputCase, Map<?, ?> saveOptions) throws IOException {
+		String casePath = String.format(CONFLICTS_LOCATION, inputCase);
+
+		PeaceMakerXMIResource resource = loadConflictResource(casePath);
+
+		ByteArrayOutputStream beforeStream = new ByteArrayOutputStream();
+		resource.save(beforeStream, saveOptions);
+
+		assertTrue(Arrays.equals(beforeStream.toByteArray(),
+				Files.readAllBytes(Paths.get(casePath))));
 	}
 
 	public static void displayCase(String inputCase) {

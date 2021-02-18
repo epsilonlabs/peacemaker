@@ -3,8 +3,13 @@ package org.eclipse.epsilon.peacemaker.tests;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Collections;
 
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
@@ -197,6 +202,25 @@ public class EMFCompareTests {
 		for (int c = 0; c < conflictTypes.length; c++) {
 			assertTrue(pmResource.getConflicts().get(c).getClass().equals(conflictTypes[c]));
 		}
+	}
+
+	@Test
+	public void testStreamUtilsDifferentVersionEnding() throws IOException {
+		String inputCase = "a1_attribute";
+
+		PeaceMakerXMIResource resource = loadConflictResource(inputCase);
+
+		// saving a1_attribute "as is" involves merging versions with different
+		//   endings (because the root element of the right version has no
+		//   contained objects)
+
+		ByteArrayOutputStream beforeStream = new ByteArrayOutputStream();
+		resource.save(beforeStream, Collections.EMPTY_MAP);
+
+		System.out.println(beforeStream.toString());
+
+		assertTrue(Arrays.equals(beforeStream.toByteArray(),
+				Files.readAllBytes(Paths.get(String.format(CONFLICTS_LOCATION, inputCase)))));
 	}
 
 	public static void displayCase(String inputCase) {
