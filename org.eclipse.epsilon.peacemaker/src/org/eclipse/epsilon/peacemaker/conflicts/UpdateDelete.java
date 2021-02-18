@@ -1,19 +1,25 @@
 package org.eclipse.epsilon.peacemaker.conflicts;
 
+import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.emf.ecore.xmi.XMIResource;
 import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResource;
+import org.eclipse.epsilon.peacemaker.XMIResetIdsHandler;
 import org.eclipse.epsilon.peacemaker.util.CopyUtils;
+import org.eclipse.epsilon.peacemaker.util.IdUtils;
 import org.eclipse.epsilon.peacemaker.util.PrettyPrint;
 
-public class UpdateDelete extends Conflict {
+public class UpdateDelete extends Conflict implements XMIResetIdsHandler {
 
 	protected boolean deleteInRight;
+	protected boolean usesXMIIds = false;
 
 	/** where the object has been updated */
 	protected XMIResource resourceWithUpdate;
 	/** where the object has been deleted */
 	protected XMIResource resourceWithDelete;
+
+	protected EObject eObject;
 
 	public UpdateDelete(String eObjectId, PeaceMakerXMIResource pmResource,
 			boolean deleteInRight) {
@@ -28,6 +34,8 @@ public class UpdateDelete extends Conflict {
 			resourceWithUpdate = pmResource.getRightResource();
 			resourceWithDelete = pmResource.getLeftResource();
 		}
+		eObject = resourceWithUpdate.getEObject(eObjectId);
+		usesXMIIds = IdUtils.hasXMIId(resourceWithUpdate, eObject);
 	}
 
 	public String toString() {
@@ -35,9 +43,9 @@ public class UpdateDelete extends Conflict {
 
 		s.append(getTitle()).append("\n").append(getDescription()).append("\n");
 		s.append("Updated version: ")
-				.append(PrettyPrint.featuresMap(resourceWithUpdate.getEObject(eObjectId))).append("\n");
+				.append(PrettyPrint.featuresMap(eObject)).append("\n");
 		s.append("Base version: ")
-				.append(PrettyPrint.featuresMap(pmResource.getBaseResource().getEObject(eObjectId)));
+				.append(PrettyPrint.featuresMap(pmResource.getBaseEObject(eObjectId)));
 
 		return s.toString();
 	}
@@ -58,12 +66,11 @@ public class UpdateDelete extends Conflict {
 
 		switch (action) {
 		case KEEP: {
-			CopyUtils.copyToResource(resourceWithUpdate.getEObject(eObjectId),
-					resourceWithUpdate, resourceWithDelete);
+			CopyUtils.copyToResource(eObject, resourceWithUpdate, resourceWithDelete);
 			break;
 		}
 		case REMOVE: {
-			EcoreUtil.remove(resourceWithUpdate.getEObject(eObjectId));
+			EcoreUtil.remove(eObject);
 			break;
 		}
 		default:
@@ -92,8 +99,15 @@ public class UpdateDelete extends Conflict {
 	public String getDescription() {
 		return String.format(
 				"%s object with id %s updated in the %s version while deleted in the other one",
-				resourceWithUpdate.getEObject(eObjectId).eClass().getName(),
+				eObject.eClass().getName(),
 				eObjectId,
 				deleteInRight ? "left" : "right");
+	}
+
+	@Override
+	public void resetXMIIds() {
+		if (usesXMIIds) {
+			resourceWithUpdate.setID(eObject, eObjectId);
+		}
 	}
 }

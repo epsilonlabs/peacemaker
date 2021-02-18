@@ -4,6 +4,7 @@ import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EReference;
 import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResource;
+import org.eclipse.epsilon.peacemaker.XMIResetIdsHandler;
 import org.eclipse.epsilon.peacemaker.util.IdUtils;
 
 /**
@@ -12,7 +13,7 @@ import org.eclipse.epsilon.peacemaker.util.IdUtils;
  * 
  * @author alfonsodelavega
  */
-public class ReferenceDoubleUpdate extends DoubleUpdate {
+public class ReferenceDoubleUpdate extends DoubleUpdate implements XMIResetIdsHandler {
 
 	protected EReference reference;
 

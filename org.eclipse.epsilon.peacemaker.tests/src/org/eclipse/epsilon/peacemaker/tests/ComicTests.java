@@ -28,6 +28,9 @@ import org.eclipse.epsilon.peacemaker.util.FormatModels;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import comicshop.Comic;
+import comicshop.ComicshopPackage;
+
 public class ComicTests {
 
 	private static String CONFLICTS_LOCATION = "models/comics-conflicts/%s.model";
@@ -42,9 +45,11 @@ public class ComicTests {
 		
 		resourceSet = new ResourceSetImpl();
 
+		resourceSet.getPackageRegistry().put(ComicshopPackage.eNS_URI, ComicshopPackage.eINSTANCE);
+
 		ResourceSet ecoreResourceSet = new ResourceSetImpl();
 
-		String[] ecoreFiles = { "metamodels/comicshop.ecore", "metamodels/comicshopIds.ecore" };
+		String[] ecoreFiles = { "metamodels/comicshopIds.ecore" };
 		for (String ecoreFile : ecoreFiles) {
 			Resource ecoreResource = ecoreResourceSet.createResource(
 					URI.createFileURI(new File(ecoreFile).getAbsolutePath()));
@@ -274,6 +279,35 @@ public class ComicTests {
 		System.out.println("\n");
 
 		assertTrue(Arrays.equals(beforeStream.toByteArray(), afterStream.toByteArray()));
+	}
+
+	@Test
+	public void testIdsWhenUndoingConflictsWithRemove() throws IOException {
+		testUndoingRemove("01-newInLeft", "Cruel Summer", true);
+		testUndoingRemove("11-updateDelete", "Bad Winter", true);
+		testUndoingRemove("12-deleteUpdate", "Bad Winter", false);
+	}
+
+	public void testUndoingRemove(String inputCase, String comicTitle, boolean objectInLeft) throws IOException {
+		PeaceMakerXMIResource resource = loadConflictResource(String.format(CONFLICTS_LOCATION, inputCase));
+
+		Conflict firstConflict = resource.getConflicts().get(0);
+
+		Comic comic = (Comic) (objectInLeft ? resource.getLeftEObject(firstConflict.getEObjectId())
+				: resource.getRightEObject(firstConflict.getEObjectId()));
+		assertTrue(comic != null && comic.getTitle().equals(comicTitle));
+
+		ConflictResolveCommand command = new ConflictResolveCommand(
+				Arrays.asList(resource.getLeftResource(), resource.getRightResource()),
+				firstConflict, ResolveAction.REMOVE, null);
+
+		command.execute();
+		assertTrue(resource.getLeftEObject(firstConflict.getEObjectId()) == null);
+
+		command.undo();
+		comic = (Comic) (objectInLeft ? resource.getLeftEObject(firstConflict.getEObjectId())
+				: resource.getRightEObject(firstConflict.getEObjectId()));
+		assertTrue(comic != null && comic.getTitle().equals(comicTitle));
 	}
 
 	public static void displayCase(String inputCase) {

@@ -1,18 +1,24 @@
 package org.eclipse.epsilon.peacemaker.conflicts;
 
+import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.emf.ecore.xmi.XMIResource;
 import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResource;
+import org.eclipse.epsilon.peacemaker.XMIResetIdsHandler;
 import org.eclipse.epsilon.peacemaker.util.CopyUtils;
+import org.eclipse.epsilon.peacemaker.util.IdUtils;
 
-public class UnconflictedObject extends Conflict {
+public class UnconflictedObject extends Conflict implements XMIResetIdsHandler {
 
 	protected boolean inLeftSegment;
+	protected boolean usesXMIIds = false;
 
 	/** The resource containing the unconflicted object */
 	protected XMIResource objectResource;
 	/** The other resource (not containing the object) */
 	protected XMIResource otherResource;
+
+	protected EObject eObject;
 
 	public UnconflictedObject(String eObjectId, PeaceMakerXMIResource pmResource,
 			boolean inLeftSegment) {
@@ -27,6 +33,8 @@ public class UnconflictedObject extends Conflict {
 			objectResource = pmResource.getRightResource();
 			otherResource = pmResource.getLeftResource();
 		}
+		eObject = objectResource.getEObject(eObjectId);
+		usesXMIIds = IdUtils.hasXMIId(objectResource, eObject);
 	}
 
 	public String toString() {
@@ -49,8 +57,7 @@ public class UnconflictedObject extends Conflict {
 
 		switch (action) {
 		case KEEP: {
-			CopyUtils.copyToResource(objectResource.getEObject(eObjectId),
-					objectResource, otherResource);
+			CopyUtils.copyToResource(eObject, objectResource, otherResource);
 			break;
 		}
 		case REMOVE: {
@@ -84,8 +91,15 @@ public class UnconflictedObject extends Conflict {
 
 		return String.format(
 				"Unconflicted %s object with id %s found in the %s segment of a conflict section",
-				objectResource.getEObject(eObjectId).eClass().getName(),
+				eObject.eClass().getName(),
 				eObjectId,
 				inLeftSegment ? "left" : "right");
+	}
+
+	@Override
+	public void resetXMIIds() {
+		if (usesXMIIds) {
+			objectResource.setID(eObject, eObjectId);
+		}
 	}
 }
