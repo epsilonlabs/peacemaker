@@ -78,7 +78,7 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 	/**
 	 * Checks if there is ancestor version information, also loads it if not loaded yet
 	 */
-	protected boolean hasBaseVersion() {
+	public boolean hasBaseResource() {
 		if (baseVersionHelper != null) {
 			if (baseResource == null) {
 				// demand-load of the resource
@@ -190,7 +190,7 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 				// special double update case: single containment reference
 				// that contains objects with distinct ids in left and right
 			}
-			else if (hasBaseVersion() && conflictSection.baseContains(id)) {
+			else if (hasBaseResource() && conflictSection.baseContains(id)) {
 				// object kept(no changes)/updated in left version, and deleted in the right one
 				if (equalityHelper.equals(leftObj, getBaseEObject(id))) {
 					addConflict(new KeepDelete(id, this, true));
@@ -208,7 +208,7 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 		// UpdateDelete conflicts can appear the other way (update in right version, delete in left)
 		// loop over right ids to detect those cases
 		for (String id : conflictSection.getRightIds()) {
-			if (hasBaseVersion() && conflictSection.baseContains(id)) {
+			if (hasBaseResource() && conflictSection.baseContains(id)) {
 				// object kept(no changes)/updated in right version, and deleted in the left one
 				if (equalityHelper.equals(getRightEObject(id), getBaseEObject(id))) {
 					addConflict(new KeepDelete(id, this, false));
@@ -261,7 +261,7 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 	}
 
 	public XMIResource getBaseResource() {
-		if (hasBaseVersion()) {
+		if (hasBaseResource()) {
 			return baseResource;
 		}
 		return null;

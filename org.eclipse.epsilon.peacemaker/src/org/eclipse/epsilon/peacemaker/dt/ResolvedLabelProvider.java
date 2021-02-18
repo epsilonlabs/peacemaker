@@ -10,12 +10,15 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Display;
 
-public class ResultLabelProvider extends VersionLabelProvider {
+public class ResolvedLabelProvider extends VersionLabelProvider {
 
-	public ResultLabelProvider(ILabelProvider labelProvider, XMIResource resource,
-			Map<String, ConflictObjectStatus> conflictObject2status) {
+	protected Color resolvedColor;
+
+	public ResolvedLabelProvider(ILabelProvider labelProvider, XMIResource resource,
+			Map<String, ConflictObjectStatus> conflictObject2status, Color resolvedColor) {
 		
 		super(labelProvider, resource, conflictObject2status);
+		this.resolvedColor = resolvedColor;
 	}
 
 	@Override
@@ -26,7 +29,7 @@ public class ResultLabelProvider extends VersionLabelProvider {
 			// it does not matter which side accepts it, in the end it's resolved
 			case ACCEPTED:
 			case DISCARDED:
-				return Display.getCurrent().getSystemColor(SWT.COLOR_GREEN);
+				return resolvedColor;
 			case UNRESOLVED:
 				return Display.getCurrent().getSystemColor(SWT.COLOR_YELLOW);
 			}
