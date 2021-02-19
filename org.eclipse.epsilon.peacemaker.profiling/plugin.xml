@@ -14,4 +14,12 @@
             genModel="metamodels/psl.genmodel"/>
    </extension>
 
+   <extension point="org.eclipse.emf.ecore.generated_package">
+      <!-- @generated boxes -->
+      <package
+            uri="boxes"
+            class="boxes.BoxesPackage"
+            genModel="metamodels/boxes.genmodel"/>
+   </extension>
+
 </plugin>
