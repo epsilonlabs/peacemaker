@@ -36,7 +36,7 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 	private static final String RIGHT_VERSION_EXTENSION = "pmRightVersion";
 
 	// placeholder for those resources where no conflicts are found
-	protected Resource unconflictedResource;
+	protected XMIResource unconflictedResource;
 
 	protected Map<?, ?> versionLoadOptions = Collections.EMPTY_MAP;
 
@@ -299,11 +299,11 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 		return leftResource != null && rightResource != null && !conflicts.isEmpty();
 	}
 
-	public void setUnconflictedResource(Resource resource) {
+	public void setUnconflictedResource(XMIResource resource) {
 		this.unconflictedResource = resource;
 	}
 
-	public Resource getUnconflictedResource() {
+	public XMIResource getUnconflictedResource() {
 		return unconflictedResource;
 	}
 

@@ -22,14 +22,14 @@ public class PeaceMakerXMISave extends XMISaveImpl {
 		PeaceMakerXMIResource pmResource = (PeaceMakerXMIResource) resource;
 
 		if (!pmResource.hasConflicts()) {
-			super.save(pmResource, outputStream, options);
+			super.save(pmResource.getUnconflictedResource(), outputStream, options);
 		}
 		else {
-			doSave(pmResource, outputStream, options);
+			save(pmResource, outputStream, options);
 		}
 	}
 
-	public void doSave(PeaceMakerXMIResource pmResource, OutputStream outputStream,
+	public void save(PeaceMakerXMIResource pmResource, OutputStream outputStream,
 			Map<?, ?> options) throws IOException {
 
 		ByteArrayOutputStream leftStream = new ByteArrayOutputStream();
