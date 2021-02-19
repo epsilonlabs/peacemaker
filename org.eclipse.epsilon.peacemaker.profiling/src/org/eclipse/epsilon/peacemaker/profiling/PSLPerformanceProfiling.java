@@ -1,6 +1,8 @@
 package org.eclipse.epsilon.peacemaker.profiling;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.eclipse.emf.common.util.URI;
@@ -24,9 +26,12 @@ import org.eclipse.emf.ecore.xmi.XMLResource;
 import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
 import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResource;
 import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResourceFactory;
+import org.eclipse.epsilon.peacemaker.profiling.PSLConflictModelsGenerator.TaskModelsPath;
 import org.eclipse.epsilon.profiling.Stopwatch;
 
 public abstract class PSLPerformanceProfiling extends MDBench {
+
+	protected TaskModelsPath taskPath;
 
 	public PSLPerformanceProfiling(int repetitions, int warmupReps) {
 		super(repetitions, warmupReps);
@@ -38,6 +43,12 @@ public abstract class PSLPerformanceProfiling extends MDBench {
 		result.add("" + runEMFCompare(parameters));
 		result.add("" + runEMFDiffMerge(parameters));
 		result.add("" + runXMILoad(parameters));
+	}
+
+	@Override
+	public List<String> getResultsHeader() {
+		return Arrays.asList("numElements", "numConflicts",
+				"Peacemaker", "EMFCompare", "EMFDiffMerge", "XMILoad");
 	}
 
 	protected long runPeacemaker(List<Object> parameters) throws Exception {
@@ -141,11 +152,44 @@ public abstract class PSLPerformanceProfiling extends MDBench {
 		return resourceSet;
 	}
 
-	protected abstract URI getLeftURI(List<Object> parameters);
+	@Override
+	public List<List<Object>> getExperiments() {
+		List<List<Object>> experiments = new ArrayList<>();
+		int[][] simpleTaskExperiments = PSLConflictModelsGenerator.getTaskExperiments();
+		for (int i = 0; i < simpleTaskExperiments.length; i++) {
+			experiments.add(Arrays.asList(
+					simpleTaskExperiments[i][0],
+					simpleTaskExperiments[i][1]));
+		}
+		return experiments;
+	}
 
-	protected abstract URI getAncestorURI(List<Object> parameters);
+	protected URI getLeftURI(List<Object> parameters) {
+		int numTasks = (int) parameters.get(0);
+		int numConflicts = (int) parameters.get(1);
 
-	protected abstract URI getRightURI(List<Object> parameters);
+		return URI.createFileURI(taskPath.getPath(
+				numTasks, numConflicts, PSLConflictModelsGenerator.LEFT));
+	}
 
-	protected abstract URI getConflictedURI(List<Object> parameters);
+	protected URI getAncestorURI(List<Object> parameters) {
+		int numTasks = (int) parameters.get(0);
+		int numConflicts = (int) parameters.get(1);
+		return URI.createFileURI(taskPath.getPath(
+				numTasks, numConflicts, PSLConflictModelsGenerator.ANCESTOR));
+	}
+
+	protected URI getRightURI(List<Object> parameters) {
+		int numTasks = (int) parameters.get(0);
+		int numConflicts = (int) parameters.get(1);
+		return URI.createFileURI(taskPath.getPath(
+				numTasks, numConflicts, PSLConflictModelsGenerator.RIGHT));
+	}
+
+	protected URI getConflictedURI(List<Object> parameters) {
+		int numTasks = (int) parameters.get(0);
+		int numConflicts = (int) parameters.get(1);
+		return URI.createFileURI(taskPath.getPath(
+				numTasks, numConflicts, PSLConflictModelsGenerator.CONFLICTED));
+	}
 }

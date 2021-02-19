@@ -28,10 +28,16 @@ public class PSLConflictModelsGenerator {
 
 		int[][] taskExperiments = getTaskExperiments();
 		for (int i = 0; i < taskExperiments.length; i++) {
-			generator.createDoubleUpdateTasksConflictModels(
-					taskExperiments[i][0], taskExperiments[i][1]);
-			generator.createUpdateDeleteTasksConflictModels(
-					taskExperiments[i][0], taskExperiments[i][1]);
+			int numTasks = taskExperiments[i][0];
+			int numConflicts = taskExperiments[i][1];
+
+			generator.createDoubleUpdateTasksConflictModels(numTasks, numConflicts);
+			generator.createUpdateDeleteTasksConflictModels(numTasks, numConflicts);
+
+			// extra changes in half of the tasks
+			int numExtraChanges = numTasks / 2;
+			generator.createUpdateDeleteTasksConflictModelsWithExtraChanges(
+					numTasks, numConflicts, numExtraChanges);
 		}
 		System.out.println("Done");
 	}
@@ -52,6 +58,10 @@ public class PSLConflictModelsGenerator {
 			
 	public static TaskModelsPath UPDATEDELETE_TAKS_PATH = (numTasks, numConflicts, suffix) 
 			-> String.format("models/psl-updatedeleteTasks/%delems-%dconflicts_%s.model",
+					numTasks, numConflicts, suffix);
+			
+	public static TaskModelsPath UPDATEDELETE_TAKS_EXTRA_CHANGES_PATH = (numTasks, numConflicts, suffix) 
+			-> String.format("models/psl-updatedeleteTasks-extraChanges/%delems-%dconflicts_%s.model",
 					numTasks, numConflicts, suffix);
 
 	/** number of tasks and conflicts per experiment */
@@ -103,39 +113,10 @@ public class PSLConflictModelsGenerator {
 		ancestorResource.getContents().add(ancestorRoot);
 		ancestorResource.setID(ancestorRoot, "projectID");
 		
-		int numPeople = 5;
-		for (int p = 0; p < numPeople; p++) {
-			Person person = pslFactory.createPerson();
-			person.setName("Person" + p);
-			ancestorRoot.getPeople().add(person);
-			ancestorResource.setID(person, "PersonID" + p);
-		}
-
 		Random rand = new Random();
 		rand.setSeed(127);
 
-		for (int t = 0; t < numTasks; t++) {
-			Task task = pslFactory.createTask();
-			task.setTitle("task" + t);
-			task.setDuration(10);
-			task.setStart(20);
-
-			// each task made by two people
-			Effort effort = pslFactory.createEffort();
-			effort.setPercentage(50);
-			effort.setPerson(ancestorRoot.getPeople().get(rand.nextInt(numPeople)));
-			task.getEffort().add(effort);
-			ancestorResource.setID(effort, task.getTitle() + "effort1");
-
-			effort = pslFactory.createEffort();
-			effort.setPercentage(50);
-			effort.setPerson(ancestorRoot.getPeople().get(rand.nextInt(numPeople)));
-			task.getEffort().add(effort);
-			ancestorResource.setID(effort, task.getTitle() + "effort2");
-
-			ancestorRoot.getTasks().add(task);
-			ancestorResource.setID(task, "taskID" + t);
-		}
+		populateAncestor(ancestorResource, ancestorRoot, numTasks, rand);
 
 		XMIResource leftResource = (XMIResource) resourceSet.createResource(URI.createFileURI(leftPath));
 		CopyUtils.copyContents(ancestorResource, leftResource);
@@ -184,39 +165,10 @@ public class PSLConflictModelsGenerator {
 		ancestorResource.getContents().add(ancestorRoot);
 		ancestorResource.setID(ancestorRoot, "projectID");
 
-		int numPeople = 5;
-		for (int p = 0; p < numPeople; p++) {
-			Person person = pslFactory.createPerson();
-			person.setName("Person" + p);
-			ancestorRoot.getPeople().add(person);
-			ancestorResource.setID(person, "PersonID" + p);
-		}
-
 		Random rand = new Random();
 		rand.setSeed(127);
 
-		for (int t = 0; t < numTasks; t++) {
-			Task task = pslFactory.createTask();
-			task.setTitle("task" + t);
-			task.setDuration(10);
-			task.setStart(20);
-
-			// each task made by two people
-			Effort effort = pslFactory.createEffort();
-			effort.setPercentage(50);
-			effort.setPerson(ancestorRoot.getPeople().get(rand.nextInt(numPeople)));
-			task.getEffort().add(effort);
-			ancestorResource.setID(effort, task.getTitle() + "effort1");
-
-			effort = pslFactory.createEffort();
-			effort.setPercentage(50);
-			effort.setPerson(ancestorRoot.getPeople().get(rand.nextInt(numPeople)));
-			task.getEffort().add(effort);
-			ancestorResource.setID(effort, task.getTitle() + "effort2");
-
-			ancestorRoot.getTasks().add(task);
-			ancestorResource.setID(task, "taskID" + t);
-		}
+		populateAncestor(ancestorResource, ancestorRoot, numTasks, rand);
 
 		XMIResource leftResource = (XMIResource) resourceSet.createResource(URI.createFileURI(leftPath));
 		CopyUtils.copyContents(ancestorResource, leftResource);
@@ -248,5 +200,109 @@ public class PSLConflictModelsGenerator {
 		pb.redirectOutput(new File(conflictedPath));
 		Process process = pb.start();
 		process.waitFor();
+	}
+
+	/**
+	 * Creates conflict models where tasks with conflicts have their efforts modified
+	 */
+	public void createUpdateDeleteTasksConflictModelsWithExtraChanges(
+			int numTasks, int numConflicts, int numExtraChanges) throws Exception {
+
+		String ancestorPath = UPDATEDELETE_TAKS_EXTRA_CHANGES_PATH.getPath(numTasks, numConflicts, ANCESTOR);
+		String leftPath = UPDATEDELETE_TAKS_EXTRA_CHANGES_PATH.getPath(numTasks, numConflicts, LEFT);
+		String rightPath = UPDATEDELETE_TAKS_EXTRA_CHANGES_PATH.getPath(numTasks, numConflicts, RIGHT);
+		String conflictedPath = UPDATEDELETE_TAKS_EXTRA_CHANGES_PATH.getPath(numTasks, numConflicts, CONFLICTED);
+
+		XMIResource ancestorResource = (XMIResource) resourceSet.createResource(URI.createFileURI(ancestorPath));
+
+		Project ancestorRoot = pslFactory.createProject();
+		ancestorResource.getContents().add(ancestorRoot);
+		ancestorResource.setID(ancestorRoot, "projectID");
+
+		Random rand = new Random();
+		rand.setSeed(127);
+
+		populateAncestor(ancestorResource, ancestorRoot, numTasks, rand);
+
+		XMIResource leftResource = (XMIResource) resourceSet.createResource(URI.createFileURI(leftPath));
+		CopyUtils.copyContents(ancestorResource, leftResource);
+
+		XMIResource rightResource = (XMIResource) resourceSet.createResource(URI.createFileURI(rightPath));
+		CopyUtils.copyContents(ancestorResource, rightResource);
+
+		Set<Integer> conflictedTasks = new HashSet<>();
+		while (conflictedTasks.size() < numConflicts) {
+			conflictedTasks.add(rand.nextInt(numTasks));
+		}
+
+		List<Task> leftTasks = ((Project) leftResource.getContents().get(0)).getTasks();
+		List<Task> rightTasks = ((Project) rightResource.getContents().get(0)).getTasks();
+
+		for (int index : conflictedTasks) {
+			// left: first effort goes to 70; right: deleted first effort
+			leftTasks.get(index).getEffort().get(0).setPercentage(70);
+			rightTasks.get(index).getEffort().remove(0);
+		}
+
+		// changed tasks only in the right side (should be merged with no problem)
+		Set<Integer> changedTasks = new HashSet<>();
+		while (changedTasks.size() < numExtraChanges) {
+			int task = rand.nextInt(numTasks);
+			if (!conflictedTasks.contains(task)) {
+				changedTasks.add(task);
+			}
+		}
+
+		for (int task : changedTasks) {
+			rightTasks.get(task).setTitle(rightTasks.get(task).getTitle() + RIGHT);
+			rightTasks.get(task).setStart(100);
+			rightTasks.get(task).setDuration(30);
+		}
+
+		ancestorResource.save(Collections.EMPTY_MAP);
+		leftResource.save(Collections.EMPTY_MAP);
+		rightResource.save(Collections.EMPTY_MAP);
+
+		// create conflict files with Peacemaker
+		ProcessBuilder pb = new ProcessBuilder("diff3", "-m", leftPath, ancestorPath, rightPath);
+		pb.directory(new File(System.getProperty("user.dir")));
+		pb.redirectOutput(new File(conflictedPath));
+		Process process = pb.start();
+		process.waitFor();
+	}
+
+	public void populateAncestor(XMIResource ancestorResource, Project ancestorRoot,
+			int numTasks, Random rand) {
+
+		int numPeople = 5;
+		for (int p = 0; p < numPeople; p++) {
+			Person person = pslFactory.createPerson();
+			person.setName("Person" + p);
+			ancestorRoot.getPeople().add(person);
+			ancestorResource.setID(person, "PersonID" + p);
+		}
+
+		for (int t = 0; t < numTasks; t++) {
+			Task task = pslFactory.createTask();
+			task.setTitle("task" + t);
+			task.setDuration(10);
+			task.setStart(20);
+
+			// each task made by two people
+			Effort effort = pslFactory.createEffort();
+			effort.setPercentage(50);
+			effort.setPerson(ancestorRoot.getPeople().get(rand.nextInt(numPeople)));
+			task.getEffort().add(effort);
+			ancestorResource.setID(effort, task.getTitle() + "effort1");
+
+			effort = pslFactory.createEffort();
+			effort.setPercentage(50);
+			effort.setPerson(ancestorRoot.getPeople().get(rand.nextInt(numPeople)));
+			task.getEffort().add(effort);
+			ancestorResource.setID(effort, task.getTitle() + "effort2");
+
+			ancestorRoot.getTasks().add(task);
+			ancestorResource.setID(task, "taskID" + t);
+		}
 	}
 }
