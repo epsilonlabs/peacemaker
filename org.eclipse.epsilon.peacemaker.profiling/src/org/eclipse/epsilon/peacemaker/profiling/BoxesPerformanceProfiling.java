@@ -7,6 +7,11 @@ import java.util.List;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.compare.Comparison;
 import org.eclipse.emf.compare.EMFCompare;
+import org.eclipse.emf.compare.diff.DefaultDiffEngine;
+import org.eclipse.emf.compare.diff.DiffBuilder;
+import org.eclipse.emf.compare.diff.FeatureFilter;
+import org.eclipse.emf.compare.diff.IDiffEngine;
+import org.eclipse.emf.compare.diff.IDiffProcessor;
 import org.eclipse.emf.compare.scope.DefaultComparisonScope;
 import org.eclipse.emf.compare.scope.IComparisonScope;
 import org.eclipse.emf.diffmerge.api.scopes.IEditableModelScope;
@@ -17,20 +22,21 @@ import org.eclipse.emf.diffmerge.impl.policies.DefaultMatchPolicy;
 import org.eclipse.emf.diffmerge.impl.policies.DefaultMergePolicy;
 import org.eclipse.emf.diffmerge.impl.scopes.FragmentedModelScope;
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.EStructuralFeature;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.xmi.XMLResource;
 import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResource;
 import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResourceFactory;
-import org.eclipse.epsilon.peacemaker.profiling.PSLConflictModelsGenerator.TaskModelsPath;
+import org.eclipse.epsilon.peacemaker.profiling.BoxesConflictModelsGenerator.ModelsPath;
 import org.eclipse.epsilon.profiling.Stopwatch;
 
-import psl.PslPackage;
+import boxes.BoxesPackage;
 
-public abstract class PSLPerformanceProfiling extends MDBench {
+public abstract class BoxesPerformanceProfiling extends MDBench {
 
-	protected TaskModelsPath taskPath;
+	protected ModelsPath taskPath;
 
-	public PSLPerformanceProfiling(int repetitions, int warmupReps) {
+	public BoxesPerformanceProfiling(int repetitions, int warmupReps) {
 		super(repetitions, warmupReps);
 	}
 
@@ -70,14 +76,28 @@ public abstract class PSLPerformanceProfiling extends MDBench {
 		URI ancestorURI = getAncestorURI(parameters);
 
 		ResourceSet resourceSet = getResourceSet();
-
 		Stopwatch stopwatch = new Stopwatch();
 		stopwatch.resume();
 		IComparisonScope scope = new DefaultComparisonScope(
 				resourceSet.getResource(leftURI, true),
 				resourceSet.getResource(rightURI, true),
 				resourceSet.getResource(ancestorURI, true));
-		Comparison comparison = EMFCompare.builder().build().compare(scope);
+
+		IDiffProcessor diffProcessor = new DiffBuilder();
+		IDiffEngine diffEngine = new DefaultDiffEngine(diffProcessor) {
+
+			@Override
+			protected FeatureFilter createFeatureFilter() {
+				return new FeatureFilter() {
+
+					@Override
+					public boolean checkForOrderingChanges(EStructuralFeature feature) {
+						return false;
+					}
+				};
+			}
+		};
+		Comparison comparison = EMFCompare.builder().setDiffEngine(diffEngine).build().compare(scope);
 		comparison.getConflicts();
 
 		stopwatch.pause();
@@ -130,7 +150,7 @@ public abstract class PSLPerformanceProfiling extends MDBench {
 
 		ResourceSet resourceSet = super.getResourceSet();
 
-		resourceSet.getPackageRegistry().put(PslPackage.eNS_URI, PslPackage.eINSTANCE);
+		resourceSet.getPackageRegistry().put(BoxesPackage.eNS_URI, BoxesPackage.eINSTANCE);
 
 		resourceSet.getLoadOptions().put(XMLResource.OPTION_DEFER_IDREF_RESOLUTION, Boolean.TRUE);
 
@@ -140,7 +160,7 @@ public abstract class PSLPerformanceProfiling extends MDBench {
 	@Override
 	public List<List<Object>> getExperiments() {
 		List<List<Object>> experiments = new ArrayList<>();
-		int[][] simpleTaskExperiments = PSLConflictModelsGenerator.getTaskExperiments();
+		int[][] simpleTaskExperiments = BoxesConflictModelsGenerator.getExperiments();
 		for (int i = 0; i < simpleTaskExperiments.length; i++) {
 			experiments.add(Arrays.asList(
 					simpleTaskExperiments[i][0],

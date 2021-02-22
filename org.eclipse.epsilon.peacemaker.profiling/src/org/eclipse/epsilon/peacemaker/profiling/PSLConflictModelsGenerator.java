@@ -8,6 +8,7 @@ import java.util.Random;
 import java.util.Set;
 
 import org.eclipse.emf.common.util.URI;
+import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
 import org.eclipse.emf.ecore.xmi.XMIResource;
@@ -88,14 +89,11 @@ public class PSLConflictModelsGenerator {
 	}
 
 
-	protected ResourceSet resourceSet;
-	protected PslFactory pslFactory;
+	protected PslFactory pslFactory = PslPackage.eINSTANCE.getPslFactory();
 
-	public PSLConflictModelsGenerator() throws Exception {
-		resourceSet = new ResourceSetImpl();
-		resourceSet.getResourceFactoryRegistry().getExtensionToFactoryMap().put(
+	public PSLConflictModelsGenerator() {
+		Resource.Factory.Registry.INSTANCE.getExtensionToFactoryMap().put(
 				"*", new XMIResourceFactoryImpl());
-		pslFactory = PslPackage.eINSTANCE.getPslFactory();
 	}
 
 	/**
@@ -107,6 +105,7 @@ public class PSLConflictModelsGenerator {
 		String rightPath = DOUBLEUPDATE_TAKS_PATH.getPath(numTasks, numConflicts, RIGHT);
 		String conflictedPath = DOUBLEUPDATE_TAKS_PATH.getPath(numTasks, numConflicts, CONFLICTED);
 		
+		ResourceSet resourceSet = new ResourceSetImpl();
 		XMIResource ancestorResource = (XMIResource) resourceSet.createResource(URI.createFileURI(ancestorPath));
 
 		Project ancestorRoot = pslFactory.createProject();
@@ -159,6 +158,7 @@ public class PSLConflictModelsGenerator {
 		String rightPath = UPDATEDELETE_TAKS_PATH.getPath(numTasks, numConflicts, RIGHT);
 		String conflictedPath = UPDATEDELETE_TAKS_PATH.getPath(numTasks, numConflicts, CONFLICTED);
 
+		ResourceSet resourceSet = new ResourceSetImpl();
 		XMIResource ancestorResource = (XMIResource) resourceSet.createResource(URI.createFileURI(ancestorPath));
 
 		Project ancestorRoot = pslFactory.createProject();
@@ -213,6 +213,7 @@ public class PSLConflictModelsGenerator {
 		String rightPath = UPDATEDELETE_TAKS_EXTRA_CHANGES_PATH.getPath(numTasks, numConflicts, RIGHT);
 		String conflictedPath = UPDATEDELETE_TAKS_EXTRA_CHANGES_PATH.getPath(numTasks, numConflicts, CONFLICTED);
 
+		ResourceSet resourceSet = new ResourceSetImpl();
 		XMIResource ancestorResource = (XMIResource) resourceSet.createResource(URI.createFileURI(ancestorPath));
 
 		Project ancestorRoot = pslFactory.createProject();

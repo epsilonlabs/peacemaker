@@ -6,6 +6,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
 import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
@@ -22,10 +23,11 @@ public abstract class MDBench {
 	}
 
 	protected ResourceSet getResourceSet() throws Exception {
-		ResourceSet resourceSet = new ResourceSetImpl();
-		resourceSet.getResourceFactoryRegistry().getExtensionToFactoryMap().put(
+
+		Resource.Factory.Registry.INSTANCE.getExtensionToFactoryMap().put(
 				"*", new XMIResourceFactoryImpl());
-		return resourceSet;
+
+		return new ResourceSetImpl();
 	}
 
 	public void run() throws Exception {
