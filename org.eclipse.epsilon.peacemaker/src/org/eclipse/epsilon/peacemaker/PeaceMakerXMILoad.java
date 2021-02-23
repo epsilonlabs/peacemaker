@@ -18,6 +18,7 @@ import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
 import org.eclipse.emf.ecore.xmi.impl.XMIResourceImpl;
 import org.eclipse.epsilon.peacemaker.conflicts.Conflict;
 import org.eclipse.epsilon.peacemaker.util.StreamUtils;
+import org.eclipse.epsilon.profiling.Stopwatch;
 
 public class PeaceMakerXMILoad extends XMILoadImpl {
 
@@ -90,8 +91,12 @@ public class PeaceMakerXMILoad extends XMILoadImpl {
 	public void load(XMLResource resource, InputStream inputStream,
 			Map<?, ?> options) throws IOException {
 
+		Stopwatch sw = new Stopwatch();
+		sw.resume();
 		ConflictsPreprocessor preprocessor = new ConflictsPreprocessor(inputStream);
 		preprocessor.run();
+		sw.pause();
+		System.out.println("Preprocessor: " + sw.getElapsed());
 
 		PeaceMakerXMIResource pmResource = (PeaceMakerXMIResource) resource;
 

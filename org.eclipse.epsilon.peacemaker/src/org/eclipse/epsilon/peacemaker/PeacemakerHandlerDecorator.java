@@ -17,6 +17,7 @@ import org.eclipse.emf.ecore.xmi.XMLHelper;
 import org.eclipse.emf.ecore.xmi.XMLResource;
 import org.eclipse.emf.ecore.xmi.impl.XMIHelperImpl;
 import org.eclipse.epsilon.peacemaker.ConflictsPreprocessor.ConflictVersionHelper;
+import org.eclipse.epsilon.profiling.Stopwatch;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.Locator;
@@ -44,6 +45,9 @@ public class PeacemakerHandlerDecorator extends DefaultHandler implements XMLDef
 
 	protected Locator locator;
 
+	protected Stopwatch targetStopwatch = new Stopwatch();
+	protected Stopwatch decoratorStopwatch = new Stopwatch();
+
 	public PeacemakerHandlerDecorator(XMLDefaultHandler target, PeaceMakerXMIResource pmResource, ConflictVersionHelper versionHelper) {
 		this.pmResource = pmResource;
 		xmiHelper = new XMIHelperImpl(pmResource);
@@ -55,8 +59,11 @@ public class PeacemakerHandlerDecorator extends DefaultHandler implements XMLDef
 
 	@Override
 	public void startElement(String uri, String localName, String qName, Attributes atts) throws SAXException {
+		targetStopwatch.resume();
 		target.startElement(uri, localName, qName, atts);
+		targetStopwatch.pause();
 
+		decoratorStopwatch.resume();
 		// start and end here mark the first and last lines of the started element's
 		//   initial tag (not the whole element)
 		int start = currentLine;
@@ -122,6 +129,7 @@ public class PeacemakerHandlerDecorator extends DefaultHandler implements XMLDef
 		else {
 			needsTypePop.push(Boolean.FALSE);
 		}
+		decoratorStopwatch.pause();
 	}
 
 	protected void gatherXMLNamespaces(Attributes atts) {
@@ -222,6 +230,9 @@ public class PeacemakerHandlerDecorator extends DefaultHandler implements XMLDef
 	@Override
 	public void endDocument() throws SAXException {
 		target.endDocument();
+
+		System.out.println("Start element target: " + targetStopwatch.getElapsed());
+		System.out.println("Start element decorator: " + decoratorStopwatch.getElapsed());
 	}
 
 	@Override

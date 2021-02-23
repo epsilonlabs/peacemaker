@@ -28,6 +28,7 @@ import org.eclipse.epsilon.peacemaker.conflicts.UnconflictedObject;
 import org.eclipse.epsilon.peacemaker.conflicts.UpdateDelete;
 import org.eclipse.epsilon.peacemaker.util.IdUtils;
 import org.eclipse.epsilon.peacemaker.util.TagBasedEqualityHelper;
+import org.eclipse.epsilon.profiling.Stopwatch;
 
 public class PeaceMakerXMIResource extends XMIResourceImpl {
 
@@ -96,12 +97,16 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 	}
 
 	protected void doLoadBase() {
+		Stopwatch sw = new Stopwatch();
+		sw.resume();
 		try {
 			baseResource = loadVersionResource(BASE_VERSION_EXTENSION, baseVersionHelper);
 		}
 		catch (IOException ex) {
 			ex.printStackTrace();
 		}
+		sw.pause();
+		System.out.println("Load base: " + sw.getElapsed());
 	}
 
 	protected void loadRight(ConflictsPreprocessor preprocessor) throws IOException {
@@ -331,14 +336,27 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 		setVersionLoadOptions(loadOptions);
 
 		try {
+			Stopwatch sw = new Stopwatch();
+			sw.resume();
 			loadLeft(preprocessor);
+			sw.pause();
+			System.out.println("Load left: " + sw.getElapsed());
+
+			sw = new Stopwatch();
+			sw.resume();
 			loadRight(preprocessor);
+			sw.pause();
+			System.out.println("Load right: " + sw.getElapsed());
 
 			if (preprocessor.hasBaseVersion()) {
 				prepareBase(preprocessor);
 			}
 
+			sw = new Stopwatch();
+			sw.resume();
 			identifyConflicts(preprocessor);
+			sw.pause();
+			System.out.println("Identify conflicts (includes load base): " + sw.getElapsed());
 		}
 		catch (DuplicatedIdsException ex) {
 			hasDuplicatedIds = true;
