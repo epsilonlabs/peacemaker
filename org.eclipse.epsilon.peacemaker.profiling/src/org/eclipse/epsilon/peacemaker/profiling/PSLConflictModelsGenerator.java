@@ -141,12 +141,7 @@ public class PSLConflictModelsGenerator {
 		leftResource.save(Collections.EMPTY_MAP);
 		rightResource.save(Collections.EMPTY_MAP);
 
-		// create conflict files with Peacemaker
-		ProcessBuilder pb = new ProcessBuilder("diff3", "-m", leftPath, ancestorPath, rightPath);
-		pb.directory(new File(System.getProperty("user.dir")));
-		pb.redirectOutput(new File(conflictedPath));
-		Process process = pb.start();
-		process.waitFor();
+		saveMergedResource(leftPath, ancestorPath, rightPath, conflictedPath);
 	}
 
 	/**
@@ -194,12 +189,7 @@ public class PSLConflictModelsGenerator {
 		leftResource.save(Collections.EMPTY_MAP);
 		rightResource.save(Collections.EMPTY_MAP);
 
-		// create conflict files with Peacemaker
-		ProcessBuilder pb = new ProcessBuilder("diff3", "-m", leftPath, ancestorPath, rightPath);
-		pb.directory(new File(System.getProperty("user.dir")));
-		pb.redirectOutput(new File(conflictedPath));
-		Process process = pb.start();
-		process.waitFor();
+		saveMergedResource(leftPath, ancestorPath, rightPath, conflictedPath);
 	}
 
 	/**
@@ -264,8 +254,13 @@ public class PSLConflictModelsGenerator {
 		leftResource.save(Collections.EMPTY_MAP);
 		rightResource.save(Collections.EMPTY_MAP);
 
-		// create conflict files with Peacemaker
-		ProcessBuilder pb = new ProcessBuilder("diff3", "-m", leftPath, ancestorPath, rightPath);
+		saveMergedResource(leftPath, ancestorPath, rightPath, conflictedPath);
+	}
+
+	protected void saveMergedResource(String leftPath, String ancestorPath,
+			String rightPath, String conflictedPath) throws Exception {
+
+		ProcessBuilder pb = new ProcessBuilder("git", "merge-file", "-p", leftPath, ancestorPath, rightPath);
 		pb.directory(new File(System.getProperty("user.dir")));
 		pb.redirectOutput(new File(conflictedPath));
 		Process process = pb.start();

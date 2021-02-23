@@ -41,6 +41,7 @@ public abstract class MDBench {
 			System.out.println("Rep " + rep);
 			runIteration(true);
 		}
+		System.out.println("Results written to " + getOutputFile());
 	}
 
 	protected void runIteration(boolean recordResults) throws Exception {

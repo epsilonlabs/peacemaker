@@ -37,6 +37,8 @@ public class BoxesConflictModelsGenerator {
 			generator.createDoubleUpdateConflictModels(numElems, numConflicts);
 
 			generator.createUpdateDeleteConflictModels(numElems, numConflicts);
+
+			generator.createUpdateDeleteConflictModelsExtraChanges(numElems, numConflicts);
 		}
 		System.out.println("Done");
 	}
@@ -143,12 +145,7 @@ public class BoxesConflictModelsGenerator {
 		leftResource.save(Collections.EMPTY_MAP);
 		rightResource.save(Collections.EMPTY_MAP);
 
-		// create conflict files with Peacemaker
-		ProcessBuilder pb = new ProcessBuilder("diff3", "-m", leftPath, ancestorPath, rightPath);
-		pb.directory(new File(System.getProperty("user.dir")));
-		pb.redirectOutput(new File(conflictedPath));
-		Process process = pb.start();
-		process.waitFor();
+		saveMergedResource(leftPath, ancestorPath, rightPath, conflictedPath);
 	}
 
 	/**
@@ -204,8 +201,91 @@ public class BoxesConflictModelsGenerator {
 		leftResource.save(Collections.EMPTY_MAP);
 		rightResource.save(Collections.EMPTY_MAP);
 
-		// create conflict files with Peacemaker
-		ProcessBuilder pb = new ProcessBuilder("diff3", "-m", leftPath, ancestorPath, rightPath);
+		saveMergedResource(leftPath, ancestorPath, rightPath, conflictedPath);
+	}
+
+	/**
+	 * Creates conflict models where tasks with conflicts have their efforts modified
+	 */
+	public void createUpdateDeleteConflictModelsExtraChanges(
+			int numElems, int numConflicts) throws Exception {
+
+		ModelsPath path = UPDATEDELETE_BOXES_EXTRA_CHANGES_PATH;
+
+		String ancestorPath = path.getPath(numElems, numConflicts, ANCESTOR);
+		String leftPath = path.getPath(numElems, numConflicts, LEFT);
+		String rightPath = path.getPath(numElems, numConflicts, RIGHT);
+		String conflictedPath = path.getPath(numElems, numConflicts, CONFLICTED);
+
+		ResourceSet resourceSet = new ResourceSetImpl();
+		XMIResource ancestorResource = (XMIResource) resourceSet.createResource(URI.createFileURI(ancestorPath));
+
+		Boxes ancestorRoot = boxesFactory.createBoxes();
+		ancestorResource.getContents().add(ancestorRoot);
+		ancestorResource.setID(ancestorRoot, "boxesId");
+
+		Random rand = new Random();
+		rand.setSeed(127);
+
+		populateAncestor(ancestorResource, ancestorRoot, BOX_TYPE, numElems, rand);
+
+		XMIResource leftResource = (XMIResource) resourceSet.createResource(URI.createFileURI(leftPath));
+		CopyUtils.copyContents(ancestorResource, leftResource);
+
+		XMIResource rightResource = (XMIResource) resourceSet.createResource(URI.createFileURI(rightPath));
+		CopyUtils.copyContents(ancestorResource, rightResource);
+
+		Set<Integer> conflicted = new HashSet<>();
+		while (conflicted.size() < numConflicts) {
+			conflicted.add(rand.nextInt(numElems));
+		}
+
+		List<Box> leftElems = ((Boxes) leftResource.getContents().get(0)).getBoxes();
+
+		EStructuralFeature feature = BOX_TYPE.getEStructuralFeature("thing1");
+		for (int index : conflicted) {
+			leftElems.get(index).eSet(feature, leftElems.get(index).eGet(feature) + LEFT);
+		}
+
+		List<Integer> orderedConflictedElems = new ArrayList<>(conflicted);
+		Collections.sort(orderedConflictedElems, Collections.reverseOrder());
+
+		Boxes rightRoot = (Boxes) rightResource.getContents().get(0);
+		for (int index : orderedConflictedElems) {
+			rightRoot.getBoxes().remove(index);
+		}
+
+		// add changes that do not generate a conflict
+		int numExtraChanges = numElems / 10;
+		Set<Integer> changed = new HashSet<>();
+		while (changed.size() < numExtraChanges) {
+			int elem = rand.nextInt(numElems - numConflicts);
+			if (!conflicted.contains(elem)) {
+				changed.add(elem);
+			}
+		}
+
+		List<Box> rightElems = rightRoot.getBoxes();
+
+		for (int changedElem : changed) {
+			Box box = rightElems.get(changedElem);
+
+			for (EAttribute attr : BOX_TYPE.getEAttributes()) {
+				box.eSet(attr, box.eGet(attr) + LEFT);
+			}
+		}
+
+		ancestorResource.save(Collections.EMPTY_MAP);
+		leftResource.save(Collections.EMPTY_MAP);
+		rightResource.save(Collections.EMPTY_MAP);
+
+		saveMergedResource(leftPath, ancestorPath, rightPath, conflictedPath);
+	}
+
+	protected void saveMergedResource(String leftPath, String ancestorPath,
+			String rightPath, String conflictedPath) throws Exception {
+
+		ProcessBuilder pb = new ProcessBuilder("git", "merge-file", "-p", leftPath, ancestorPath, rightPath);
 		pb.directory(new File(System.getProperty("user.dir")));
 		pb.redirectOutput(new File(conflictedPath));
 		Process process = pb.start();

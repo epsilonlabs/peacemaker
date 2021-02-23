@@ -85,4 +85,18 @@ public class BoxesProfilingBenches {
 			return stopwatch.getElapsed();
 		}
 	}
+
+	public static class BoxesUpdateDeleteExtraChanges extends BoxesUpdateDelete {
+
+		public BoxesUpdateDeleteExtraChanges(int repetitions, int warmupReps) {
+			super(repetitions, warmupReps);
+
+			taskPath = BoxesConflictModelsGenerator.UPDATEDELETE_BOXES_EXTRA_CHANGES_PATH;
+		}
+
+		@Override
+		public String getOutputFile() {
+			return "results/updatedeleteBoxesExtraChangesResults.csv";
+		}
+	}
 }
