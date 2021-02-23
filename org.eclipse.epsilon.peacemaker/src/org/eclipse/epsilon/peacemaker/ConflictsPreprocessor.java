@@ -66,58 +66,77 @@ public class ConflictsPreprocessor {
 		for (int index = 0; index < lines.length; index++) {
 			String line = lines[index];
 
-			if (line.matches(LEFT_REGEX)) {
-				lineTypes[index] = LineType.SEPARATOR;
-				currentSegment = FileSegment.LEFT_CONFLICT;
+			switch (currentSegment) {
+			case COMMON:
+				// if a conflict section starts
+				if (line.matches(LEFT_REGEX)) {
+					lineTypes[index] = LineType.SEPARATOR;
+					currentSegment = FileSegment.LEFT_CONFLICT;
 
-				currentSection = new ConflictSection();
+					currentSection = new ConflictSection();
 
-				if (leftVersionName == null) {
-					leftVersionName = getVersionName(line, LEFT_REGEX);
+					if (leftVersionName == null) {
+						leftVersionName = getVersionName(line, LEFT_REGEX);
+					}
 				}
-			}
-			else if (line.matches(BASE_REGEX)) {
-				hasBaseVersion = true;
-				lineTypes[index] = LineType.SEPARATOR;
-				currentSegment = FileSegment.BASE_CONFLICT;
-
-				if (baseVersionName == null) {
-					baseVersionName = getVersionName(line, BASE_REGEX);
-				}
-			}
-			else if (line.matches(SEPARATOR_REGEX)) {
-				lineTypes[index] = LineType.SEPARATOR;
-				currentSegment = FileSegment.RIGHT_CONFLICT;
-			}
-			else if (line.matches(RIGHT_REGEX)) {
-				lineTypes[index] = LineType.SEPARATOR;
-				currentSegment = FileSegment.COMMON;
-
-				currentSection = null;
-
-				if (rightVersionName == null) {
-					rightVersionName = getVersionName(line, RIGHT_REGEX);
-				}
-			}
-			else {
-				switch (currentSegment) {
-				case COMMON:
+				// a new common line
+				else {
 					lineTypes[index] = LineType.COMMON;
 					leftOriginalLinesIndex.add(index);
 					baseOriginalLinesIndex.add(index);
 					rightOriginalLinesIndex.add(index);
-					break;
-				case LEFT_CONFLICT:
+				}
+				break;
+			case LEFT_CONFLICT:
+				// if the base segment starts (optional)
+				if (line.matches(BASE_REGEX)) {
+					hasBaseVersion = true;
+					lineTypes[index] = LineType.SEPARATOR;
+					currentSegment = FileSegment.BASE_CONFLICT;
+
+					if (baseVersionName == null) {
+						baseVersionName = getVersionName(line, BASE_REGEX);
+					}
+				}
+				// if the right segment starts
+				else if (line.matches(SEPARATOR_REGEX)) {
+					lineTypes[index] = LineType.SEPARATOR;
+					currentSegment = FileSegment.RIGHT_CONFLICT;
+				}
+				// a new line of the left segment
+				else {
 					lineTypes[index] = LineType.LEFT;
 					leftOriginalLinesIndex.add(index);
 					line2conflictSection.put(index, currentSection);
-					break;
-				case BASE_CONFLICT:
+				}
+				break;
+			case BASE_CONFLICT:
+				// if the right segment starts
+				if (line.matches(SEPARATOR_REGEX)) {
+					lineTypes[index] = LineType.SEPARATOR;
+					currentSegment = FileSegment.RIGHT_CONFLICT;
+				}
+				// a new line of the base segment
+				else {
 					lineTypes[index] = LineType.BASE;
 					baseOriginalLinesIndex.add(index);
 					line2conflictSection.put(index, currentSection);
-					break;
-				case RIGHT_CONFLICT:
+				}
+				break;
+			case RIGHT_CONFLICT:
+				// if the right segment ends (and thus the conflict section)
+				if (line.matches(RIGHT_REGEX)) {
+					lineTypes[index] = LineType.SEPARATOR;
+					currentSegment = FileSegment.COMMON;
+
+					currentSection = null;
+
+					if (rightVersionName == null) {
+						rightVersionName = getVersionName(line, RIGHT_REGEX);
+					}
+				}
+				// a new line of the right segment
+				else {
 					lineTypes[index] = LineType.RIGHT;
 					rightOriginalLinesIndex.add(index);
 					line2conflictSection.put(index, currentSection);
@@ -161,8 +180,7 @@ public class ConflictsPreprocessor {
 		}
 
 		public InputStream getVersionContents() {
-
-			return new ByteArrayInputStream(originalLinesIndex.stream()
+			return new ByteArrayInputStream(originalLinesIndex.parallelStream()
 					.map(lineIndex -> lines[lineIndex])
 					.collect(Collectors.joining(System.lineSeparator()))
 					.getBytes());
