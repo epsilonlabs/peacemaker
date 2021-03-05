@@ -15,6 +15,11 @@ public class DuplicatedIdsException extends RuntimeException {
 		this.endLine = endLine;
 	}
 
+	public DuplicatedIdsException(String id) {
+		super();
+		this.id = id;
+	}
+
 	public String getId() {
 		return id;
 	}

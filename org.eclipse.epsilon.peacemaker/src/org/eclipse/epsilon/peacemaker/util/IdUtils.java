@@ -1,8 +1,18 @@
 package org.eclipse.epsilon.peacemaker.util;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.emf.ecore.xmi.XMIResource;
+import org.eclipse.emf.ecore.xmi.XMLResource;
+import org.eclipse.epsilon.peacemaker.DuplicatedIdsException;
+import org.eclipse.epsilon.peacemaker.util.ids.FindDuplicatedIdsParserPoolImpl;
 
 public class IdUtils {
 
@@ -13,5 +23,58 @@ public class IdUtils {
 
 	public static boolean hasXMIId(XMIResource resource, EObject obj) {
 		return resource.getID(obj) != null;
+	}
+
+	/**
+	 * Loads a resource and checks for duplicated ids
+	 * 
+	 * @param resource The resource to load
+	 * @param contents Resource contents to perform the load
+	 * @return True if the resource has at least one duplicated id
+	 */
+	public static boolean hasDuplicatedIds(XMIResource resource, InputStream contents) {
+		return !findDuplicatedIds(resource, contents, true).isEmpty();
+	}
+
+	/**
+	 * Loads a resource and finds all duplicated ids
+	 * 
+	 * @param resource  The resource to load
+	 * @param contents  Resource contents to perform the load
+	 * @param findFirst If true, loading stops after finding a duplicated id
+	 */
+	public static List<String> findDuplicatedIds(XMIResource resource, InputStream contents) {
+		return findDuplicatedIds(resource, contents, false);
+	}
+
+	/**
+	 * Loads a resource and finds duplicated ids
+	 * 
+	 * @param resource      The resource to load
+	 * @param contents      Resource contents to perform the load
+	 * @param stopWithFirst If true, loading stops after finding a duplicated id
+	 */
+	private static List<String> findDuplicatedIds(XMIResource resource,
+			InputStream contents, boolean stopWithFirst) {
+
+		List<String> duplicatedIds = new ArrayList<String>();
+
+		// the pool allows decorating the xml handler to get element lines
+		Map<Object, Object> loadOptions = new HashMap<Object, Object>();
+		loadOptions.put(XMLResource.OPTION_DEFER_IDREF_RESOLUTION, Boolean.TRUE);
+		loadOptions.put(XMLResource.OPTION_USE_PARSER_POOL,
+				new FindDuplicatedIdsParserPoolImpl(duplicatedIds, stopWithFirst));
+
+		try {
+			resource.load(contents, loadOptions);
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+		catch (DuplicatedIdsException dupIds) {
+			// launched when stopWithFirst == true and a dup is found, nothing to do
+		}
+
+		return duplicatedIds;
 	}
 }

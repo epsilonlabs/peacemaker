@@ -13,4 +13,11 @@
             name="PeaceMaker Editor">
       </editor>
    </extension>
+   <extension
+         point="org.eclipse.egit.core.mergeStrategy">
+      <strategy
+            class="org.eclipse.epsilon.peacemaker.dt.DuplicatedIdsMergeStrategy"
+            label="Detect Duplicated Ids (from Peacemaker)">
+      </strategy>
+   </extension>
 </plugin>
