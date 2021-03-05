@@ -26,8 +26,9 @@ import org.eclipse.epsilon.peacemaker.conflicts.KeepDelete;
 import org.eclipse.epsilon.peacemaker.conflicts.ReferenceDoubleUpdate;
 import org.eclipse.epsilon.peacemaker.conflicts.UnconflictedObject;
 import org.eclipse.epsilon.peacemaker.conflicts.UpdateDelete;
-import org.eclipse.epsilon.peacemaker.util.IdUtils;
 import org.eclipse.epsilon.peacemaker.util.TagBasedEqualityHelper;
+import org.eclipse.epsilon.peacemaker.util.ids.DuplicatedIdsException;
+import org.eclipse.epsilon.peacemaker.util.ids.IdUtils;
 
 public class PeaceMakerXMIResource extends XMIResourceImpl {
 

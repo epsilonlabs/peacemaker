@@ -6,8 +6,8 @@ import org.eclipse.emf.ecore.xmi.XMIResource;
 import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResource;
 import org.eclipse.epsilon.peacemaker.XMIResetIdsHandler;
 import org.eclipse.epsilon.peacemaker.util.CopyUtils;
-import org.eclipse.epsilon.peacemaker.util.IdUtils;
 import org.eclipse.epsilon.peacemaker.util.PrettyPrint;
+import org.eclipse.epsilon.peacemaker.util.ids.IdUtils;
 
 public class UpdateDelete extends Conflict implements XMIResetIdsHandler {
 

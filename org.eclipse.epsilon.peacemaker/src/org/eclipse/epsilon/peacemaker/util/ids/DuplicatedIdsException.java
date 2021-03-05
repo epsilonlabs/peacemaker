@@ -1,4 +1,4 @@
-package org.eclipse.epsilon.peacemaker;
+package org.eclipse.epsilon.peacemaker.util.ids;
 
 
 public class DuplicatedIdsException extends RuntimeException {

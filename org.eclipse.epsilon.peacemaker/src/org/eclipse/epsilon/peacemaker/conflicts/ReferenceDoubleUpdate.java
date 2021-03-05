@@ -5,7 +5,7 @@ import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EReference;
 import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResource;
 import org.eclipse.epsilon.peacemaker.XMIResetIdsHandler;
-import org.eclipse.epsilon.peacemaker.util.IdUtils;
+import org.eclipse.epsilon.peacemaker.util.ids.IdUtils;
 
 /**
  * A special case of a double update conflict where the changes happen in a

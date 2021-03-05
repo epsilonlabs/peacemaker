@@ -6,7 +6,7 @@ import org.eclipse.emf.ecore.xmi.XMIResource;
 import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResource;
 import org.eclipse.epsilon.peacemaker.XMIResetIdsHandler;
 import org.eclipse.epsilon.peacemaker.util.CopyUtils;
-import org.eclipse.epsilon.peacemaker.util.IdUtils;
+import org.eclipse.epsilon.peacemaker.util.ids.IdUtils;
 
 public class UnconflictedObject extends Conflict implements XMIResetIdsHandler {
 

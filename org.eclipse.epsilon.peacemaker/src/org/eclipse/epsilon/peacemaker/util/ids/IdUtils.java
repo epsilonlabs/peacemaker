@@ -1,4 +1,4 @@
-package org.eclipse.epsilon.peacemaker.util;
+package org.eclipse.epsilon.peacemaker.util.ids;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -11,8 +11,6 @@ import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.emf.ecore.xmi.XMIResource;
 import org.eclipse.emf.ecore.xmi.XMLResource;
-import org.eclipse.epsilon.peacemaker.DuplicatedIdsException;
-import org.eclipse.epsilon.peacemaker.util.ids.FindDuplicatedIdsParserPoolImpl;
 
 public class IdUtils {
 
