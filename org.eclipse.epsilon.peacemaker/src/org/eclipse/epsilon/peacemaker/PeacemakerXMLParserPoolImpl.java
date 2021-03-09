@@ -16,10 +16,10 @@ import org.xml.sax.SAXException;
 
 public class PeacemakerXMLParserPoolImpl extends XMLParserPoolImpl {
 
-	protected PeaceMakerXMIResource pmResource;
+	protected PeacemakerResource pmResource;
 	protected ConflictVersionHelper versionHelper;
 
-	public PeacemakerXMLParserPoolImpl(PeaceMakerXMIResource pmResource, ConflictVersionHelper versionHelper) {
+	public PeacemakerXMLParserPoolImpl(PeacemakerResource pmResource, ConflictVersionHelper versionHelper) {
 		this.pmResource = pmResource;
 		this.versionHelper = versionHelper;
 	}

@@ -26,8 +26,8 @@ import org.eclipse.emf.edit.ui.provider.AdapterFactoryContentProvider;
 import org.eclipse.emf.edit.ui.provider.AdapterFactoryLabelProvider;
 import org.eclipse.emf.edit.ui.provider.DiagnosticDecorator;
 import org.eclipse.emf.edit.ui.provider.UnwrappingSelectionProvider;
-import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResource;
-import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResourceFactory;
+import org.eclipse.epsilon.peacemaker.PeacemakerResource;
+import org.eclipse.epsilon.peacemaker.PeacemakerResourceFactory;
 import org.eclipse.epsilon.peacemaker.conflicts.Conflict;
 import org.eclipse.epsilon.peacemaker.conflicts.Conflict.ConflictObjectStatus;
 import org.eclipse.epsilon.peacemaker.conflicts.Conflict.ResolveAction;
@@ -67,7 +67,7 @@ import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.forms.widgets.ExpandableComposite;
 import org.eclipse.ui.views.properties.PropertySheetPage;
 
-public class PeaceMakerEditor extends EcoreEditor {
+public class PeacemakerEditor extends EcoreEditor {
 
 	private static final String COPY_EXTENSION = "pmCopy";
 
@@ -179,9 +179,9 @@ public class PeaceMakerEditor extends EcoreEditor {
 	protected TreeViewer mergedViewer;
 
 	/** the main (i.e. the opened) resource */
-	protected PeaceMakerXMIResource pmResource;
+	protected PeacemakerResource pmResource;
 	/** referenced resources (might have conflicts too) */
-	protected List<PeaceMakerXMIResource> otherResources = new ArrayList<>();
+	protected List<PeacemakerResource> otherResources = new ArrayList<>();
 
 	protected Map<Group, ResolveActionGroup> resolveGroups = new HashMap<>();
 	protected List<Notifier> notifiers;
@@ -196,14 +196,14 @@ public class PeaceMakerEditor extends EcoreEditor {
 		}
 	};
 
-	public PeaceMakerEditor() {
+	public PeacemakerEditor() {
 		super();
 
 		final Map<String, Object> extensionToFactoryMap =
 				editingDomain.getResourceSet().getResourceFactoryRegistry().getExtensionToFactoryMap();
 
 		// Using "*" here might be dangerous based on Exeed constructor comments
-		extensionToFactoryMap.put("*", new PeaceMakerXMIResourceFactory());
+		extensionToFactoryMap.put("*", new PeacemakerResourceFactory());
 	}
 
 	@Override
@@ -213,7 +213,7 @@ public class PeaceMakerEditor extends EcoreEditor {
 
 		// Only creates contents if the resource has been loaded
 		if (!getEditingDomain().getResourceSet().getResources().isEmpty()) {
-			pmResource = (PeaceMakerXMIResource) editingDomain.getResourceSet().getResources().get(0);
+			pmResource = (PeacemakerResource) editingDomain.getResourceSet().getResources().get(0);
 			if (pmResource.hasDuplicatedIds()) {
 				createDuplicatedIdsPage();
 			}
@@ -322,7 +322,7 @@ public class PeaceMakerEditor extends EcoreEditor {
 		createContextMenuFor(selectionViewer);
 	}
 
-	protected void createConflictsPage(PeaceMakerXMIResource resource) {
+	protected void createConflictsPage(PeacemakerResource resource) {
 
 		Composite page = new Composite(getContainer(), SWT.NONE);
 		page.setBackground(getSite().getShell().getDisplay().getSystemColor(SWT.COLOR_WHITE));
@@ -576,7 +576,7 @@ public class PeaceMakerEditor extends EcoreEditor {
 	protected void handleActivateGen() {
 		if (!removedResources.isEmpty()) {
 			if (handleDirtyConflict()) {
-				getSite().getPage().closeEditor(PeaceMakerEditor.this, false);
+				getSite().getPage().closeEditor(PeacemakerEditor.this, false);
 			}
 			else {
 				removedResources.clear();

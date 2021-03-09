@@ -19,8 +19,8 @@ import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
 import org.eclipse.emf.ecore.util.EcoreUtil.ExternalCrossReferencer;
 import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
-import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResource;
-import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResourceFactory;
+import org.eclipse.epsilon.peacemaker.PeacemakerResource;
+import org.eclipse.epsilon.peacemaker.PeacemakerResourceFactory;
 import org.eclipse.epsilon.peacemaker.conflicts.Conflict;
 import org.eclipse.epsilon.peacemaker.conflicts.Conflict.ResolveAction;
 import org.eclipse.epsilon.peacemaker.conflicts.DoubleUpdate;
@@ -65,7 +65,7 @@ public class ComicTests {
 		}
 
 		resourceSet.getResourceFactoryRegistry().getExtensionToFactoryMap().put(
-				"*", new PeaceMakerXMIResourceFactory());
+				"*", new PeacemakerResourceFactory());
 	}
 
 	@Test
@@ -74,7 +74,7 @@ public class ComicTests {
 		displayCase(inputCase);
 		
 		// expected one reference conflict, let's resolve it keeping left
-		PeaceMakerXMIResource resource = loadConflictResource(String.format(CONFLICTS_LOCATION, inputCase));
+		PeacemakerResource resource = loadConflictResource(String.format(CONFLICTS_LOCATION, inputCase));
 
 		assertTrue(resource.getConflicts().size() == 2);
 		assertTrue(resource.getConflicts().get(0) instanceof ReferenceDoubleUpdate);
@@ -103,7 +103,7 @@ public class ComicTests {
 		displayCase(inputCase);
 
 		// expected one reference conflict, let's resolve it keeping left
-		PeaceMakerXMIResource resource = loadConflictResource(String.format(CONFLICTS_LOCATION, inputCase));
+		PeacemakerResource resource = loadConflictResource(String.format(CONFLICTS_LOCATION, inputCase));
 
 		assertTrue(resource.getConflicts().size() == 2);
 
@@ -120,7 +120,7 @@ public class ComicTests {
 		displayCase(inputCase);
 
 		// expected one reference conflict, let's resolve it keeping left
-		PeaceMakerXMIResource resource = loadConflictResource(String.format(CONFLICTS_LOCATION, inputCase));
+		PeacemakerResource resource = loadConflictResource(String.format(CONFLICTS_LOCATION, inputCase));
 
 		assertTrue(resource.getConflicts().size() == 2);
 
@@ -138,7 +138,7 @@ public class ComicTests {
 		displayCase(inputCase + "-DoUndo");
 
 		// expected one reference conflict, let's resolve it keeping left
-		PeaceMakerXMIResource resource = loadConflictResource(String.format(CONFLICTS_LOCATION, inputCase));
+		PeacemakerResource resource = loadConflictResource(String.format(CONFLICTS_LOCATION, inputCase));
 
 		assertTrue(resource.getConflicts().size() == 2);
 
@@ -171,7 +171,7 @@ public class ComicTests {
 		String inputCase = "11-updateDelete";
 		displayCase(inputCase);
 
-		PeaceMakerXMIResource resource = loadConflictResource(String.format(CONFLICTS_LOCATION, inputCase));
+		PeacemakerResource resource = loadConflictResource(String.format(CONFLICTS_LOCATION, inputCase));
 
 		assertTrue(resource.getConflicts().size() == 1);
 		assertTrue(resource.getConflicts().get(0) instanceof UpdateDelete);
@@ -192,7 +192,7 @@ public class ComicTests {
 		String inputCase = "13-severalConflictSectionsSameObject";
 		displayCase(inputCase);
 
-		PeaceMakerXMIResource resource = loadConflictResource(String.format(CONFLICTS_LOCATION, inputCase));
+		PeacemakerResource resource = loadConflictResource(String.format(CONFLICTS_LOCATION, inputCase));
 
 		assertTrue(resource.getConflicts().size() == 1);
 		assertTrue(resource.getConflicts().get(0) instanceof DoubleUpdate);
@@ -203,7 +203,7 @@ public class ComicTests {
 		String inputCase = "04-nonContained1boundedRef";
 		displayCase(inputCase);
 
-		PeaceMakerXMIResource resource = loadConflictResource(String.format(CONFLICTS_LOCATION, inputCase));
+		PeacemakerResource resource = loadConflictResource(String.format(CONFLICTS_LOCATION, inputCase));
 
 		assertTrue(resource.getConflicts().size() == 1);
 		assertTrue(resource.getConflicts().get(0) instanceof DoubleUpdate);
@@ -230,7 +230,7 @@ public class ComicTests {
 		String inputCase = "17-attribute-EcoreIds";
 		displayCase(inputCase);
 
-		PeaceMakerXMIResource resource = loadConflictResource(String.format(CONFLICTS_LOCATION, inputCase));
+		PeacemakerResource resource = loadConflictResource(String.format(CONFLICTS_LOCATION, inputCase));
 
 		// getEObject works because after checking for the XMI id, it looks for Ecore ids
 		assertTrue(resource.getLeftEObject("shop1") != null);
@@ -256,7 +256,7 @@ public class ComicTests {
 		//   ReferenceDoubleUpdate conflicts, where the conflicting objects can
 		//   have different XMI ids (single containment reference)
 
-		PeaceMakerXMIResource resource = loadConflictResource(String.format(CONFLICTS_LOCATION, inputCase));
+		PeacemakerResource resource = loadConflictResource(String.format(CONFLICTS_LOCATION, inputCase));
 
 		assertTrue(resource.getConflicts().size() == 2);
 
@@ -292,7 +292,7 @@ public class ComicTests {
 	}
 
 	public void testUndoingRemove(String inputCase, String comicTitle, boolean objectInLeft) throws IOException {
-		PeaceMakerXMIResource resource = loadConflictResource(String.format(CONFLICTS_LOCATION, inputCase));
+		PeacemakerResource resource = loadConflictResource(String.format(CONFLICTS_LOCATION, inputCase));
 
 		Conflict firstConflict = resource.getConflicts().get(0);
 
@@ -347,7 +347,7 @@ public class ComicTests {
 	public void testSave(String inputCase, Map<?, ?> saveOptions) throws IOException {
 		String casePath = String.format(CONFLICTS_LOCATION, inputCase);
 
-		PeaceMakerXMIResource resource = loadConflictResource(casePath);
+		PeacemakerResource resource = loadConflictResource(casePath);
 
 		ByteArrayOutputStream beforeStream = new ByteArrayOutputStream();
 		resource.save(beforeStream, saveOptions);
@@ -362,8 +362,8 @@ public class ComicTests {
 		System.out.println("############################################");
 	}
 
-	public static PeaceMakerXMIResource loadConflictResource(String resourceName) throws IOException {
-		PeaceMakerXMIResource resource = (PeaceMakerXMIResource) resourceSet.createResource(
+	public static PeacemakerResource loadConflictResource(String resourceName) throws IOException {
+		PeacemakerResource resource = (PeacemakerResource) resourceSet.createResource(
 				URI.createFileURI(new File(resourceName).getAbsolutePath()));
 		resource.load(null);
 		return resource;

@@ -1,7 +1,7 @@
 package org.eclipse.epsilon.peacemaker.conflicts;
 
 import org.eclipse.emf.ecore.EObject;
-import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResource;
+import org.eclipse.epsilon.peacemaker.PeacemakerResource;
 import org.eclipse.epsilon.peacemaker.util.CopyUtils;
 import org.eclipse.epsilon.peacemaker.util.PrettyPrint;
 
@@ -20,7 +20,7 @@ public class DoubleUpdate extends Conflict {
 	/**
 	 * Create a double update conflict
 	 */
-	public DoubleUpdate(String objectId, PeaceMakerXMIResource pmResource) {
+	public DoubleUpdate(String objectId, PeacemakerResource pmResource) {
 		super(objectId, pmResource);
 		leftObject = pmResource.getLeftEObject(eObjectId);
 		rightObject = pmResource.getRightEObject(eObjectId);

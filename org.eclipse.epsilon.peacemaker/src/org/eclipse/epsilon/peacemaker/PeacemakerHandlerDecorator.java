@@ -38,14 +38,14 @@ public class PeacemakerHandlerDecorator extends DefaultHandler implements XMLDef
 
 	protected Set<String> ids = new HashSet<>();
 
-	protected PeaceMakerXMIResource pmResource;
+	protected PeacemakerResource pmResource;
 	protected XMLHelper xmiHelper;
 	protected XMLDefaultHandler target;
 	protected ConflictVersionHelper versionHelper;
 
 	protected Locator locator;
 
-	public PeacemakerHandlerDecorator(XMLDefaultHandler target, PeaceMakerXMIResource pmResource, ConflictVersionHelper versionHelper) {
+	public PeacemakerHandlerDecorator(XMLDefaultHandler target, PeacemakerResource pmResource, ConflictVersionHelper versionHelper) {
 		this.pmResource = pmResource;
 		xmiHelper = new XMIHelperImpl(pmResource);
 

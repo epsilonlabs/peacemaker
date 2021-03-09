@@ -1,10 +1,10 @@
 package org.eclipse.epsilon.peacemaker.conflicts;
 
-import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResource;
+import org.eclipse.epsilon.peacemaker.PeacemakerResource;
 
 public class KeepDelete extends UpdateDelete {
 
-	public KeepDelete(String eObjectId, PeaceMakerXMIResource pmResource, boolean deleteInRight) {
+	public KeepDelete(String eObjectId, PeacemakerResource pmResource, boolean deleteInRight) {
 		super(eObjectId, pmResource, deleteInRight);
 	}
 

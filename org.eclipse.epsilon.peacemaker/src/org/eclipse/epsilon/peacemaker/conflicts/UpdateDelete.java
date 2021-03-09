@@ -3,7 +3,7 @@ package org.eclipse.epsilon.peacemaker.conflicts;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.emf.ecore.xmi.XMIResource;
-import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResource;
+import org.eclipse.epsilon.peacemaker.PeacemakerResource;
 import org.eclipse.epsilon.peacemaker.XMIResetIdsHandler;
 import org.eclipse.epsilon.peacemaker.util.CopyUtils;
 import org.eclipse.epsilon.peacemaker.util.PrettyPrint;
@@ -21,7 +21,7 @@ public class UpdateDelete extends Conflict implements XMIResetIdsHandler {
 
 	protected EObject eObject;
 
-	public UpdateDelete(String eObjectId, PeaceMakerXMIResource pmResource,
+	public UpdateDelete(String eObjectId, PeacemakerResource pmResource,
 			boolean deleteInRight) {
 		super(eObjectId, pmResource);
 		this.deleteInRight = deleteInRight;

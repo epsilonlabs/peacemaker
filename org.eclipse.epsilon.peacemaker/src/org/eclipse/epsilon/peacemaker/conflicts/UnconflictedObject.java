@@ -3,7 +3,7 @@ package org.eclipse.epsilon.peacemaker.conflicts;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.emf.ecore.xmi.XMIResource;
-import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResource;
+import org.eclipse.epsilon.peacemaker.PeacemakerResource;
 import org.eclipse.epsilon.peacemaker.XMIResetIdsHandler;
 import org.eclipse.epsilon.peacemaker.util.CopyUtils;
 import org.eclipse.epsilon.peacemaker.util.ids.IdUtils;
@@ -20,7 +20,7 @@ public class UnconflictedObject extends Conflict implements XMIResetIdsHandler {
 
 	protected EObject eObject;
 
-	public UnconflictedObject(String eObjectId, PeaceMakerXMIResource pmResource,
+	public UnconflictedObject(String eObjectId, PeacemakerResource pmResource,
 			boolean inLeftSegment) {
 		super(eObjectId, pmResource);
 		this.inLeftSegment = inLeftSegment;

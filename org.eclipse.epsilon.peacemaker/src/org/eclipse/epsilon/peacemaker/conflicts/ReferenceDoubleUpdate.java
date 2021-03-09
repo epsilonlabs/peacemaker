@@ -3,7 +3,7 @@ package org.eclipse.epsilon.peacemaker.conflicts;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EReference;
-import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResource;
+import org.eclipse.epsilon.peacemaker.PeacemakerResource;
 import org.eclipse.epsilon.peacemaker.XMIResetIdsHandler;
 import org.eclipse.epsilon.peacemaker.util.ids.IdUtils;
 
@@ -32,7 +32,7 @@ public class ReferenceDoubleUpdate extends DoubleUpdate implements XMIResetIdsHa
 	 * @param parentId  The parent that contains the reference feature
 	 * @param reference
 	 */
-	public ReferenceDoubleUpdate(String parentId, PeaceMakerXMIResource pmResource,
+	public ReferenceDoubleUpdate(String parentId, PeacemakerResource pmResource,
 			EReference reference) {
 		
 		super(parentId, pmResource);

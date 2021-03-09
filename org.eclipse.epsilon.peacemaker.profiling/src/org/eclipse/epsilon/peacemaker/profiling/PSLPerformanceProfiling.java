@@ -19,8 +19,8 @@ import org.eclipse.emf.diffmerge.impl.scopes.FragmentedModelScope;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.xmi.XMLResource;
-import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResource;
-import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResourceFactory;
+import org.eclipse.epsilon.peacemaker.PeacemakerResource;
+import org.eclipse.epsilon.peacemaker.PeacemakerResourceFactory;
 import org.eclipse.epsilon.peacemaker.profiling.PSLConflictModelsGenerator.TaskModelsPath;
 import org.eclipse.epsilon.profiling.Stopwatch;
 
@@ -51,12 +51,12 @@ public abstract class PSLPerformanceProfiling extends MDBench {
 	protected long runPeacemaker(List<Object> parameters) throws Exception {
 		ResourceSet resourceSet = getResourceSet();
 		resourceSet.getResourceFactoryRegistry().getExtensionToFactoryMap().put(
-				"*", new PeaceMakerXMIResourceFactory());
+				"*", new PeacemakerResourceFactory());
 		
 		Stopwatch stopwatch = new Stopwatch();
 		stopwatch.resume();
-		PeaceMakerXMIResource resource =
-				(PeaceMakerXMIResource) resourceSet.getResource(getConflictedURI(parameters), true);
+		PeacemakerResource resource =
+				(PeacemakerResource) resourceSet.getResource(getConflictedURI(parameters), true);
 		resource.load(null);
 
 		stopwatch.pause();

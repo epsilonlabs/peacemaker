@@ -11,15 +11,15 @@ import org.eclipse.emf.ecore.xmi.impl.XMISaveImpl;
 import org.eclipse.epsilon.peacemaker.util.StreamUtils;
 
 
-public class PeaceMakerXMISave extends XMISaveImpl {
+public class PeacemakerXMISave extends XMISaveImpl {
 
-	public PeaceMakerXMISave(XMLHelper helper) {
+	public PeacemakerXMISave(XMLHelper helper) {
 		super(helper);
 	}
 
 	@Override
 	public void save(XMLResource resource, OutputStream outputStream, Map<?, ?> options) throws IOException {
-		PeaceMakerXMIResource pmResource = (PeaceMakerXMIResource) resource;
+		PeacemakerResource pmResource = (PeacemakerResource) resource;
 
 		if (!pmResource.hasConflicts()) {
 			super.save(pmResource.getUnconflictedResource(), outputStream, options);
@@ -29,7 +29,7 @@ public class PeaceMakerXMISave extends XMISaveImpl {
 		}
 	}
 
-	public void save(PeaceMakerXMIResource pmResource, OutputStream outputStream,
+	public void save(PeacemakerResource pmResource, OutputStream outputStream,
 			Map<?, ?> options) throws IOException {
 
 		ByteArrayOutputStream leftStream = new ByteArrayOutputStream();

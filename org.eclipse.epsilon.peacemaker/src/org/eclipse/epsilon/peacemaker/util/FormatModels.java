@@ -12,7 +12,7 @@ import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
 import org.eclipse.emf.ecore.xmi.XMLResource;
 import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
-import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResourceFactory;
+import org.eclipse.epsilon.peacemaker.PeacemakerResourceFactory;
 
 public class FormatModels {
 
@@ -31,7 +31,7 @@ public class FormatModels {
 		}
 
 		resourceSet.getResourceFactoryRegistry().getExtensionToFactoryMap().put(
-				"model", new PeaceMakerXMIResourceFactory());
+				"model", new PeacemakerResourceFactory());
 
 		String folder = "models/07-newLines-attributes/";
 		String[] models = { "base.model", "left.model", "right.model" };

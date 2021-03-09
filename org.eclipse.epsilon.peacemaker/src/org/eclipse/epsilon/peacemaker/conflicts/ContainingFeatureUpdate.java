@@ -1,14 +1,14 @@
 package org.eclipse.epsilon.peacemaker.conflicts;
 
 import org.eclipse.emf.ecore.EStructuralFeature;
-import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResource;
+import org.eclipse.epsilon.peacemaker.PeacemakerResource;
 
 public class ContainingFeatureUpdate extends DoubleUpdate {
 
 	protected EStructuralFeature leftFeature;
 	protected EStructuralFeature rightFeature;
 
-	public ContainingFeatureUpdate(String objectId, PeaceMakerXMIResource pmResource,
+	public ContainingFeatureUpdate(String objectId, PeacemakerResource pmResource,
 			EStructuralFeature leftFeature, EStructuralFeature rightFeature) {
 
 		super(objectId, pmResource);

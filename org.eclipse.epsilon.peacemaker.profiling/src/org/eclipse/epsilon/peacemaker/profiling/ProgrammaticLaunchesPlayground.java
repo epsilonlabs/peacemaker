@@ -22,8 +22,8 @@ import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
 import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
-import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResource;
-import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResourceFactory;
+import org.eclipse.epsilon.peacemaker.PeacemakerResource;
+import org.eclipse.epsilon.peacemaker.PeacemakerResourceFactory;
 import org.eclipse.epsilon.peacemaker.conflicts.Conflict;
 
 public class ProgrammaticLaunchesPlayground {
@@ -40,9 +40,9 @@ public class ProgrammaticLaunchesPlayground {
 		ResourceSet resourceSet = getResourceSet();
 
 		resourceSet.getResourceFactoryRegistry().getExtensionToFactoryMap().put(
-				"*", new PeaceMakerXMIResourceFactory());
+				"*", new PeacemakerResourceFactory());
 
-		PeaceMakerXMIResource resource = (PeaceMakerXMIResource) resourceSet.createResource(
+		PeacemakerResource resource = (PeacemakerResource) resourceSet.createResource(
 				URI.createFileURI(new File("models/psl/conflicted.model").getAbsolutePath()));
 		resource.load(null);
 		

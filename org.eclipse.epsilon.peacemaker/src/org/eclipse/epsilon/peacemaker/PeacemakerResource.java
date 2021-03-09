@@ -30,7 +30,7 @@ import org.eclipse.epsilon.peacemaker.util.TagBasedEqualityHelper;
 import org.eclipse.epsilon.peacemaker.util.ids.DuplicatedIdsException;
 import org.eclipse.epsilon.peacemaker.util.ids.IdUtils;
 
-public class PeaceMakerXMIResource extends XMIResourceImpl {
+public class PeacemakerResource extends XMIResourceImpl {
 
 	private static final String LEFT_VERSION_EXTENSION = "pmLeftVersion";
 	private static final String BASE_VERSION_EXTENSION = "pmBaseVersion";
@@ -56,18 +56,18 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 	protected boolean hasDuplicatedIds = false;
 	protected DuplicatedIdsException duplicatedIdsException;
 
-	public PeaceMakerXMIResource(URI uri) {
+	public PeacemakerResource(URI uri) {
 		super(uri);
 	}
 
 	@Override
 	protected XMLLoad createXMLLoad() {
-		return new PeaceMakerXMILoad(createXMLHelper());
+		return new PeacemakerXMILoad(createXMLHelper());
 	}
 
 	@Override
 	protected XMLSave createXMLSave() {
-		return new PeaceMakerXMISave(createXMLHelper());
+		return new PeacemakerXMISave(createXMLHelper());
 	}
 
 	protected void loadLeft(ConflictsPreprocessor preprocessor) throws IOException {
@@ -118,7 +118,7 @@ public class PeaceMakerXMIResource extends XMIResourceImpl {
 
 		// load it as a standard XMI Resource (using specific factories if registered)
 		Resource.Factory.Registry factoryRegistry = getResourceSet().getResourceFactoryRegistry();
-		if (!(factoryRegistry.getExtensionToFactoryMap().get("*") instanceof PeaceMakerXMIResourceFactory)) {
+		if (!(factoryRegistry.getExtensionToFactoryMap().get("*") instanceof PeacemakerResourceFactory)) {
 			throw new RuntimeException("A peacemaker factory should be locally registered");
 		}
 		Object peacemakerFactory = factoryRegistry.getExtensionToFactoryMap().remove("*");

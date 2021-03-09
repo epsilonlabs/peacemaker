@@ -1,7 +1,7 @@
 package org.eclipse.epsilon.peacemaker.conflicts;
 
 import org.eclipse.emf.ecore.EObject;
-import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResource;
+import org.eclipse.epsilon.peacemaker.PeacemakerResource;
 
 public abstract class Conflict {
 
@@ -36,10 +36,10 @@ public abstract class Conflict {
 		ACCEPTED, DISCARDED, UNRESOLVED
 	}
 
-	protected PeaceMakerXMIResource pmResource;
+	protected PeacemakerResource pmResource;
 	protected String eObjectId;
 
-	public Conflict(String eObjectId, PeaceMakerXMIResource pmResource) {
+	public Conflict(String eObjectId, PeacemakerResource pmResource) {
 		this.eObjectId = eObjectId;
 		this.pmResource = pmResource;
 	}

@@ -18,8 +18,8 @@ import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
 import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
-import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResource;
-import org.eclipse.epsilon.peacemaker.PeaceMakerXMIResourceFactory;
+import org.eclipse.epsilon.peacemaker.PeacemakerResource;
+import org.eclipse.epsilon.peacemaker.PeacemakerResourceFactory;
 import org.eclipse.epsilon.peacemaker.conflicts.ContainingFeatureUpdate;
 import org.eclipse.epsilon.peacemaker.conflicts.DoubleUpdate;
 import org.eclipse.epsilon.peacemaker.conflicts.KeepDelete;
@@ -60,7 +60,7 @@ public class EMFCompareTests {
 		}
 
 		resourceSet.getResourceFactoryRegistry().getExtensionToFactoryMap().put(
-				"*", new PeaceMakerXMIResourceFactory());
+				"*", new PeacemakerResourceFactory());
 	}
 
 	@Test
@@ -191,7 +191,7 @@ public class EMFCompareTests {
 	}
 
 	protected void testCase(String conflictCase, Class<?>[] conflictTypes) throws IOException {
-		PeaceMakerXMIResource pmResource = loadConflictResource(conflictCase);
+		PeacemakerResource pmResource = loadConflictResource(conflictCase);
 
 		if (pmResource.hasDuplicatedIds()) {
 			throw pmResource.getDuplicatedIdException();
@@ -208,7 +208,7 @@ public class EMFCompareTests {
 	public void testStreamUtilsDifferentVersionEnding() throws IOException {
 		String inputCase = "a1_attribute";
 
-		PeaceMakerXMIResource resource = loadConflictResource(inputCase);
+		PeacemakerResource resource = loadConflictResource(inputCase);
 
 		// saving a1_attribute "as is" involves merging versions with different
 		//   endings (because the root element of the right version has no
@@ -229,8 +229,8 @@ public class EMFCompareTests {
 		System.out.println("############################################");
 	}
 
-	public static PeaceMakerXMIResource loadConflictResource(String resourceName) throws IOException {
-		PeaceMakerXMIResource resource = (PeaceMakerXMIResource) resourceSet.createResource(
+	public static PeacemakerResource loadConflictResource(String resourceName) throws IOException {
+		PeacemakerResource resource = (PeacemakerResource) resourceSet.createResource(
 				URI.createFileURI(new File(String.format(CONFLICTS_LOCATION, resourceName)).getAbsolutePath()));
 		resource.load(null);
 		return resource;

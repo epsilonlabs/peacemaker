@@ -19,7 +19,7 @@ import org.eclipse.emf.ecore.xmi.impl.XMIResourceImpl;
 import org.eclipse.epsilon.peacemaker.conflicts.Conflict;
 import org.eclipse.epsilon.peacemaker.util.StreamUtils;
 
-public class PeaceMakerXMILoad extends XMILoadImpl {
+public class PeacemakerXMILoad extends XMILoadImpl {
 
 	public static final boolean debug = false;
 
@@ -45,7 +45,7 @@ public class PeaceMakerXMILoad extends XMILoadImpl {
 		}
 
 		resourceSet.getResourceFactoryRegistry().getExtensionToFactoryMap().put(
-				"*", new PeaceMakerXMIResourceFactory());
+				"*", new PeacemakerResourceFactory());
 
 		String[] cases = {
 				"01-newInLeft",
@@ -82,7 +82,7 @@ public class PeaceMakerXMILoad extends XMILoadImpl {
 		System.out.println("Done");
 	}
 
-	public PeaceMakerXMILoad(XMLHelper helper) {
+	public PeacemakerXMILoad(XMLHelper helper) {
 		super(helper);
 	}
 
@@ -93,7 +93,7 @@ public class PeaceMakerXMILoad extends XMILoadImpl {
 		ConflictsPreprocessor preprocessor = new ConflictsPreprocessor(inputStream);
 		preprocessor.run();
 
-		PeaceMakerXMIResource pmResource = (PeaceMakerXMIResource) resource;
+		PeacemakerResource pmResource = (PeacemakerResource) resource;
 
 		if (!preprocessor.hasConflicts()) {
 			// We need to use the helper contents because the inputStream is used and non-resetable
@@ -104,13 +104,13 @@ public class PeaceMakerXMILoad extends XMILoadImpl {
 		}
 	}
 
-	public void noConflictsLoad(PeaceMakerXMIResource pmResource, InputStream contents,
+	public void noConflictsLoad(PeacemakerResource pmResource, InputStream contents,
 			Map<?, ?> options) throws IOException {
 
 		Resource.Factory.Registry factoryRegistry = pmResource.getResourceSet().getResourceFactoryRegistry();
 
 		// load it as a standard XMI Resource (using specific factories if registered)
-		if (!(factoryRegistry.getExtensionToFactoryMap().get("*") instanceof PeaceMakerXMIResourceFactory)) {
+		if (!(factoryRegistry.getExtensionToFactoryMap().get("*") instanceof PeacemakerResourceFactory)) {
 			throw new RuntimeException("A peacemaker factory should be locally registered");
 		}
 		Object peacemakerFactory = factoryRegistry.getExtensionToFactoryMap().remove("*");
@@ -124,7 +124,7 @@ public class PeaceMakerXMILoad extends XMILoadImpl {
 		pmResource.setUnconflictedResource(specificResource);
 	}
 
-	public void load(PeaceMakerXMIResource pmResource, ConflictsPreprocessor preprocessor,
+	public void load(PeacemakerResource pmResource, ConflictsPreprocessor preprocessor,
 			Map<?, ?> options) throws IOException {
 
 		if (debug) {
