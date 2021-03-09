@@ -1,6 +1,7 @@
 package org.eclipse.epsilon.peacemaker;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -27,7 +28,6 @@ import org.eclipse.epsilon.peacemaker.conflicts.ReferenceDoubleUpdate;
 import org.eclipse.epsilon.peacemaker.conflicts.UnconflictedObject;
 import org.eclipse.epsilon.peacemaker.conflicts.UpdateDelete;
 import org.eclipse.epsilon.peacemaker.util.TagBasedEqualityHelper;
-import org.eclipse.epsilon.peacemaker.util.ids.DuplicatedIdsException;
 import org.eclipse.epsilon.peacemaker.util.ids.IdUtils;
 
 public class PeacemakerResource extends XMIResourceImpl {
@@ -39,7 +39,7 @@ public class PeacemakerResource extends XMIResourceImpl {
 	// placeholder for those resources where no conflicts are found
 	protected XMIResource unconflictedResource;
 
-	protected Map<?, ?> versionLoadOptions = Collections.EMPTY_MAP;
+	protected Map<?, ?> loadOptions = Collections.EMPTY_MAP;
 
 	protected XMIResource leftResource;
 	protected XMIResource rightResource;
@@ -53,8 +53,9 @@ public class PeacemakerResource extends XMIResourceImpl {
 
 	protected List<Conflict> conflicts = new ArrayList<>();
 
-	protected boolean hasDuplicatedIds = false;
-	protected DuplicatedIdsException duplicatedIdsException;
+	protected boolean failOnDuplicatedIds = false;
+	protected Map<String, List<EObject>> leftDuplicatedIds;
+	protected Map<String, List<EObject>> rightDuplicatedIds;
 
 	public PeacemakerResource(URI uri) {
 		super(uri);
@@ -114,26 +115,33 @@ public class PeacemakerResource extends XMIResourceImpl {
 	protected XMIResource loadVersionResource(String extension,
 			ConflictVersionHelper versionHelper) throws IOException {
 
-		URI versionURI = uri.appendFileExtension(extension);
-
 		// load it as a standard XMI Resource (using specific factories if registered)
-		Resource.Factory.Registry factoryRegistry = getResourceSet().getResourceFactoryRegistry();
-		if (!(factoryRegistry.getExtensionToFactoryMap().get("*") instanceof PeacemakerResourceFactory)) {
-			throw new RuntimeException("A peacemaker factory should be locally registered");
-		}
-		Object peacemakerFactory = factoryRegistry.getExtensionToFactoryMap().remove("*");
-		Resource.Factory specificFactory = factoryRegistry.getFactory(getURI());
-		factoryRegistry.getExtensionToFactoryMap().put("*", peacemakerFactory);
+		Resource.Factory specificFactory = getSpecificFactory();
 
+		URI versionURI = uri.appendFileExtension(extension);
 		XMIResourceImpl specificResource = (XMIResourceImpl) specificFactory.createResource(versionURI);
 		specificResource.basicSetResourceSet(getResourceSet(), null);
 
 		// the pool allows decorating the xml handler to get element lines
-		Map<Object, Object> loadOptions = new HashMap<Object, Object>(versionLoadOptions);
+		Map<Object, Object> loadOptions = new HashMap<Object, Object>(this.loadOptions);
 		loadOptions.put(XMLResource.OPTION_USE_PARSER_POOL, new PeacemakerXMLParserPoolImpl(this, versionHelper));
 		specificResource.load(versionHelper.getVersionContents(), loadOptions);
 
 		return specificResource;
+	}
+
+	public void loadUnconflicted(InputStream contents, Map<?, ?> options) throws IOException {
+		setLoadOptions(loadOptions);
+
+		// load it as a standard XMI Resource (using specific factories if registered)
+		Resource.Factory specificFactory = getSpecificFactory();
+
+		unconflictedResource = (XMIResource) specificFactory.createResource(getURI());
+		((XMIResourceImpl) unconflictedResource).basicSetResourceSet(getResourceSet(), null);
+
+		Map<Object, Object> loadOptions = new HashMap<Object, Object>(this.loadOptions);
+		loadOptions.put(XMLResource.OPTION_USE_PARSER_POOL, new PeacemakerXMLParserPoolImpl(this, null));
+		unconflictedResource.load(contents, loadOptions);
 	}
 
 	protected void identifyConflicts(ConflictsPreprocessor preprocessor) {
@@ -308,9 +316,9 @@ public class PeacemakerResource extends XMIResourceImpl {
 		return unconflictedResource;
 	}
 
-	public void setVersionLoadOptions(Map<?, ?> options) {
+	public void setLoadOptions(Map<?, ?> options) {
 		if (options != null) {
-			this.versionLoadOptions = options;
+			this.loadOptions = options;
 		}
 	}
 
@@ -326,32 +334,66 @@ public class PeacemakerResource extends XMIResourceImpl {
 		return rightVersionName;
 	}
 
+	protected Factory getSpecificFactory() {
+		Resource.Factory.Registry factoryRegistry = getResourceSet().getResourceFactoryRegistry();
+		if (!(factoryRegistry.getExtensionToFactoryMap().get("*") instanceof PeacemakerResourceFactory)) {
+			throw new RuntimeException("A peacemaker factory should be locally registered");
+		}
+		Object peacemakerFactory = factoryRegistry.getExtensionToFactoryMap().remove("*");
+		Resource.Factory specificFactory = factoryRegistry.getFactory(getURI());
+		factoryRegistry.getExtensionToFactoryMap().put("*", peacemakerFactory);
+		return specificFactory;
+	}
+
 	public void loadVersions(ConflictsPreprocessor preprocessor, Map<?, ?> loadOptions)
 			throws IOException {
 
-		setVersionLoadOptions(loadOptions);
+		setLoadOptions(loadOptions);
 
-		try {
-			loadLeft(preprocessor);
-			loadRight(preprocessor);
+		loadLeft(preprocessor);
+		loadRight(preprocessor);
 
-			if (preprocessor.hasBaseVersion()) {
-				prepareBase(preprocessor);
-			}
-
-			identifyConflicts(preprocessor);
+		if (preprocessor.hasBaseVersion()) {
+			prepareBase(preprocessor);
 		}
-		catch (DuplicatedIdsException ex) {
-			hasDuplicatedIds = true;
-			duplicatedIdsException = ex;
-		}
+
+		identifyConflicts(preprocessor);
+	}
+
+	public boolean failOnDuplicateIds() {
+		return failOnDuplicatedIds;
+	}
+
+	public void setFailOnDuplicatedIds(boolean failOnDuplicatedIds) {
+		this.failOnDuplicatedIds = failOnDuplicatedIds;
 	}
 
 	public boolean hasDuplicatedIds() {
-		return hasDuplicatedIds;
+		return leftDuplicatedIds != null || rightDuplicatedIds != null;
 	}
 
-	public DuplicatedIdsException getDuplicatedIdException() {
-		return duplicatedIdsException;
+	public void setLeftDuplicatedIds(Map<String, List<EObject>> duplicatedIds) {
+		leftDuplicatedIds = duplicatedIds;
+
+	}
+
+	public void setRightDuplicatedIds(Map<String, List<EObject>> duplicatedIds) {
+		rightDuplicatedIds = duplicatedIds;
+	}
+
+	public Map<String, List<EObject>> getLeftDuplicatedIds() {
+		return leftDuplicatedIds;
+	}
+
+	public Map<String, List<EObject>> getRightDuplicatedIds() {
+		return rightDuplicatedIds;
+	}
+
+	public Map<String, List<EObject>> getDuplicatedIds() {
+		return getLeftDuplicatedIds();
+	}
+
+	public void setDuplicatedIds(Map<String, List<EObject>> duplicatedIds) {
+		setLeftDuplicatedIds(duplicatedIds);
 	}
 }

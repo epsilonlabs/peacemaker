@@ -193,10 +193,6 @@ public class EMFCompareTests {
 	protected void testCase(String conflictCase, Class<?>[] conflictTypes) throws IOException {
 		PeacemakerResource pmResource = loadConflictResource(conflictCase);
 
-		if (pmResource.hasDuplicatedIds()) {
-			throw pmResource.getDuplicatedIdException();
-		}
-
 		assertTrue(pmResource.getConflicts().size() == conflictTypes.length);
 
 		for (int c = 0; c < conflictTypes.length; c++) {
@@ -232,6 +228,7 @@ public class EMFCompareTests {
 	public static PeacemakerResource loadConflictResource(String resourceName) throws IOException {
 		PeacemakerResource resource = (PeacemakerResource) resourceSet.createResource(
 				URI.createFileURI(new File(String.format(CONFLICTS_LOCATION, resourceName)).getAbsolutePath()));
+		resource.setFailOnDuplicatedIds(true);
 		resource.load(null);
 		return resource;
 	}

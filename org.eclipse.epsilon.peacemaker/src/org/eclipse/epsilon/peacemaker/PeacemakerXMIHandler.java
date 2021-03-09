@@ -1,6 +1,9 @@
 package org.eclipse.epsilon.peacemaker;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -9,6 +12,7 @@ import org.eclipse.emf.ecore.xmi.XMLHelper;
 import org.eclipse.emf.ecore.xmi.XMLResource;
 import org.eclipse.emf.ecore.xmi.impl.SAXXMIHandler;
 import org.eclipse.epsilon.peacemaker.ConflictsPreprocessor.ConflictVersionHelper;
+import org.eclipse.epsilon.peacemaker.ConflictsPreprocessor.LineType;
 import org.eclipse.epsilon.peacemaker.util.ids.DuplicatedIdsException;
 import org.eclipse.epsilon.peacemaker.util.ids.IdUtils;
 import org.xml.sax.Attributes;
@@ -24,6 +28,8 @@ public class PeacemakerXMIHandler extends SAXXMIHandler {
 	protected boolean checkConflicts = false;
 
 	protected Set<String> ids = new HashSet<>();
+	protected Map<String, List<EObject>> idObjects = new HashMap<>();
+	protected Map<String, List<EObject>> duplicatedIds = new HashMap<>();
 
 	public PeacemakerXMIHandler(XMLResource xmlResource, XMLHelper helper, Map<?, ?> options,
 			PeacemakerResource pmResource, ConflictVersionHelper versionHelper) {
@@ -57,10 +63,17 @@ public class PeacemakerXMIHandler extends SAXXMIHandler {
 
 			if (objId != null) {
 				if (ids.contains(objId)) {
-					throw new DuplicatedIdsException(objId);
+					duplicatedIds.put(objId, idObjects.get(objId));
+					idObjects.get(objId).add(peekObject);
+					if (pmResource.failOnDuplicateIds()) {
+						throw new DuplicatedIdsException(objId, start, end);
+					}
 				}
 				else {
 					ids.add(objId);
+					List<EObject> list = new ArrayList<>();
+					list.add(peekObject);
+					idObjects.put(objId, list);
 				}
 
 				if (checkConflicts && objId != null) {
@@ -78,5 +91,24 @@ public class PeacemakerXMIHandler extends SAXXMIHandler {
 		super.endElement(uri, localName, name);
 
 		currentLine = locator.getLineNumber() + 1;
+	}
+
+	@Override
+	public void endDocument() {
+		super.endDocument();
+
+		if (!duplicatedIds.isEmpty()) {
+			if (versionHelper != null) {
+				if (versionHelper.getVersionType() == LineType.LEFT) {
+					pmResource.setLeftDuplicatedIds(duplicatedIds);
+				}
+				else {
+					pmResource.setRightDuplicatedIds(duplicatedIds);
+				}
+			}
+			else {
+				pmResource.setDuplicatedIds(duplicatedIds);
+			}
+		}
 	}
 }

@@ -219,6 +219,10 @@ public class ConflictsPreprocessor {
 			}
 			return false;
 		}
+
+		public LineType getVersionType() {
+			return versionType;
+		}
 	}
 
 	public ConflictVersionHelper getLeftVersionHelper() {

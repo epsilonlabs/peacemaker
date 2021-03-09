@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.eclipse.emf.common.command.AbstractCommand;
 import org.eclipse.emf.common.command.Command;
@@ -214,10 +215,7 @@ public class PeacemakerEditor extends EcoreEditor {
 		// Only creates contents if the resource has been loaded
 		if (!getEditingDomain().getResourceSet().getResources().isEmpty()) {
 			pmResource = (PeacemakerResource) editingDomain.getResourceSet().getResources().get(0);
-			if (pmResource.hasDuplicatedIds()) {
-				createDuplicatedIdsPage();
-			}
-			else if (!pmResource.hasConflicts()) {
+			if (!pmResource.hasConflicts()) {
 				createSingleViewerPage();
 
 				setReadOnly(pmResource);
@@ -232,7 +230,7 @@ public class PeacemakerEditor extends EcoreEditor {
 				setReadOnly(pmResource.getLeftResource());
 				setReadOnly(pmResource.getRightResource());
 
-				createConflictsPage(pmResource);
+				createConflictsPage();
 			}
 
 			getSite().getShell().getDisplay().asyncExec(new Runnable() {
@@ -269,30 +267,65 @@ public class PeacemakerEditor extends EcoreEditor {
 		});
 	}
 
-	protected void createDuplicatedIdsPage() {
-		Composite page = new Composite(getContainer(), SWT.NONE);
-		page.setBackground(getSite().getShell().getDisplay().getSystemColor(SWT.COLOR_WHITE));
-		int pageIndex = addPage(page);
-		setPageText(pageIndex, "Duplicated ids");
+	protected void createDuplicatedIdsControl(Composite parent, String label,
+			Map<String, List<EObject>> duplicatedIds, TreeViewer viewer, boolean copiedResources) {
 
-		GridLayout pageLayout = new GridLayout(1, false);
-		page.setLayout(pageLayout);
+		ExpandableComposite root = new ExpandableComposite(parent, SWT.BORDER,
+				ExpandableComposite.EXPANDED | ExpandableComposite.TWISTIE);
+		GridDataFactory.fillDefaults().grab(true, false).minSize(1, 1).applyTo(root);
 
-		Label title = new Label(page, SWT.NONE);
-		title.setText("Conflict Resolution aborted");
+		GridLayout conflictLayout = new GridLayout(1, false);
+		root.setLayout(conflictLayout);
 
-		FontDescriptor boldDescriptor = FontDescriptor.createFrom(title.getFont()).setStyle(SWT.BOLD);
-		Font boldFont = boldDescriptor.createFont(title.getDisplay());
-		title.setFont(boldFont);
+		FontDescriptor boldDescriptor = FontDescriptor.createFrom(root.getFont()).setStyle(SWT.BOLD);
+		Font boldFont = boldDescriptor.createFont(root.getDisplay());
+		root.setFont(boldFont);
+		root.setText(label);
 
-		Text description = new Text(page, SWT.WRAP);
-		GridDataFactory.fillDefaults().grab(true, true).minSize(1, 1).applyTo(description);
-		description.setText(String.format(
-				"A duplicated id \"%s\" has been found (lines %d-%d)",
-				pmResource.getDuplicatedIdException().getId(),
-				pmResource.getDuplicatedIdException().getStartLine(),
-				pmResource.getDuplicatedIdException().getEndLine()));
-		description.setForeground(Display.getCurrent().getSystemColor(SWT.COLOR_RED));
+		Composite duplicatedIdsControl = new Composite(root, SWT.NONE);
+		root.setClient(duplicatedIdsControl);
+		GridLayout duplicatedIdsLayout = new GridLayout(1, false);
+		duplicatedIdsControl.setLayout(duplicatedIdsLayout);
+
+		for (Entry<String, List<EObject>> entry : duplicatedIds.entrySet()) {
+			Text description = new Text(duplicatedIdsControl, SWT.WRAP);
+			GridDataFactory.fillDefaults().grab(true, true).minSize(1, 1).applyTo(description);
+			description.setText(entry.getKey());
+
+			int objNumber = 1;
+			List<EObject> objects = entry.getValue();
+			// if working over copied resources (e.g. the left and right viewtrees),
+			//   we need to obtain references to the copied objects
+			// we can do so through the EObjectToIdMap
+			if (copiedResources) {
+				objects = getReferencesToCopies((XMIResource) viewer.getInput(), entry.getKey());
+			}
+			for (EObject obj : objects) {
+				Link showInTreeViewers = new Link(duplicatedIdsControl, SWT.WRAP);
+				GridDataFactory.fillDefaults().grab(true, false).minSize(1, 1).applyTo(showInTreeViewers);
+				showInTreeViewers.setText("<a>Obj" + objNumber + "</a>");
+				objNumber++;
+				showInTreeViewers.addSelectionListener(new SelectionAdapter() {
+
+					@Override
+					public void widgetSelected(SelectionEvent e) {
+						viewer.setSelection(new StructuredSelection(obj), true);
+						viewer.refresh(obj, true);
+					}
+				});
+			}
+		}
+	}
+
+	@SuppressWarnings("deprecation")
+	protected List<EObject> getReferencesToCopies(XMIResource resource, String objId) {
+		List<EObject> objects = new ArrayList<>();
+		for (Entry<EObject, String> entry : resource.getEObjectToIDMap().entrySet()) {
+			if (entry.getValue().equals(objId)) {
+				objects.add(entry.getKey());
+			}
+		}
+		return objects;
 	}
 
 	protected void createSingleViewerPage() {
@@ -305,10 +338,19 @@ public class PeacemakerEditor extends EcoreEditor {
 		GridLayout pageLayout = new GridLayout(1, false);
 		page.setLayout(pageLayout);
 
-		Label label = new Label(page, SWT.NONE);
+		SashForm duplicatedIdsSash = new SashForm(page, SWT.HORIZONTAL);
+		GridDataFactory.fillDefaults().grab(true, true).minSize(1, 1).applyTo(duplicatedIdsSash);
+
+		Composite treeControl = new Composite(duplicatedIdsSash, SWT.NONE);
+		GridDataFactory.fillDefaults().grab(true, true).minSize(1, 1).applyTo(treeControl);
+
+		GridLayout treeLayout = new GridLayout(1, false);
+		treeControl.setLayout(treeLayout);
+
+		Label label = new Label(treeControl, SWT.NONE);
 		label.setText("No conflicts were found");
 
-		Tree tree = new Tree(page, SWT.MULTI);
+		Tree tree = new Tree(treeControl, SWT.MULTI);
 		GridDataFactory.fillDefaults().grab(true, true).minSize(1, 1).applyTo(tree);
 
 		selectionViewer = new TreeViewer(tree);
@@ -320,14 +362,30 @@ public class PeacemakerEditor extends EcoreEditor {
 		selectionViewer.setInput(pmResource.getUnconflictedResource());
 		selectionViewer.setSelection(new StructuredSelection(pmResource.getUnconflictedResource()), true);
 		createContextMenuFor(selectionViewer);
+
+		Composite duplicatedIdsControl = new Composite(duplicatedIdsSash, SWT.BORDER);
+		GridDataFactory.fillDefaults().grab(true, true).minSize(1, 1).applyTo(duplicatedIdsSash);
+
+		GridLayout duplicatedIdsLayout = new GridLayout(1, false);
+		duplicatedIdsControl.setLayout(duplicatedIdsLayout);
+
+		if (pmResource.hasDuplicatedIds()) {
+			createDuplicatedIdsControl(duplicatedIdsControl, "Duplicated Ids",
+					pmResource.getDuplicatedIds(), selectionViewer, false);
+		}
+		else {
+			duplicatedIdsControl.setVisible(false);
+		}
+
+		duplicatedIdsSash.setWeights(new int[] { 2, 1 });
 	}
 
-	protected void createConflictsPage(PeacemakerResource resource) {
+	protected void createConflictsPage() {
 
 		Composite page = new Composite(getContainer(), SWT.NONE);
 		page.setBackground(getSite().getShell().getDisplay().getSystemColor(SWT.COLOR_WHITE));
 		int pageIndex = addPage(page);
-		setPageText(pageIndex, resource.getURI().lastSegment());
+		setPageText(pageIndex, pmResource.getURI().lastSegment());
 
 		GridLayout pageLayout = new GridLayout(1, false);
 		page.setLayout(pageLayout);
@@ -448,6 +506,16 @@ public class PeacemakerEditor extends EcoreEditor {
 			ResolveActionGroup resolveGroup = new ResolveActionGroup(conflictControl, SWT.NONE, conflict);
 			GridDataFactory.fillDefaults().grab(false, false).minSize(1, 1).applyTo(resolveGroup.getGroup());
 			resolveGroup.createActionButtons(conflict);
+		}
+
+		if (pmResource.getLeftDuplicatedIds() != null) {
+			createDuplicatedIdsControl(conflictsList, "Duplicated ids in left",
+					pmResource.getLeftDuplicatedIds(), leftViewer, true);
+		}
+
+		if (pmResource.getRightDuplicatedIds() != null) {
+			createDuplicatedIdsControl(conflictsList, "Duplicated ids in right",
+					pmResource.getRightDuplicatedIds(), rightViewer, true);
 		}
 
 		resourceConflictsSash.setWeights(new int[] { 2, 1 });

@@ -15,7 +15,6 @@ import org.eclipse.emf.ecore.xmi.XMLHelper;
 import org.eclipse.emf.ecore.xmi.XMLResource;
 import org.eclipse.emf.ecore.xmi.impl.XMILoadImpl;
 import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
-import org.eclipse.emf.ecore.xmi.impl.XMIResourceImpl;
 import org.eclipse.epsilon.peacemaker.conflicts.Conflict;
 import org.eclipse.epsilon.peacemaker.util.StreamUtils;
 
@@ -97,31 +96,11 @@ public class PeacemakerXMILoad extends XMILoadImpl {
 
 		if (!preprocessor.hasConflicts()) {
 			// We need to use the helper contents because the inputStream is used and non-resetable
-			noConflictsLoad(pmResource, preprocessor.getLeftVersionHelper().getVersionContents(), options);
+			pmResource.loadUnconflicted(preprocessor.getLeftVersionHelper().getVersionContents(), options);
 		}
 		else {
 			load(pmResource, preprocessor, options);
 		}
-	}
-
-	public void noConflictsLoad(PeacemakerResource pmResource, InputStream contents,
-			Map<?, ?> options) throws IOException {
-
-		Resource.Factory.Registry factoryRegistry = pmResource.getResourceSet().getResourceFactoryRegistry();
-
-		// load it as a standard XMI Resource (using specific factories if registered)
-		if (!(factoryRegistry.getExtensionToFactoryMap().get("*") instanceof PeacemakerResourceFactory)) {
-			throw new RuntimeException("A peacemaker factory should be locally registered");
-		}
-		Object peacemakerFactory = factoryRegistry.getExtensionToFactoryMap().remove("*");
-		Resource.Factory specificFactory = factoryRegistry.getFactory(pmResource.getURI());
-		factoryRegistry.getExtensionToFactoryMap().put("*", peacemakerFactory);
-
-		XMIResourceImpl specificResource = (XMIResourceImpl) specificFactory.createResource(pmResource.getURI());
-		specificResource.load(contents, options);
-
-		specificResource.basicSetResourceSet(pmResource.getResourceSet(), null);
-		pmResource.setUnconflictedResource(specificResource);
 	}
 
 	public void load(PeacemakerResource pmResource, ConflictsPreprocessor preprocessor,
