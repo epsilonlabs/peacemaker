@@ -30,25 +30,42 @@ public class PeacemakerXMIHandler extends SAXXMIHandler {
 	protected Set<String> ids = new HashSet<>();
 	protected Map<String, List<EObject>> idObjects = new HashMap<>();
 	protected Map<String, List<EObject>> duplicatedIds = new HashMap<>();
+	protected boolean failOnDuplicatedIds;
 
 	public PeacemakerXMIHandler(XMLResource xmlResource, XMLHelper helper, Map<?, ?> options,
 			PeacemakerResource pmResource, ConflictVersionHelper versionHelper) {
 
 		super(xmlResource, helper, options);
 
+		currentLine = 1;
+
 		this.pmResource = pmResource;
-		currentLine = 1; //TODO: start in line 2 to avoid xml tag? is it relevant?
+
+		failOnDuplicatedIds = pmResource.failOnDuplicateIds();
 		if (versionHelper != null) {
 			this.versionHelper = versionHelper;
 			checkConflicts = true;
 		}
 	}
 
+	/**
+	 * Constructor to find duplicated ids in non-peacemaker resources
+	 */
+	public PeacemakerXMIHandler(XMLResource xmlResource, XMLHelper helper, Map<?, ?> options,
+			Map<String, List<EObject>> duplicatedIds, boolean failOnDuplicatedIds) {
+
+		super(xmlResource, helper, options);
+
+		currentLine = 1;
+
+		this.failOnDuplicatedIds = failOnDuplicatedIds;
+		this.duplicatedIds = duplicatedIds;
+	}
+
 	@Override
 	public void startElement(String uri, String localName, String name, Attributes attributes) throws SAXException {
 
 		super.startElement(uri, localName, name, attributes);
-		
 
 		// start and end here mark the first and last lines of the started element's
 		//   initial tag (not the whole element)
@@ -65,7 +82,7 @@ public class PeacemakerXMIHandler extends SAXXMIHandler {
 				if (ids.contains(objId)) {
 					duplicatedIds.put(objId, idObjects.get(objId));
 					idObjects.get(objId).add(peekObject);
-					if (pmResource.failOnDuplicateIds()) {
+					if (failOnDuplicatedIds) {
 						throw new DuplicatedIdsException(objId, start, end);
 					}
 				}
@@ -76,7 +93,7 @@ public class PeacemakerXMIHandler extends SAXXMIHandler {
 					idObjects.put(objId, list);
 				}
 
-				if (checkConflicts && objId != null) {
+				if (checkConflicts) {
 					versionHelper.addToConflictSections(start, end,
 							IdUtils.getAvailableId(xmlResource, objects.peek()));
 				}
@@ -97,7 +114,7 @@ public class PeacemakerXMIHandler extends SAXXMIHandler {
 	public void endDocument() {
 		super.endDocument();
 
-		if (!duplicatedIds.isEmpty()) {
+		if (pmResource != null && !duplicatedIds.isEmpty()) {
 			if (versionHelper != null) {
 				if (versionHelper.getVersionType() == LineType.LEFT) {
 					pmResource.setLeftDuplicatedIds(duplicatedIds);

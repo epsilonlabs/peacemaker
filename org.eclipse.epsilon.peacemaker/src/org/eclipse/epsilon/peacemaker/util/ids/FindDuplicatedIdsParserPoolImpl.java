@@ -7,19 +7,21 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.xmi.XMLDefaultHandler;
 import org.eclipse.emf.ecore.xmi.XMLHelper;
 import org.eclipse.emf.ecore.xmi.XMLLoad;
 import org.eclipse.emf.ecore.xmi.XMLResource;
 import org.eclipse.emf.ecore.xmi.impl.XMLParserPoolImpl;
+import org.eclipse.epsilon.peacemaker.PeacemakerXMIHandler;
 import org.xml.sax.SAXException;
 
 public class FindDuplicatedIdsParserPoolImpl extends XMLParserPoolImpl {
 
-	protected List<String> duplicatedIds;
+	protected Map<String, List<EObject>> duplicatedIds;
 	protected boolean stopWithFirst;
 
-	public FindDuplicatedIdsParserPoolImpl(List<String> duplicatedIds, boolean stopWithFirst) {
+	public FindDuplicatedIdsParserPoolImpl(Map<String, List<EObject>> duplicatedIds, boolean stopWithFirst) {
 		this.duplicatedIds = duplicatedIds;
 		this.stopWithFirst = stopWithFirst;
 	}
@@ -28,9 +30,7 @@ public class FindDuplicatedIdsParserPoolImpl extends XMLParserPoolImpl {
 	public synchronized XMLDefaultHandler getDefaultHandler(XMLResource resource,
 			XMLLoad xmlLoad, XMLHelper helper, Map<?, ?> options) {
 
-		return new FindDuplicatedIdsHandlerDecorator(resource,
-				super.getDefaultHandler(resource, xmlLoad, helper, options),
-				duplicatedIds, stopWithFirst);
+		return new PeacemakerXMIHandler(resource, helper, options, duplicatedIds, stopWithFirst);
 	}
 
 	protected SAXParser makeParser(Map<String, Boolean> features, Map<String, ?> properties) throws ParserConfigurationException, SAXException {

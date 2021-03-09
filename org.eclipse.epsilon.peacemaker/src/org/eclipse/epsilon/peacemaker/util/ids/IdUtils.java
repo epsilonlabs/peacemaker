@@ -2,10 +2,10 @@ package org.eclipse.epsilon.peacemaker.util.ids;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.util.EcoreUtil;
@@ -41,7 +41,7 @@ public class IdUtils {
 	 * @param contents  Resource contents to perform the load
 	 * @param findFirst If true, loading stops after finding a duplicated id
 	 */
-	public static List<String> findDuplicatedIds(XMIResource resource, InputStream contents) {
+	public static Set<String> findDuplicatedIds(XMIResource resource, InputStream contents) {
 		return findDuplicatedIds(resource, contents, false);
 	}
 
@@ -52,10 +52,10 @@ public class IdUtils {
 	 * @param contents      Resource contents to perform the load
 	 * @param stopWithFirst If true, loading stops after finding a duplicated id
 	 */
-	private static List<String> findDuplicatedIds(XMIResource resource,
+	private static Set<String> findDuplicatedIds(XMIResource resource,
 			InputStream contents, boolean stopWithFirst) {
 
-		List<String> duplicatedIds = new ArrayList<String>();
+		Map<String, List<EObject>> duplicatedIds = new HashMap<>();
 
 		// the pool allows decorating the xml handler to get element lines
 		Map<Object, Object> loadOptions = new HashMap<Object, Object>();
@@ -73,6 +73,6 @@ public class IdUtils {
 			// launched when stopWithFirst == true and a dup is found, nothing to do
 		}
 
-		return duplicatedIds;
+		return duplicatedIds.keySet();
 	}
 }
