@@ -26,7 +26,7 @@ public class PeacemakerXMLParserPoolImpl extends XMLParserPoolImpl {
 
 	@Override
 	public synchronized XMLDefaultHandler getDefaultHandler(XMLResource resource, XMLLoad xmlLoad, XMLHelper helper, Map<?, ?> options) {
-		return new PeacemakerHandlerDecorator(super.getDefaultHandler(resource, xmlLoad, helper, options), pmResource, versionHelper);
+		return new PeacemakerXMIHandler(resource, helper, options, pmResource, versionHelper);
 	}
 
 	protected SAXParser makeParser(Map<String, Boolean> features, Map<String, ?> properties) throws ParserConfigurationException, SAXException {

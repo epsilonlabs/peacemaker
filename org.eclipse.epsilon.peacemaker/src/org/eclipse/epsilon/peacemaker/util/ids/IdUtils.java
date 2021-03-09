@@ -14,12 +14,12 @@ import org.eclipse.emf.ecore.xmi.XMLResource;
 
 public class IdUtils {
 
-	public static String getAvailableId(XMIResource resource, EObject obj) {
+	public static String getAvailableId(XMLResource resource, EObject obj) {
 		String id = resource.getID(obj);
 		return id != null ? id : EcoreUtil.getID(obj);
 	}
 
-	public static boolean hasXMIId(XMIResource resource, EObject obj) {
+	public static boolean hasXMIId(XMLResource resource, EObject obj) {
 		return resource.getID(obj) != null;
 	}
 

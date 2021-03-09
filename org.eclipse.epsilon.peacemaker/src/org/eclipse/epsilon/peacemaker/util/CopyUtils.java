@@ -18,7 +18,6 @@ import org.eclipse.emf.ecore.util.EcoreUtil.Copier;
 import org.eclipse.emf.ecore.util.EcoreUtil.ExternalCrossReferencer;
 import org.eclipse.emf.ecore.util.InternalEList;
 import org.eclipse.emf.ecore.xmi.XMIResource;
-import org.eclipse.epsilon.peacemaker.ConflictVersionResource;
 
 public class CopyUtils {
 
@@ -177,40 +176,6 @@ public class CopyUtils {
 		fixExternalReferences(obj, copy);
 	}
 
-	//TODO: currently superseeded by replaceContents. Delete later if no use appears
-	/**
-	 * Replaces an object with a copy of another one
-	 */
-	public static void copyAndReplace(EObject replacingObj, EObject replacedObj) {
-		EObject copy = EcoreUtil.copy(replacingObj);
-
-		EReference reference = (EReference) replacingObj.eContainingFeature();
-		if (reference != null) {
-			EObject toObjectParent = replacedObj.eContainer();
-			if (!reference.isMany()) {
-				toObjectParent.eSet(reference, copy);
-			}
-			else {
-				@SuppressWarnings("unchecked")
-				List<EObject> list = (List<EObject>) toObjectParent.eGet(reference);
-
-				int index = list.indexOf(replacedObj);
-				list.remove(index);
-				safeIndexAdd(list, index, copy);
-			}
-		}
-		else {
-			// root element
-			List<EObject> contents = replacedObj.eResource().getContents();
-			int index = contents.indexOf(replacedObj);
-			contents.remove(index);
-			safeIndexAdd(contents, index, copy);
-		}
-		copyIds(replacingObj, copy);
-		fixExternalReferences(replacingObj, copy);
-		fixDanglingReferences(replacingObj, copy);
-	}
-
 	protected static void copyIds(EObject obj, EObject copy) {
 		XMIResource objResource = (XMIResource) obj.eResource();
 
@@ -261,32 +226,6 @@ public class CopyUtils {
 					// there is no object to point to in the copy resource, what to do?
 					throw new IllegalStateException(
 							"Nothing to reference internally to when copying the resource: " + obj);
-				}
-			}
-		}
-	}
-
-	protected static void fixDanglingReferences(EObject fromObject, EObject toObject) {
-		DanglingCrossReferencer referencer = new DanglingCrossReferencer(EcoreUtil.getRootContainer(toObject));
-		Map<EObject, Collection<Setting>> danglingReferences = referencer.findDanglingCrossReferences();
-		ConflictVersionResource toObjectResource = (ConflictVersionResource) toObject.eResource();
-
-		String toObjectId = toObjectResource.getID(toObject);
-		
-		for (EObject externalObj : danglingReferences.keySet()) {
-			if (toObjectId.equals(toObjectResource.getDetachedId(externalObj))) {
-				for (Setting setting : danglingReferences.get(externalObj)) {
-					if (!setting.getEStructuralFeature().isMany()) {
-						setting.set(toObject);
-					}
-					else {
-						@SuppressWarnings("unchecked")
-						List<EObject> list = (List<EObject>) setting.get(true);
-
-						int index = list.indexOf(externalObj);
-						list.remove(index);
-						safeIndexAdd(list, index, toObject);
-					}
 				}
 			}
 		}
