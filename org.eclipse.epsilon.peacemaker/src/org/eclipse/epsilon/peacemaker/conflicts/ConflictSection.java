@@ -1,65 +1,65 @@
 package org.eclipse.epsilon.peacemaker.conflicts;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 public class ConflictSection {
 
-	protected List<String> leftObjects = new ArrayList<>();
-	protected List<String> rightObjects = new ArrayList<>();
-	protected List<String> baseObjects = new ArrayList<>();
+	protected Set<String> leftIds = new HashSet<>();
+	protected Set<String> rightIds = new HashSet<>();
+	protected Set<String> baseIds = new HashSet<>();
 
 	public void addLeft(String objId) {
-		leftObjects.add(objId);
+		leftIds.add(objId);
 	}
 
 	public void addBase(String objId) {
-		baseObjects.add(objId);
+		baseIds.add(objId);
 	}
 
 	public void addRight(String objId) {
-		rightObjects.add(objId);
+		rightIds.add(objId);
 	}
 
 	public boolean leftContains(String objId) {
-		return leftObjects.contains(objId);
+		return leftIds.contains(objId);
 	}
 
 	public boolean baseContains(String objId) {
-		return baseObjects.contains(objId);
+		return baseIds.contains(objId);
 	}
 
 	public boolean rightContains(String objId) {
-		return rightObjects.contains(objId);
+		return rightIds.contains(objId);
 	}
 
 	public void removeLeft(String objId) {
-		leftObjects.remove(objId);
+		leftIds.remove(objId);
 	}
 
 	public void removeRight(String objId) {
-		rightObjects.remove(objId);
+		rightIds.remove(objId);
 	}
 
-	public List<String> getLeftIds() {
-		return leftObjects;
+	public Set<String> getLeftIds() {
+		return leftIds;
 	}
 
-	public List<String> getRightIds() {
-		return rightObjects;
+	public Set<String> getRightIds() {
+		return rightIds;
 	}
 
 	public boolean isEmpty() {
-		return leftObjects.isEmpty() && rightObjects.isEmpty();
+		return leftIds.isEmpty() && rightIds.isEmpty();
 	}
 
 	public String toString() {
 		StringBuilder s = new StringBuilder();
 
-		s.append("New (or modified) left objects without match\n");
-		s.append("\t").append(String.join("\n\t", leftObjects)).append("\n\n");
-		s.append("New (or modified) right objects without match\n");
-		s.append("\t").append(String.join("\n\t", rightObjects));
+		s.append("New (or modified) left ids without match\n");
+		s.append("\t").append(String.join("\n\t", leftIds)).append("\n\n");
+		s.append("New (or modified) right ids without match\n");
+		s.append("\t").append(String.join("\n\t", rightIds));
 
 		return s.toString();
 	}
