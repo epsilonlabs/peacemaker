@@ -1,11 +1,7 @@
 package org.eclipse.epsilon.peacemaker.profiling;
 
-import org.eclipse.epsilon.peacemaker.profiling.BoxesProfilingBenches.BoxesDoubleUpdate;
-import org.eclipse.epsilon.peacemaker.profiling.BoxesProfilingBenches.BoxesUpdateDelete;
-import org.eclipse.epsilon.peacemaker.profiling.BoxesProfilingBenches.BoxesUpdateDeleteExtraChanges;
-import org.eclipse.epsilon.peacemaker.profiling.PSLProfilingBenches.PSLDoubleUpdateTasks;
-import org.eclipse.epsilon.peacemaker.profiling.PSLProfilingBenches.PSLUpdateDeleteTasks;
-import org.eclipse.epsilon.peacemaker.profiling.PSLProfilingBenches.PSLUpdateDeleteTasksExtraChanges;
+import org.eclipse.epsilon.peacemaker.profiling.BoxesProfilingBenches.*;
+import org.eclipse.epsilon.peacemaker.profiling.PSLProfilingBenches.*;
 
 public class RunProfilingTests {
 
@@ -13,12 +9,24 @@ public class RunProfilingTests {
 
 		int numReps = 5, numWarms = 2, intermediateWarms = 1;
 
-		new PSLDoubleUpdateTasks(numReps, numWarms).run();
-		new PSLUpdateDeleteTasks(numReps, intermediateWarms).run();
-		new PSLUpdateDeleteTasksExtraChanges(numReps, 2).run();
+		// scenario 1
+		new PSLUpdateDeleteTasks(numReps, numWarms).run();
 
-		new BoxesDoubleUpdate(numReps, intermediateWarms).run();
-		new BoxesUpdateDelete(numReps, intermediateWarms).run();
-		new BoxesUpdateDeleteExtraChanges(numReps, intermediateWarms).run();
+		// scenario 2
+		new PSLDoubleUpdateTasks(numReps, intermediateWarms).run();
+
+		// scenario 3
+		new PSLUpdateDeleteTasks10PercentChanges(numReps, intermediateWarms).run();
+		new PSLUpdateDeleteTasks50PercentChanges(numReps, intermediateWarms).run();
+		new PSLUpdateDeleteTasks100PercentChanges(numReps, intermediateWarms).run();
+
+		new PSLUpdateDeleteTasks10PercentConflicts(numReps, intermediateWarms).run();
+		new PSLUpdateDeleteTasks50PercentConflicts(numReps, intermediateWarms).run();
+		new PSLUpdateDeleteTasks100PercentConflicts(numReps, intermediateWarms).run();
+
+		// scenario 4
+		new BoxesUpdateDeleteBox1(numReps, intermediateWarms).run();
+		new BoxesUpdateDeleteBox10(numReps, intermediateWarms).run();
+		new BoxesUpdateDeleteBox20(numReps, intermediateWarms).run();
 	}
 }

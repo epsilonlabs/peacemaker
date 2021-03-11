@@ -32,17 +32,10 @@ public class BoxesProfilingBenches {
 		}
 	}
 
-	public static class BoxesUpdateDelete extends BoxesPerformanceProfiling {
+	public static abstract class BoxesUpdateDelete extends BoxesPerformanceProfiling {
 
 		public BoxesUpdateDelete(int repetitions, int warmupReps) {
 			super(repetitions, warmupReps);
-
-			taskPath = BoxesConflictModelsGenerator.UPDATEDELETE_BOXES_PATH;
-		}
-
-		@Override
-		public String getOutputFile() {
-			return "results/updatedeleteBoxesResults.csv";
 		}
 
 		@Override
@@ -83,6 +76,49 @@ public class BoxesProfilingBenches {
 
 			stopwatch.pause();
 			return stopwatch.getElapsed();
+		}
+	}
+
+	public static class BoxesUpdateDeleteBox1 extends BoxesUpdateDelete {
+
+		public BoxesUpdateDeleteBox1(int repetitions, int warmupReps) {
+			super(repetitions, warmupReps);
+
+			taskPath = BoxesConflictModelsGenerator.getUpdateDeleteBoxesPath("Box1");
+		}
+
+		@Override
+		public String getOutputFile() {
+			return "results/updateDeleteBox1.csv";
+		}
+
+	}
+
+	public static class BoxesUpdateDeleteBox10 extends BoxesUpdateDelete {
+
+		public BoxesUpdateDeleteBox10(int repetitions, int warmupReps) {
+			super(repetitions, warmupReps);
+
+			taskPath = BoxesConflictModelsGenerator.getUpdateDeleteBoxesPath("Box10");
+		}
+
+		@Override
+		public String getOutputFile() {
+			return "results/updateDeleteBox10.csv";
+		}
+	}
+
+	public static class BoxesUpdateDeleteBox20 extends BoxesUpdateDelete {
+
+		public BoxesUpdateDeleteBox20(int repetitions, int warmupReps) {
+			super(repetitions, warmupReps);
+
+			taskPath = BoxesConflictModelsGenerator.getUpdateDeleteBoxesPath("Box20");
+		}
+
+		@Override
+		public String getOutputFile() {
+			return "results/updateDeleteBox20.csv";
 		}
 	}
 
