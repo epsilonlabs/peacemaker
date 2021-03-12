@@ -17,13 +17,9 @@ Export-Package: psl,
 Require-Bundle: org.eclipse.emf.ecore;visibility:=reexport,
  org.eclipse.emf.compare,
  org.eclipse.emf.ecore.xmi,
- com.google.guava;bundle-version="27.1.0",
- org.apache.log4j;bundle-version="1.2.15",
  org.eclipse.core.runtime,
  org.eclipse.epsilon.peacemaker,
  org.eclipse.emf.edit,
- org.eclipse.epsilon.emc.emf,
- org.eclipse.epsilon.eol.engine,
  org.eclipse.epsilon.profiling,
  org.eclipse.emf.diffmerge;bundle-version="0.13.0"
 Bundle-ActivationPolicy: lazy

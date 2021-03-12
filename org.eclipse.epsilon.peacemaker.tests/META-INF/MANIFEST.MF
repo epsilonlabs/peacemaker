@@ -7,10 +7,7 @@ Bundle-ClassPath: .
 Bundle-Localization: plugin
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Automatic-Module-Name: org.eclipse.epsilon.peacemaker.tests
-Export-Package: org.eclipse.epsilon.peacemaker.tests,
- comicshop,
- comicshop.impl,
- comicshop.util
+Export-Package: org.eclipse.epsilon.peacemaker.tests
 Require-Bundle: org.eclipse.epsilon.peacemaker,
  org.junit,
  org.eclipse.core.runtime,
