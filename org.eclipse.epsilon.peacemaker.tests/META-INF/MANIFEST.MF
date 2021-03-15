@@ -9,6 +9,7 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Automatic-Module-Name: org.eclipse.epsilon.peacemaker.tests
 Export-Package: org.eclipse.epsilon.peacemaker.tests
 Require-Bundle: org.eclipse.epsilon.peacemaker,
+ org.eclipse.epsilon.peacemaker.dt;bundle-version="0.0.1",
  org.junit,
  org.eclipse.core.runtime,
  org.eclipse.emf.ecore;visibility:=reexport

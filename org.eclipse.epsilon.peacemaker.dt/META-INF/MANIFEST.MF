@@ -1,0 +1,16 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Peacemaker Development Tools
+Bundle-SymbolicName: org.eclipse.epsilon.peacemaker.dt;singleton:=true
+Bundle-Version: 0.0.1.qualifier
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Automatic-Module-Name: org.eclipse.epsilon.peacemaker.dt
+Export-Package: org.eclipse.epsilon.peacemaker.dt
+Require-Bundle: org.eclipse.epsilon.peacemaker,
+ org.eclipse.emf.ecore.editor;visibility:=reexport,
+ org.eclipse.ui.forms,
+ org.eclipse.jgit,
+ org.eclipse.egit.core,
+ org.eclipse.core.runtime
+Bundle-ActivationPolicy: lazy
+Bundle-Activator: org.eclipse.epsilon.peacemaker.dt.PeacemakerPlugin

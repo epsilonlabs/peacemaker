@@ -3,18 +3,10 @@ Automatic-Module-Name: org.eclipse.epsilon.peacemaker
 Bundle-SymbolicName: org.eclipse.epsilon.peacemaker;singleton:=true
 Bundle-ManifestVersion: 2
 Bundle-Name: Peacemaker
-Bundle-Version: 1.0.0.qualifier
+Bundle-Version: 0.0.1.qualifier
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Export-Package: org.eclipse.epsilon.peacemaker,
  org.eclipse.epsilon.peacemaker.conflicts,
- org.eclipse.epsilon.peacemaker.dt,
  org.eclipse.epsilon.peacemaker.util,
  org.eclipse.epsilon.peacemaker.util.ids
-Require-Bundle: org.eclipse.emf.ecore.xmi;visibility:=reexport,
- org.eclipse.emf.ecore.editor;visibility:=reexport,
- org.eclipse.ui.forms,
- org.eclipse.jgit,
- org.eclipse.egit.core,
- org.eclipse.core.runtime
-Bundle-ActivationPolicy: lazy
-Bundle-Activator: org.eclipse.epsilon.peacemaker.dt.PeacemakerPlugin
+Require-Bundle: org.eclipse.emf.ecore.xmi;visibility:=reexport
