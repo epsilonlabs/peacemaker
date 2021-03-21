@@ -7,6 +7,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
@@ -57,6 +61,8 @@ public class PeacemakerResource extends XMIResourceImpl {
 	protected Map<String, List<EObject>> leftDuplicatedIds;
 	protected Map<String, List<EObject>> rightDuplicatedIds;
 
+	protected boolean parallelLoad = false;
+
 	public PeacemakerResource(URI uri) {
 		super(uri);
 	}
@@ -71,55 +77,67 @@ public class PeacemakerResource extends XMIResourceImpl {
 		return new PeacemakerXMISave(createXMLHelper());
 	}
 
-	protected void loadLeft(ConflictsPreprocessor preprocessor) throws IOException {
+	protected void loadLeft(ConflictsPreprocessor preprocessor, Resource.Factory resourceFactory) throws IOException {
 		leftVersionName = preprocessor.getLeftVersionName();
-		leftResource = loadVersionResource(
-				LEFT_VERSION_EXTENSION, preprocessor.getLeftVersionHelper());
+		leftResource = loadVersionResource(resourceFactory, LEFT_VERSION_EXTENSION,
+				preprocessor.getLeftVersionHelper());
+	}
+
+	/**
+	 * Direct loading of the base version (for parallel loads only)
+	 */
+	protected void loadBase(ConflictsPreprocessor preprocessor, Resource.Factory resourceFactory) throws IOException {
+		baseVersionName = preprocessor.getBaseVersionName();
+		baseResource = loadVersionResource(resourceFactory, BASE_VERSION_EXTENSION,
+				preprocessor.getBaseVersionHelper());
+	}
+
+	protected void loadRight(ConflictsPreprocessor preprocessor, Resource.Factory resourceFactory) throws IOException {
+		rightVersionName = preprocessor.getRightVersionName();
+		rightResource = loadVersionResource(resourceFactory, RIGHT_VERSION_EXTENSION,
+				preprocessor.getRightVersionHelper());
 	}
 
 	/**
 	 * Checks if there is ancestor version information, also loads it if not loaded yet
 	 */
 	public boolean hasBaseResource() {
+		if (baseResource != null) {
+			return true;
+		}
+		// if doing sequential load, demand-load the base version
 		if (baseVersionHelper != null) {
 			if (baseResource == null) {
-				// demand-load of the resource
-				doLoadBase();
+				demandLoadBase();
 			}
 			return true;
 		}
 		return false;
 	}
 
+	/**
+	 * For sequential loads, base loading is delayed until needed
+	 */
 	protected void prepareBase(ConflictsPreprocessor preprocessor) {
 		// this version is loaded on demand (i.e. if needed to identify conflicts)
 		baseVersionName = preprocessor.getBaseVersionName();
 		baseVersionHelper = preprocessor.getBaseVersionHelper();
 	}
 
-	protected void doLoadBase() {
+	protected void demandLoadBase() {
 		try {
-			baseResource = loadVersionResource(BASE_VERSION_EXTENSION, baseVersionHelper);
+			baseResource = loadVersionResource(getSpecificFactory(), BASE_VERSION_EXTENSION, baseVersionHelper);
 		}
 		catch (IOException ex) {
-			ex.printStackTrace();
+			throw new RuntimeException(ex);
 		}
 	}
 
-	protected void loadRight(ConflictsPreprocessor preprocessor) throws IOException {
-		rightVersionName = preprocessor.getRightVersionName();
-		rightResource = loadVersionResource(RIGHT_VERSION_EXTENSION,
-				preprocessor.getRightVersionHelper());
-	}
-
-	protected XMIResource loadVersionResource(String extension,
+	protected XMIResource loadVersionResource(Resource.Factory resourceFactory, String extension,
 			ConflictVersionHelper versionHelper) throws IOException {
 
-		// load it as a standard XMI Resource (using specific factories if registered)
-		Resource.Factory specificFactory = getSpecificFactory();
-
 		URI versionURI = uri.appendFileExtension(extension);
-		XMIResourceImpl specificResource = (XMIResourceImpl) specificFactory.createResource(versionURI);
+		XMIResourceImpl specificResource = (XMIResourceImpl) resourceFactory.createResource(versionURI);
 		specificResource.basicSetResourceSet(getResourceSet(), null);
 
 		// the pool allows decorating the xml handler to get element lines
@@ -155,7 +173,7 @@ public class PeacemakerResource extends XMIResourceImpl {
 		for (String id : conflictSection.getLeftIds()) {
 
 			EObject leftObj = getLeftEObject(id);
-			
+
 			if (conflictSection.rightContains(id)) {
 				EObject rightObj = getRightEObject(id);
 
@@ -345,17 +363,99 @@ public class PeacemakerResource extends XMIResourceImpl {
 		return specificFactory;
 	}
 
-	public void loadVersions(ConflictsPreprocessor preprocessor, Map<?, ?> loadOptions)
-			throws IOException {
+	public void loadVersions(ConflictsPreprocessor preprocessor, Map<?, ?> options) throws IOException {
+		if (parallelLoad) {
+			parallelLoadVersions(preprocessor, options);
+		}
+		else {
+			sequentialLoadVersions(preprocessor, options);
+		}
+	}
 
+	protected void sequentialLoadVersions(ConflictsPreprocessor preprocessor, Map<?, ?> options) throws IOException {
 		setLoadOptions(loadOptions);
 
-		loadLeft(preprocessor);
-		loadRight(preprocessor);
+		Resource.Factory resourceFactory = getSpecificFactory();
+
+		loadLeft(preprocessor, resourceFactory);
+		loadRight(preprocessor, resourceFactory);
 
 		if (preprocessor.hasBaseVersion()) {
 			prepareBase(preprocessor);
 		}
+
+		identifyConflicts(preprocessor);
+	}
+
+	protected void parallelLoadVersions(ConflictsPreprocessor preprocessor, Map<?, ?> loadOptions) {
+
+		setLoadOptions(loadOptions);
+
+		Resource.Factory resourceFactory = getSpecificFactory();
+
+		// parallel load of the three model versions
+		ExecutorService versionLoadExecutor;
+		if (preprocessor.hasBaseVersion()) {
+			versionLoadExecutor = Executors.newFixedThreadPool(3);
+		}
+		else {
+			versionLoadExecutor = Executors.newFixedThreadPool(2);
+		}
+		
+		List<Future<?>> loadingTasks = new ArrayList<>();
+
+		loadingTasks.add(versionLoadExecutor.submit(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					loadLeft(preprocessor, resourceFactory);
+				}
+				catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+			}
+		}));
+		
+		loadingTasks.add(versionLoadExecutor.submit(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					loadRight(preprocessor, resourceFactory);
+				}
+				catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+			}
+		}));
+		
+		if (preprocessor.hasBaseVersion()) {
+			loadingTasks.add(versionLoadExecutor.submit(new Runnable() {
+				@Override
+				public void run() {
+					try {
+						loadBase(preprocessor, resourceFactory);
+					}
+					catch (IOException e) {
+						throw new RuntimeException(e);
+					}
+				}
+			}));
+		}
+
+		try {
+			for (Future<?> task : loadingTasks) {
+				task.get();
+			}
+		}
+		catch (InterruptedException e1) {
+			e1.printStackTrace(); // TODO: determine a better way to handle this
+		}
+		catch (ExecutionException executionEx) {
+			if (executionEx.getCause() instanceof RuntimeException) {
+				throw (RuntimeException) executionEx.getCause();
+			}
+		}
+		versionLoadExecutor.shutdown(); // TODO: use shutdownNow?
 
 		identifyConflicts(preprocessor);
 	}
@@ -395,5 +495,9 @@ public class PeacemakerResource extends XMIResourceImpl {
 
 	public void setDuplicatedIds(Map<String, List<EObject>> duplicatedIds) {
 		setLeftDuplicatedIds(duplicatedIds);
+	}
+
+	public void setParallelLoad(boolean parallelLoad) {
+		this.parallelLoad = parallelLoad;
 	}
 }

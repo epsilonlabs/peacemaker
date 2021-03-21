@@ -9,15 +9,15 @@ public class ConflictSection {
 	protected Set<String> rightIds = new HashSet<>();
 	protected Set<String> baseIds = new HashSet<>();
 
-	public void addLeft(String objId) {
+	public synchronized void addLeft(String objId) {
 		leftIds.add(objId);
 	}
 
-	public void addBase(String objId) {
+	public synchronized void addBase(String objId) {
 		baseIds.add(objId);
 	}
 
-	public void addRight(String objId) {
+	public synchronized void addRight(String objId) {
 		rightIds.add(objId);
 	}
 
