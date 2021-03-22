@@ -180,7 +180,7 @@ public class ConflictsPreprocessor {
 		}
 
 		public InputStream getVersionContents() {
-			return new ByteArrayInputStream(originalLinesIndex.parallelStream()
+			return new ByteArrayInputStream(originalLinesIndex.stream()
 					.map(lineIndex -> lines[lineIndex])
 					.collect(Collectors.joining(System.lineSeparator()))
 					.getBytes());
