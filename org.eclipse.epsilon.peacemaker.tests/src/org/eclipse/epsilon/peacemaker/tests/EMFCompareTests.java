@@ -23,7 +23,7 @@ import org.eclipse.epsilon.peacemaker.PeacemakerResourceFactory;
 import org.eclipse.epsilon.peacemaker.conflicts.ContainingFeatureUpdate;
 import org.eclipse.epsilon.peacemaker.conflicts.DoubleUpdate;
 import org.eclipse.epsilon.peacemaker.conflicts.KeepDelete;
-import org.eclipse.epsilon.peacemaker.conflicts.ReferenceDoubleUpdate;
+import org.eclipse.epsilon.peacemaker.conflicts.SingleContainmentReferenceUpdate;
 import org.eclipse.epsilon.peacemaker.conflicts.UnconflictedObject;
 import org.eclipse.epsilon.peacemaker.conflicts.UpdateDelete;
 import org.eclipse.epsilon.peacemaker.util.ids.DuplicatedIdsException;
@@ -92,7 +92,8 @@ public class EMFCompareTests {
 		testCase("b3_attribute", conflictTypes);
 		testCase("b3_reference", conflictTypes);
 
-		testCase("b3_containment_reference", new Class<?>[] { ReferenceDoubleUpdate.class });
+		testCase("b3_containment_reference", 
+				new Class<?>[] { SingleContainmentReferenceUpdate.class });
 
 		testCase("b4_attribute", conflictTypes);
 		testCase("b4_reference", conflictTypes);

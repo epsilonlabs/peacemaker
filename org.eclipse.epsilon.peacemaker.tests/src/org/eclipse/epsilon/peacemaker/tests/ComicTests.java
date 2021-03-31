@@ -24,7 +24,7 @@ import org.eclipse.epsilon.peacemaker.PeacemakerResourceFactory;
 import org.eclipse.epsilon.peacemaker.conflicts.Conflict;
 import org.eclipse.epsilon.peacemaker.conflicts.Conflict.ResolveAction;
 import org.eclipse.epsilon.peacemaker.conflicts.DoubleUpdate;
-import org.eclipse.epsilon.peacemaker.conflicts.ReferenceDoubleUpdate;
+import org.eclipse.epsilon.peacemaker.conflicts.SingleContainmentReferenceUpdate;
 import org.eclipse.epsilon.peacemaker.conflicts.UpdateDelete;
 import org.eclipse.epsilon.peacemaker.dt.ConflictResolveCommand;
 import org.eclipse.epsilon.peacemaker.util.FormatModels;
@@ -77,7 +77,7 @@ public class ComicTests {
 		PeacemakerResource resource = loadConflictResource(String.format(CONFLICTS_LOCATION, inputCase));
 
 		assertTrue(resource.getConflicts().size() == 2);
-		assertTrue(resource.getConflicts().get(0) instanceof ReferenceDoubleUpdate);
+		assertTrue(resource.getConflicts().get(0) instanceof SingleContainmentReferenceUpdate);
 
 		System.out.println("\nKeep left in both (FULL RESOLUTION)");
 		resource.getConflicts().get(0).resolve(ResolveAction.KEEP_LEFT);

@@ -13,7 +13,7 @@ import org.eclipse.epsilon.peacemaker.util.ids.IdUtils;
  * 
  * @author alfonsodelavega
  */
-public class ReferenceDoubleUpdate extends DoubleUpdate implements XMIResetIdsHandler {
+public class SingleContainmentReferenceUpdate extends DoubleUpdate implements XMIResetIdsHandler {
 
 	protected EReference reference;
 
@@ -32,7 +32,7 @@ public class ReferenceDoubleUpdate extends DoubleUpdate implements XMIResetIdsHa
 	 * @param parentId  The parent that contains the reference feature
 	 * @param reference
 	 */
-	public ReferenceDoubleUpdate(String parentId, PeacemakerResource pmResource,
+	public SingleContainmentReferenceUpdate(String parentId, PeacemakerResource pmResource,
 			EReference reference) {
 		
 		super(parentId, pmResource);

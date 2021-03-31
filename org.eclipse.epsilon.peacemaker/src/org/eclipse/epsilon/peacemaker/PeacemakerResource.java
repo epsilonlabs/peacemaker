@@ -28,7 +28,7 @@ import org.eclipse.epsilon.peacemaker.conflicts.ConflictSection;
 import org.eclipse.epsilon.peacemaker.conflicts.ContainingFeatureUpdate;
 import org.eclipse.epsilon.peacemaker.conflicts.DoubleUpdate;
 import org.eclipse.epsilon.peacemaker.conflicts.KeepDelete;
-import org.eclipse.epsilon.peacemaker.conflicts.ReferenceDoubleUpdate;
+import org.eclipse.epsilon.peacemaker.conflicts.SingleContainmentReferenceUpdate;
 import org.eclipse.epsilon.peacemaker.conflicts.UnconflictedObject;
 import org.eclipse.epsilon.peacemaker.conflicts.UpdateDelete;
 import org.eclipse.epsilon.peacemaker.util.TagBasedEqualityHelper;
@@ -265,7 +265,7 @@ public class PeacemakerResource extends XMIResourceImpl {
 
 			EObject rightObj = (EObject) rightParent.eGet(ref);
 			if (rightObj != null && conflictSection.rightContains(getRightId(rightObj))) {
-				addConflict(new ReferenceDoubleUpdate(parentId, this, ref));
+				addConflict(new SingleContainmentReferenceUpdate(parentId, this, ref));
 				conflictSection.removeRight(getRightId(rightObj));
 				return true;
 			}
