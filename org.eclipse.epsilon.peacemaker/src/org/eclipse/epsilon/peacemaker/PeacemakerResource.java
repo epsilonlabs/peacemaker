@@ -68,6 +68,8 @@ public class PeacemakerResource extends XMIResourceImpl {
 
 	protected boolean parallelLoad = false;
 
+	protected TagBasedEqualityHelper equalityHelper = new TagBasedEqualityHelper();
+
 	public PeacemakerResource(URI uri) {
 		super(uri);
 	}
@@ -212,7 +214,6 @@ public class PeacemakerResource extends XMIResourceImpl {
 	}
 
 	protected void identifyConflicts(ConflictSection conflictSection) {
-		TagBasedEqualityHelper equalityHelper = new TagBasedEqualityHelper();
 		for (String id : conflictSection.getLeftIds()) {
 
 			EObject leftObj = getLeftEObject(id);
@@ -222,32 +223,18 @@ public class PeacemakerResource extends XMIResourceImpl {
 
 				Conflict conflict = new DoubleUpdate(id, this);
 
-				if (leftObj.eContents().isEmpty() != rightObj.eContents().isEmpty()) {
-					// a false positive might be happening because of the end of
-					// the starting tag (i.e. ">" vs "/>")
+				EStructuralFeature leftFeature = leftObj.eContainingFeature();
+				EStructuralFeature rightFeature = rightObj.eContainingFeature();
 
-					// TODO: determine if a line comparison here would be worth
-					//   to save some comparison time. If not, simplify code
-
+				if (leftFeature != null && rightFeature != null && leftFeature != rightFeature) {
+					conflict = new ContainingFeatureUpdate(id, this,
+							leftObj.eContainingFeature(), rightObj.eContainingFeature());
+				}
+				else {
+					// check attributes and non-containment references
 					if (equalityHelper.equals(leftObj, rightObj)) {
 						// features are equal, so false positive
 						conflict = null;
-					}
-				}
-				else {
-					EStructuralFeature leftFeature = leftObj.eContainingFeature();
-					EStructuralFeature rightFeature = rightObj.eContainingFeature();
-
-					if (leftFeature != null && rightFeature != null && leftFeature != rightFeature) {
-						conflict = new ContainingFeatureUpdate(id, this,
-								leftObj.eContainingFeature(), rightObj.eContainingFeature());
-					}
-					else {
-						// check attributes and non-containment references
-						if (equalityHelper.equals(leftObj, rightObj)) {
-							// features are equal, so false positive
-							conflict = null;
-						}
 					}
 				}
 
@@ -261,7 +248,7 @@ public class PeacemakerResource extends XMIResourceImpl {
 				// that contains objects with distinct ids in left and right
 			}
 			else if (hasBaseResource() && conflictSection.baseContains(id)) {
-				Conflict conflict = getDeleteConflict(id, leftObj, equalityHelper,
+				Conflict conflict = getDeleteConflict(id, leftObj,
 						leftResource, leftDuplicatedIds,
 						rightResource, rightDuplicatedIds);
 
@@ -277,7 +264,7 @@ public class PeacemakerResource extends XMIResourceImpl {
 		// delete conflicts can appear the other way (delete in left, update in right)
 		for (String id : conflictSection.getRightIds()) {
 			if (hasBaseResource() && conflictSection.baseContains(id)) {
-				Conflict conflict = getDeleteConflict(id, getRightEObject(id), equalityHelper,
+				Conflict conflict = getDeleteConflict(id, getRightEObject(id),
 						rightResource, rightDuplicatedIds,
 						leftResource, leftDuplicatedIds);
 
@@ -292,20 +279,18 @@ public class PeacemakerResource extends XMIResourceImpl {
 	}
 
 	/**
-	 * Gets the delete conflict that is taking place. Takes into account the
-	 * direction of the parameters to work in both directions
+	 * Gets the delete conflict that is taking place. Allows to work in both directions
 	 * (e.g. UpdateDelete or DeleteUpdate conflicts)
 	 * 
-	 * @param id                         Identifier of the element in conflict
-	 * @param object                     Object present in the non-delete version
-	 * @param equalityHelper             Helper to compare objects
+	 * @param id                         Conflicting identifier
+	 * @param object                     Object in the non-delete version
 	 * @param resource                   Resource of the non-delete version
-	 * @param duplicatedIds              Set of duplicated ids of teh non-delete version
+	 * @param duplicatedIds              Duplicated ids in the non-delete version
 	 * @param deleteVersionResource      Resource of the delete version
-	 * @param deleteVersionDuplicatedIds Set of duplicated ids of the delete version
+	 * @param deleteVersionDuplicatedIds Duplicated ids in the delete version
 	 * @return
 	 */
-	protected Conflict getDeleteConflict(String id, EObject object, TagBasedEqualityHelper equalityHelper,
+	protected Conflict getDeleteConflict(String id, EObject object,
 			XMIResource resource, Map<String, List<EObject>> duplicatedIds,
 			XMIResource deleteVersionResource, Map<String, List<EObject>> deleteVersionDuplicatedIds) {
 
