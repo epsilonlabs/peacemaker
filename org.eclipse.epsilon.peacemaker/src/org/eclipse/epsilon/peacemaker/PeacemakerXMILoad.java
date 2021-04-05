@@ -96,7 +96,7 @@ public class PeacemakerXMILoad extends XMILoadImpl {
 
 		if (!preprocessor.hasConflicts()) {
 			// We need to use the helper contents because the inputStream is used and non-resetable
-			pmResource.loadUnconflicted(preprocessor.getLeftVersionHelper().getVersionContents(), options);
+			pmResource.loadSingle(preprocessor, options);
 		}
 		else {
 			load(pmResource, preprocessor, options);

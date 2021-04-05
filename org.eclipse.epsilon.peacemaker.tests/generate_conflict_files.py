@@ -33,7 +33,7 @@ tests = [["a1", ["conflict_a1_attribute", "conflict_a1_reference"]],
 
          ["f", ["conflict_f"]],
 
-         ["g", ["conflict_g"]],
+         ["g", ["conflict_g", "conflict_g_interleaveddummy"]],
 
          ["h1", ["conflict_h1"]],
          ["h2", ["conflict_h2"]],

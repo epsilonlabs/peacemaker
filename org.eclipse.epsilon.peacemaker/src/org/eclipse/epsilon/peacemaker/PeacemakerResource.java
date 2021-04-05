@@ -1,12 +1,13 @@
 package org.eclipse.epsilon.peacemaker;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -17,6 +18,7 @@ import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EReference;
 import org.eclipse.emf.ecore.EStructuralFeature;
 import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.emf.ecore.xmi.XMIResource;
 import org.eclipse.emf.ecore.xmi.XMLLoad;
 import org.eclipse.emf.ecore.xmi.XMLResource;
@@ -25,8 +27,10 @@ import org.eclipse.emf.ecore.xmi.impl.XMIResourceImpl;
 import org.eclipse.epsilon.peacemaker.ConflictsPreprocessor.ConflictVersionHelper;
 import org.eclipse.epsilon.peacemaker.conflicts.Conflict;
 import org.eclipse.epsilon.peacemaker.conflicts.ConflictSection;
+import org.eclipse.epsilon.peacemaker.conflicts.ContainerUpdate;
 import org.eclipse.epsilon.peacemaker.conflicts.ContainingFeatureUpdate;
 import org.eclipse.epsilon.peacemaker.conflicts.DoubleUpdate;
+import org.eclipse.epsilon.peacemaker.conflicts.DuplicatedId;
 import org.eclipse.epsilon.peacemaker.conflicts.KeepDelete;
 import org.eclipse.epsilon.peacemaker.conflicts.SingleContainmentReferenceUpdate;
 import org.eclipse.epsilon.peacemaker.conflicts.UnconflictedObject;
@@ -58,8 +62,9 @@ public class PeacemakerResource extends XMIResourceImpl {
 	protected List<Conflict> conflicts = new ArrayList<>();
 
 	protected boolean failOnDuplicatedIds = false;
-	protected Map<String, List<EObject>> leftDuplicatedIds;
-	protected Map<String, List<EObject>> rightDuplicatedIds;
+	protected Map<String, List<EObject>> leftDuplicatedIds = new HashMap<>();
+	protected Map<String, List<EObject>> baseDuplicatedIds = new HashMap<>();
+	protected Map<String, List<EObject>> rightDuplicatedIds = new HashMap<>();
 
 	protected boolean parallelLoad = false;
 
@@ -148,7 +153,7 @@ public class PeacemakerResource extends XMIResourceImpl {
 		return specificResource;
 	}
 
-	public void loadUnconflicted(InputStream contents, Map<?, ?> options) throws IOException {
+	public void loadSingle(ConflictsPreprocessor preprocessor, Map<?, ?> options) throws IOException {
 		setLoadOptions(loadOptions);
 
 		// load it as a standard XMI Resource (using specific factories if registered)
@@ -159,12 +164,50 @@ public class PeacemakerResource extends XMIResourceImpl {
 
 		Map<Object, Object> loadOptions = new HashMap<Object, Object>(this.loadOptions);
 		loadOptions.put(XMLResource.OPTION_USE_PARSER_POOL, new PeacemakerXMLParserPoolImpl(this, null));
-		unconflictedResource.load(contents, loadOptions);
+		unconflictedResource.load(preprocessor.getLeftVersionHelper().getVersionContents(), loadOptions);
+
+		// no conflict sections does not always imply that there are no conflicts
+		identifyConflicts(preprocessor);
 	}
 
 	protected void identifyConflicts(ConflictsPreprocessor preprocessor) {
 		for (ConflictSection cs : preprocessor.getConflictSections()) {
 			identifyConflicts(cs);
+		}
+		// some conflicts can happen outside conflict sections
+		identifyDuplicatedIdConflicts();
+	}
+
+	protected void identifyDuplicatedIdConflicts() {
+		if (isSingleLoad()) {
+			// we can only flag it as duplicated element
+			//   could be a container change, or new additions
+			if (hasDuplicatedIds()) {
+				for (Entry<String, List<EObject>> entry : getDuplicatedIds().entrySet()) {
+					conflicts.add(new DuplicatedId(entry.getKey(), this));
+				}
+			}
+		}
+		else {
+			// if the base version contains the resource, treat the conflict as
+			//   a container update (it's the same conflict, but gives more precise information)
+			for (Entry<String, List<EObject>> entry : leftDuplicatedIds.entrySet()) {
+				if (hasBaseResource() && IdUtils.containsObjectWithId(baseResource, entry.getKey())) {
+					conflicts.add(new ContainerUpdate(entry.getKey(), this));
+				}
+				else {
+					conflicts.add(new DuplicatedId(entry.getKey(), this));
+				}
+
+			}
+			for (Entry<String, List<EObject>> entry : rightDuplicatedIds.entrySet()) {
+				if (hasBaseResource() && IdUtils.containsObjectWithId(baseResource, entry.getKey())) {
+					conflicts.add(new ContainerUpdate(entry.getKey(), this));
+				}
+				else {
+					conflicts.add(new DuplicatedId(entry.getKey(), this));
+				}
+			}
 		}
 	}
 
@@ -213,48 +256,144 @@ public class PeacemakerResource extends XMIResourceImpl {
 				}
 				conflictSection.removeRight(id);
 			}
-			else if (checkContainmentReference(id, leftObj, conflictSection)) {
+			else if (checkSingleContainmentReference(id, leftObj, conflictSection)) {
 				// special double update case: single containment reference
 				// that contains objects with distinct ids in left and right
 			}
 			else if (hasBaseResource() && conflictSection.baseContains(id)) {
-				// object kept(no changes)/updated in left version, and deleted in the right one
-				if (equalityHelper.equals(leftObj, getBaseEObject(id))) {
-					addConflict(new KeepDelete(id, this, true));
-				}
-				else {
-					addConflict(new UpdateDelete(id, this, true));
+				Conflict conflict = getDeleteConflict(id, leftObj, equalityHelper,
+						leftResource, leftDuplicatedIds,
+						rightResource, rightDuplicatedIds);
+
+				if (conflict != null) {
+					addConflict(conflict);
 				}
 			}
 			else {
-				// not identified as part of a conflict: "free" element to keep or remove
 				addConflict(new UnconflictedObject(id, this, true));
 			}
 		}
 
-		// UpdateDelete conflicts can appear the other way (update in right version, delete in left)
-		// loop over right ids to detect those cases
+		// delete conflicts can appear the other way (delete in left, update in right)
 		for (String id : conflictSection.getRightIds()) {
 			if (hasBaseResource() && conflictSection.baseContains(id)) {
-				// object kept(no changes)/updated in right version, and deleted in the left one
-				if (equalityHelper.equals(getRightEObject(id), getBaseEObject(id))) {
-					addConflict(new KeepDelete(id, this, false));
-				}
-				else {
-					addConflict(new UpdateDelete(id, this, false));
+				Conflict conflict = getDeleteConflict(id, getRightEObject(id), equalityHelper,
+						rightResource, rightDuplicatedIds,
+						leftResource, leftDuplicatedIds);
+
+				if (conflict != null) {
+					addConflict(conflict);
 				}
 			}
 			else {
-				// not identified as part of a conflict: "free" element to keep or remove
 				addConflict(new UnconflictedObject(id, this, false));
 			}
 		}
 	}
 
-	protected boolean checkContainmentReference(String leftId, EObject leftObj, ConflictSection conflictSection) {
+	/**
+	 * Gets the delete conflict that is taking place. Takes into account the
+	 * direction of the parameters to work in both directions
+	 * (e.g. UpdateDelete or DeleteUpdate conflicts)
+	 * 
+	 * @param id                         Identifier of the element in conflict
+	 * @param object                     Object present in the non-delete version
+	 * @param equalityHelper             Helper to compare objects
+	 * @param resource                   Resource of the non-delete version
+	 * @param duplicatedIds              Set of duplicated ids of teh non-delete version
+	 * @param deleteVersionResource      Resource of the delete version
+	 * @param deleteVersionDuplicatedIds Set of duplicated ids of the delete version
+	 * @return
+	 */
+	protected Conflict getDeleteConflict(String id, EObject object, TagBasedEqualityHelper equalityHelper,
+			XMIResource resource, Map<String, List<EObject>> duplicatedIds,
+			XMIResource deleteVersionResource, Map<String, List<EObject>> deleteVersionDuplicatedIds) {
+
+		// in delete conflicts, versions play sides that can be swapped
+		//   (e.g. there is an UpdateDelete conflict, but also a DeleteUpdate one)
+
+		Conflict conflict = null;
+
+		if (duplicatedIds.containsKey(id)) {
+			// this is not a delete conflict, is a duplicated id one (identified later)
+
+			// here we know:
+			//   1. the id is in our conflict section segment (left or right)
+			//   2. that id is not appearing in the other segment of the cs
+			//   3. that id is also duplicated in our version resource
+
+			// because of 2, I do not think it is possible to have the
+			//   id duplicated in the other version
+			if (deleteVersionDuplicatedIds.containsKey(id)) {
+				throw new RuntimeException("Duplicated id in the deleted side of an update delete");
+			}
+
+			EObject deleteVersionObject = deleteVersionResource.getEObject(id);
+			if (deleteVersionObject != null) {
+				// root objects not considered, assumed tree structure 
+				EObject deleteVersionObjectContainer = deleteVersionObject.eContainer();
+				if (deleteVersionObjectContainer != null) {
+
+					String deleteVersionObjectContainerId =
+							IdUtils.getAvailableId(deleteVersionResource, deleteVersionObjectContainer);
+
+					// delete from our version the duplicated element
+					//   whose container matches the container from the delete version
+					deleteMatchingContainers(deleteVersionObjectContainerId,
+							resource, duplicatedIds.get(id));
+
+					// and from the base resource too, if duplicated
+					if (baseDuplicatedIds.containsKey(id)) {
+						deleteMatchingContainers(deleteVersionObjectContainerId,
+								baseResource, baseDuplicatedIds.get(id));
+					}
+				}
+			}
+		}
+		else {
+			boolean deleteInRightVersion = deleteVersionResource == rightResource;
+			// if object kept unmodified
+			if (equalityHelper.equals(object, getBaseEObject(id))) {
+				conflict = new KeepDelete(id, this, deleteInRightVersion);
+			}
+			else {
+				conflict = new UpdateDelete(id, this, deleteInRightVersion);
+			}
+		}
+		
+		return conflict;
+	}
+
+	protected void deleteMatchingContainers(String containerId, XMIResource resource,
+			List<EObject> dupObjects) {
+
+		Iterator<EObject> dupObjectsIterator = dupObjects.iterator();
+		while (dupObjectsIterator.hasNext()) {
+			EObject dupObject = dupObjectsIterator.next();
+			EObject dupObjectContainer = dupObject.eContainer();
+			if (dupObjectContainer != null && containerId.equals(
+					IdUtils.getAvailableId(resource, dupObjectContainer))) {
+
+				// TODO: check dangling references
+				dupObjectsIterator.remove();
+				EcoreUtil.remove(dupObject);
+			}
+		}
+		// it could happen that we have removed the element pointed by the idToEObject map
+		// reset it to one of the remaining duplicated objects
+		if (!dupObjects.isEmpty()) {
+			EObject dupObject = dupObjects.get(0);
+			String dupObjectId = resource.getID(dupObject);
+			if (dupObjectId != null) {
+				resource.setID(dupObject, dupObjectId);
+			}
+		}
+	}
+
+	protected boolean checkSingleContainmentReference(String leftId, EObject leftObj, ConflictSection conflictSection) {
 		EStructuralFeature feature = leftObj.eContainingFeature();
 
-		if (feature != null && isContainmentNotManyReference(feature)) {
+		if (feature != null && isSignleContainmentReference(feature)) {
 			EReference ref = (EReference) feature;
 
 			String parentId = getLeftId(leftObj.eContainer());
@@ -273,7 +412,7 @@ public class PeacemakerResource extends XMIResourceImpl {
 		return false;
 	}
 
-	protected boolean isContainmentNotManyReference(EStructuralFeature feature) {
+	protected boolean isSignleContainmentReference(EStructuralFeature feature) {
 		return feature instanceof EReference &&
 				((EReference) feature).isContainment() &&
 				!((EReference) feature).isMany();
@@ -323,7 +462,11 @@ public class PeacemakerResource extends XMIResourceImpl {
 	}
 
 	public boolean hasConflicts() {
-		return leftResource != null && rightResource != null && !conflicts.isEmpty();
+		return !conflicts.isEmpty();
+	}
+
+	public boolean isSingleLoad() {
+		return unconflictedResource != null;
 	}
 
 	public void setUnconflictedResource(XMIResource resource) {
@@ -405,6 +548,7 @@ public class PeacemakerResource extends XMIResourceImpl {
 		List<Future<?>> loadingTasks = new ArrayList<>();
 
 		loadingTasks.add(versionLoadExecutor.submit(new Runnable() {
+
 			@Override
 			public void run() {
 				try {
@@ -415,8 +559,9 @@ public class PeacemakerResource extends XMIResourceImpl {
 				}
 			}
 		}));
-		
+
 		loadingTasks.add(versionLoadExecutor.submit(new Runnable() {
+
 			@Override
 			public void run() {
 				try {
@@ -427,9 +572,10 @@ public class PeacemakerResource extends XMIResourceImpl {
 				}
 			}
 		}));
-		
+
 		if (preprocessor.hasBaseVersion()) {
 			loadingTasks.add(versionLoadExecutor.submit(new Runnable() {
+
 				@Override
 				public void run() {
 					try {
@@ -469,7 +615,15 @@ public class PeacemakerResource extends XMIResourceImpl {
 	}
 
 	public boolean hasDuplicatedIds() {
-		return leftDuplicatedIds != null || rightDuplicatedIds != null;
+		return hasLeftDuplicatedIds() || hasRightDuplicatedIds();
+	}
+
+	protected boolean hasLeftDuplicatedIds() {
+		return !leftDuplicatedIds.isEmpty();
+	}
+
+	protected boolean hasRightDuplicatedIds() {
+		return !rightDuplicatedIds.isEmpty();
 	}
 
 	public void setLeftDuplicatedIds(Map<String, List<EObject>> duplicatedIds) {
@@ -483,6 +637,10 @@ public class PeacemakerResource extends XMIResourceImpl {
 
 	public Map<String, List<EObject>> getLeftDuplicatedIds() {
 		return leftDuplicatedIds;
+	}
+
+	public Map<String, List<EObject>> getBaseDuplicatedIds() {
+		return baseDuplicatedIds;
 	}
 
 	public Map<String, List<EObject>> getRightDuplicatedIds() {

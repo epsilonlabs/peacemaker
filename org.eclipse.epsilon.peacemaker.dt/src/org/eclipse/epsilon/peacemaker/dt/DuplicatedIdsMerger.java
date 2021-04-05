@@ -19,10 +19,6 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.content.IContentDescriber;
 import org.eclipse.emf.common.util.URI;
-import org.eclipse.emf.ecore.resource.Resource;
-import org.eclipse.emf.ecore.resource.ResourceSet;
-import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
-import org.eclipse.emf.ecore.xmi.XMIResource;
 import org.eclipse.epsilon.peacemaker.util.ids.IdUtils;
 import org.eclipse.jgit.attributes.Attributes;
 import org.eclipse.jgit.dircache.DirCacheBuildIterator;
@@ -108,11 +104,7 @@ public class DuplicatedIdsMerger extends RecursiveMerger {
 
 		// if the check detects duplicates, store the information required
 		//   for marking the model as in conflict later (after super.mergeTrees())
-		ResourceSet resourceSet = new ResourceSetImpl();
-		Resource resource = resourceSet.createResource(URI.createFileURI(fullPath));
-		if (resource instanceof XMIResource &&
-				IdUtils.hasDuplicatedIds((XMIResource) resource, fileContents)) {
-
+		if (IdUtils.hasDuplicatedIds(URI.createFileURI(fullPath), fileContents)) {
 			String modelPath = tw.getPathString();
 			pathsToWrongModels.add(modelPath);
 			baseMap.put(modelPath, base);

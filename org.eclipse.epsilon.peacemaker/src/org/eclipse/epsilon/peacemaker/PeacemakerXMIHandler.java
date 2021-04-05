@@ -12,7 +12,6 @@ import org.eclipse.emf.ecore.xmi.XMLHelper;
 import org.eclipse.emf.ecore.xmi.XMLResource;
 import org.eclipse.emf.ecore.xmi.impl.SAXXMIHandler;
 import org.eclipse.epsilon.peacemaker.ConflictsPreprocessor.ConflictVersionHelper;
-import org.eclipse.epsilon.peacemaker.ConflictsPreprocessor.LineType;
 import org.eclipse.epsilon.peacemaker.util.ids.DuplicatedIdsException;
 import org.eclipse.epsilon.peacemaker.util.ids.IdUtils;
 import org.xml.sax.Attributes;
@@ -29,8 +28,7 @@ public class PeacemakerXMIHandler extends SAXXMIHandler {
 
 	protected Set<String> ids = new HashSet<>();
 	protected Map<String, List<EObject>> idObjects = new HashMap<>();
-	protected Map<String, List<EObject>> duplicatedIds = new HashMap<>();
-	protected boolean failOnDuplicatedIds;
+	protected Map<String, List<EObject>> duplicatedIds;
 
 	public PeacemakerXMIHandler(XMLResource xmlResource, XMLHelper helper, Map<?, ?> options,
 			PeacemakerResource pmResource, ConflictVersionHelper versionHelper) {
@@ -41,25 +39,25 @@ public class PeacemakerXMIHandler extends SAXXMIHandler {
 
 		this.pmResource = pmResource;
 
-		failOnDuplicatedIds = pmResource.failOnDuplicateIds();
 		if (versionHelper != null) {
 			this.versionHelper = versionHelper;
 			checkConflicts = true;
+
+			switch (versionHelper.getVersionType()) {
+			case LEFT:
+				duplicatedIds = pmResource.getLeftDuplicatedIds();
+				break;
+			case BASE:
+				duplicatedIds = pmResource.getBaseDuplicatedIds();
+				break;
+			case RIGHT:
+				duplicatedIds = pmResource.getRightDuplicatedIds();
+			default:
+			}
 		}
-	}
-
-	/**
-	 * Constructor to find duplicated ids in non-peacemaker resources
-	 */
-	public PeacemakerXMIHandler(XMLResource xmlResource, XMLHelper helper, Map<?, ?> options,
-			Map<String, List<EObject>> duplicatedIds, boolean failOnDuplicatedIds) {
-
-		super(xmlResource, helper, options);
-
-		currentLine = 1;
-
-		this.failOnDuplicatedIds = failOnDuplicatedIds;
-		this.duplicatedIds = duplicatedIds;
+		else {
+			duplicatedIds = pmResource.getDuplicatedIds();
+		}
 	}
 
 	@Override
@@ -82,7 +80,7 @@ public class PeacemakerXMIHandler extends SAXXMIHandler {
 				if (ids.contains(objId)) {
 					duplicatedIds.put(objId, idObjects.get(objId));
 					idObjects.get(objId).add(peekObject);
-					if (failOnDuplicatedIds) {
+					if (pmResource.failOnDuplicateIds()) {
 						throw new DuplicatedIdsException(objId, start, end);
 					}
 				}
@@ -108,24 +106,5 @@ public class PeacemakerXMIHandler extends SAXXMIHandler {
 		super.endElement(uri, localName, name);
 
 		currentLine = locator.getLineNumber() + 1;
-	}
-
-	@Override
-	public void endDocument() {
-		super.endDocument();
-
-		if (pmResource != null && !duplicatedIds.isEmpty()) {
-			if (versionHelper != null) {
-				if (versionHelper.getVersionType() == LineType.LEFT) {
-					pmResource.setLeftDuplicatedIds(duplicatedIds);
-				}
-				else {
-					pmResource.setRightDuplicatedIds(duplicatedIds);
-				}
-			}
-			else {
-				pmResource.setDuplicatedIds(duplicatedIds);
-			}
-		}
 	}
 }

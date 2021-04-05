@@ -2,15 +2,17 @@ package org.eclipse.epsilon.peacemaker.util.ids;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
+import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.resource.ResourceSet;
+import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.emf.ecore.xmi.XMIResource;
 import org.eclipse.emf.ecore.xmi.XMLResource;
+import org.eclipse.epsilon.peacemaker.PeacemakerResource;
+import org.eclipse.epsilon.peacemaker.PeacemakerResourceFactory;
 
 public class IdUtils {
 
@@ -23,6 +25,10 @@ public class IdUtils {
 		return resource.getID(obj) != null;
 	}
 
+	public static boolean containsObjectWithId(XMIResource resource, String id) {
+		return resource.getEObject(id) != null;
+	}
+
 	/**
 	 * Loads a resource and checks for duplicated ids
 	 * 
@@ -30,8 +36,8 @@ public class IdUtils {
 	 * @param contents Resource contents to perform the load
 	 * @return True if the resource has at least one duplicated id
 	 */
-	public static boolean hasDuplicatedIds(XMIResource resource, InputStream contents) {
-		return !findDuplicatedIds(resource, contents, true).isEmpty();
+	public static boolean hasDuplicatedIds(URI resourceURI, InputStream contents) {
+		return !findDuplicatedIds(resourceURI, contents, true).isEmpty();
 	}
 
 	/**
@@ -41,8 +47,8 @@ public class IdUtils {
 	 * @param contents  Resource contents to perform the load
 	 * @param findFirst If true, loading stops after finding a duplicated id
 	 */
-	public static Set<String> findDuplicatedIds(XMIResource resource, InputStream contents) {
-		return findDuplicatedIds(resource, contents, false);
+	public static Set<String> findDuplicatedIds(URI resourceURI, InputStream contents) {
+		return findDuplicatedIds(resourceURI, contents, false);
 	}
 
 	/**
@@ -50,29 +56,28 @@ public class IdUtils {
 	 * 
 	 * @param resource      The resource to load
 	 * @param contents      Resource contents to perform the load
-	 * @param stopWithFirst If true, loading stops after finding a duplicated id
+	 * @param failOnDuplicatedids If true, loading stops after finding a duplicated id
 	 */
-	private static Set<String> findDuplicatedIds(XMIResource resource,
-			InputStream contents, boolean stopWithFirst) {
+	private static Set<String> findDuplicatedIds(URI resourceURI,
+			InputStream contents, boolean failOnDuplicatedids) {
 
-		Map<String, List<EObject>> duplicatedIds = new HashMap<>();
-
-		// the pool allows decorating the xml handler to get element lines
-		Map<Object, Object> loadOptions = new HashMap<Object, Object>();
-		loadOptions.put(XMLResource.OPTION_DEFER_IDREF_RESOLUTION, Boolean.TRUE);
-		loadOptions.put(XMLResource.OPTION_USE_PARSER_POOL,
-				new FindDuplicatedIdsParserPoolImpl(duplicatedIds, stopWithFirst));
+		ResourceSet resourceSet = new ResourceSetImpl();
+		resourceSet.getResourceFactoryRegistry().getExtensionToFactoryMap().put(
+				"*", new PeacemakerResourceFactory());
+		PeacemakerResource pmResource =
+				(PeacemakerResource) resourceSet.createResource(resourceURI);
+		pmResource.setFailOnDuplicatedIds(failOnDuplicatedids);
 
 		try {
-			resource.load(contents, loadOptions);
+			pmResource.load(contents, null);
+		}
+		catch (DuplicatedIdsException ex) {
 		}
 		catch (IOException e) {
-			e.printStackTrace();
-		}
-		catch (DuplicatedIdsException dupIds) {
-			// launched when stopWithFirst == true and a dup is found, nothing to do
+			throw new RuntimeException(e);
 		}
 
-		return duplicatedIds.keySet();
+		// atm assume that input resources have no conflict sections
+		return pmResource.getDuplicatedIds().keySet();
 	}
 }

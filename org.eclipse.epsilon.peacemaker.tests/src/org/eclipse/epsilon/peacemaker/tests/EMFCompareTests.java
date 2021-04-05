@@ -1,6 +1,5 @@
 package org.eclipse.epsilon.peacemaker.tests;
 
-import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayOutputStream;
@@ -20,13 +19,14 @@ import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
 import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
 import org.eclipse.epsilon.peacemaker.PeacemakerResource;
 import org.eclipse.epsilon.peacemaker.PeacemakerResourceFactory;
+import org.eclipse.epsilon.peacemaker.conflicts.ContainerUpdate;
 import org.eclipse.epsilon.peacemaker.conflicts.ContainingFeatureUpdate;
 import org.eclipse.epsilon.peacemaker.conflicts.DoubleUpdate;
+import org.eclipse.epsilon.peacemaker.conflicts.DuplicatedId;
 import org.eclipse.epsilon.peacemaker.conflicts.KeepDelete;
 import org.eclipse.epsilon.peacemaker.conflicts.SingleContainmentReferenceUpdate;
 import org.eclipse.epsilon.peacemaker.conflicts.UnconflictedObject;
 import org.eclipse.epsilon.peacemaker.conflicts.UpdateDelete;
-import org.eclipse.epsilon.peacemaker.util.ids.DuplicatedIdsException;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -171,9 +171,8 @@ public class EMFCompareTests {
 	@Test
 	public void g_ContainerChange() throws IOException {
 
-		assertThrows(DuplicatedIdsException.class, () -> {
-			testCase("g", NO_CONFLICTS);
-		});
+		testCase("g", new Class<?>[] { ContainerUpdate.class });
+		testCase("g_interleaveddummy", new Class<?>[] { DuplicatedId.class });
 	}
 
 	@Test
@@ -229,7 +228,6 @@ public class EMFCompareTests {
 	public static PeacemakerResource loadConflictResource(String resourceName) throws IOException {
 		PeacemakerResource resource = (PeacemakerResource) resourceSet.createResource(
 				URI.createFileURI(new File(String.format(CONFLICTS_LOCATION, resourceName)).getAbsolutePath()));
-		resource.setFailOnDuplicatedIds(true);
 		resource.load(null);
 		return resource;
 	}
