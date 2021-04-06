@@ -46,6 +46,7 @@ import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
+import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -295,8 +296,25 @@ public class PeacemakerEditor extends EcoreEditor {
 		createTreeViewerSection(resourceConflictsSash);
 
 		// list of conflicts along with the available actions (right side)
-		Composite conflictsList = new Composite(resourceConflictsSash, SWT.BORDER);
-		GridDataFactory.fillDefaults().grab(true, true).minSize(1, 1).applyTo(conflictsList);
+		ScrolledComposite conflictsListScrollable = new ScrolledComposite(
+				resourceConflictsSash, SWT.V_SCROLL | SWT.BORDER);
+		conflictsListScrollable.setBackground(getSite().getShell().getDisplay().getSystemColor(SWT.COLOR_WHITE));
+		conflictsListScrollable.setBackgroundMode(SWT.INHERIT_FORCE);
+		conflictsListScrollable.setExpandHorizontal(true);
+		conflictsListScrollable.setExpandVertical(true);
+
+		// double conflictList composite is required to get the scrollable minHeight
+		Composite conflictsListExternal = new Composite(conflictsListScrollable, SWT.NONE);
+		GridDataFactory.fillDefaults().grab(true, true).minSize(1, 1).applyTo(conflictsListExternal);
+		GridLayout listLayoutExternal = new GridLayout(1, false);
+		listLayoutExternal.marginHeight = 0;
+		listLayoutExternal.marginWidth = 0;
+		conflictsListExternal.setLayout(listLayoutExternal);
+
+		Composite conflictsList = new Composite(conflictsListExternal, SWT.NONE);
+		GridDataFactory.fillDefaults().grab(true, false).minSize(1, 1).applyTo(conflictsList);
+
+		conflictsListScrollable.setContent(conflictsListExternal);
 
 		GridLayout listLayout = new GridLayout(1, false);
 		conflictsList.setLayout(listLayout);
@@ -341,6 +359,14 @@ public class PeacemakerEditor extends EcoreEditor {
 			GridDataFactory.fillDefaults().grab(false, false).minSize(1, 1).applyTo(resolveGroup.getGroup());
 			resolveGroup.createActionButtons(conflict);
 		}
+
+		conflictsListScrollable.addControlListener(new ControlAdapter() {
+			public void controlResized(ControlEvent e) {
+				conflictsListScrollable.setMinHeight(conflictsList.getSize().y);
+			}
+		});
+		// FIXME: scroll does not appear the first time if editor is smaller than the conflicts list
+		conflictsListScrollable.setMinHeight(conflictsList.computeSize(SWT.DEFAULT, SWT.DEFAULT).y);
 
 		resourceConflictsSash.setWeights(new int[] { 2, 1 });
 	}
