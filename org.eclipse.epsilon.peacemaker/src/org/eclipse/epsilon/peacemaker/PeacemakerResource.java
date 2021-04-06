@@ -182,7 +182,7 @@ public class PeacemakerResource extends XMIResourceImpl {
 
 	protected void identifyDuplicatedIdConflicts() {
 		if (isSingleLoad()) {
-			// we can only flag it as duplicated element
+			// only enough information to flag it as duplicated element
 			//   could be a container change, or new additions
 			if (hasDuplicatedIds()) {
 				for (Entry<String, List<EObject>> entry : getDuplicatedIds().entrySet()) {
@@ -200,7 +200,6 @@ public class PeacemakerResource extends XMIResourceImpl {
 				else {
 					conflicts.add(new DuplicatedId(entry.getKey(), this));
 				}
-
 			}
 			for (Entry<String, List<EObject>> entry : rightDuplicatedIds.entrySet()) {
 				if (hasBaseResource() && IdUtils.containsObjectWithId(baseResource, entry.getKey())) {
@@ -225,16 +224,13 @@ public class PeacemakerResource extends XMIResourceImpl {
 
 				EStructuralFeature leftFeature = leftObj.eContainingFeature();
 				EStructuralFeature rightFeature = rightObj.eContainingFeature();
-
 				if (leftFeature != null && rightFeature != null && leftFeature != rightFeature) {
 					conflict = new ContainingFeatureUpdate(id, this,
 							leftObj.eContainingFeature(), rightObj.eContainingFeature());
 				}
 				else {
-					// check attributes and non-containment references
 					if (equalityHelper.equals(leftObj, rightObj)) {
-						// features are equal, so false positive
-						conflict = null;
+						conflict = null; // false positive
 					}
 				}
 
@@ -281,21 +277,10 @@ public class PeacemakerResource extends XMIResourceImpl {
 	/**
 	 * Gets the delete conflict that is taking place. Allows to work in both directions
 	 * (e.g. UpdateDelete or DeleteUpdate conflicts)
-	 * 
-	 * @param id                         Conflicting identifier
-	 * @param object                     Object in the non-delete version
-	 * @param resource                   Resource of the non-delete version
-	 * @param duplicatedIds              Duplicated ids in the non-delete version
-	 * @param deleteVersionResource      Resource of the delete version
-	 * @param deleteVersionDuplicatedIds Duplicated ids in the delete version
-	 * @return
 	 */
 	protected Conflict getDeleteConflict(String id, EObject object,
 			XMIResource resource, Map<String, List<EObject>> duplicatedIds,
 			XMIResource deleteVersionResource, Map<String, List<EObject>> deleteVersionDuplicatedIds) {
-
-		// in delete conflicts, versions play sides that can be swapped
-		//   (e.g. there is an UpdateDelete conflict, but also a DeleteUpdate one)
 
 		Conflict conflict = null;
 
@@ -308,7 +293,7 @@ public class PeacemakerResource extends XMIResourceImpl {
 			//   3. that id is also duplicated in our version resource
 
 			// because of 2, I do not think it is possible to have the
-			//   id duplicated in the other version
+			//   id duplicated in the delete version
 			if (deleteVersionDuplicatedIds.containsKey(id)) {
 				throw new RuntimeException("Duplicated id in the deleted side of an update delete");
 			}
@@ -322,14 +307,14 @@ public class PeacemakerResource extends XMIResourceImpl {
 					String deleteVersionObjectContainerId =
 							IdUtils.getAvailableId(deleteVersionResource, deleteVersionObjectContainer);
 
-					// delete from our version the duplicated element
+					// delete from our version the duplicated object
 					//   whose container matches the container from the delete version
-					deleteMatchingContainers(deleteVersionObjectContainerId,
+					deleteObjectWithMatchingContainer(deleteVersionObjectContainerId,
 							resource, duplicatedIds.get(id));
 
 					// and from the base resource too, if duplicated
 					if (baseDuplicatedIds.containsKey(id)) {
-						deleteMatchingContainers(deleteVersionObjectContainerId,
+						deleteObjectWithMatchingContainer(deleteVersionObjectContainerId,
 								baseResource, baseDuplicatedIds.get(id));
 					}
 				}
@@ -349,7 +334,7 @@ public class PeacemakerResource extends XMIResourceImpl {
 		return conflict;
 	}
 
-	protected void deleteMatchingContainers(String containerId, XMIResource resource,
+	protected void deleteObjectWithMatchingContainer(String containerId, XMIResource resource,
 			List<EObject> dupObjects) {
 
 		Iterator<EObject> dupObjectsIterator = dupObjects.iterator();
