@@ -298,4 +298,18 @@ public class CopyUtils {
 		}
 	}
 
+	public static void swapContainer(EObject obj, EObject destinationContainer,
+			EStructuralFeature destinationFeature, int destinationIndex) {
+		
+		if (destinationFeature.isMany()) {
+			@SuppressWarnings("unchecked")
+			List<EObject> destinationFeatureValues =
+					(List<EObject>) destinationContainer.eGet(destinationFeature);
+			safeIndexAdd(destinationFeatureValues, destinationIndex, obj);
+		}
+		else {
+			destinationContainer.eSet(destinationFeature, obj);
+		}
+	}
+
 }
