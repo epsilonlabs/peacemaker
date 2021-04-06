@@ -13,12 +13,15 @@ import java.util.Collections;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EPackage;
+import org.eclipse.emf.ecore.EStructuralFeature;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
 import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
 import org.eclipse.epsilon.peacemaker.PeacemakerResource;
 import org.eclipse.epsilon.peacemaker.PeacemakerResourceFactory;
+import org.eclipse.epsilon.peacemaker.conflicts.Conflict;
+import org.eclipse.epsilon.peacemaker.conflicts.Conflict.ResolveAction;
 import org.eclipse.epsilon.peacemaker.conflicts.ContainerUpdate;
 import org.eclipse.epsilon.peacemaker.conflicts.ContainingFeatureUpdate;
 import org.eclipse.epsilon.peacemaker.conflicts.DoubleUpdate;
@@ -27,6 +30,7 @@ import org.eclipse.epsilon.peacemaker.conflicts.KeepDelete;
 import org.eclipse.epsilon.peacemaker.conflicts.SingleContainmentReferenceUpdate;
 import org.eclipse.epsilon.peacemaker.conflicts.UnconflictedObject;
 import org.eclipse.epsilon.peacemaker.conflicts.UpdateDelete;
+import org.eclipse.epsilon.peacemaker.dt.ConflictResolveCommand;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -165,7 +169,49 @@ public class EMFCompareTests {
 	@Test
 	public void f_ContainingFeatureChange() throws IOException {
 
-		testCase("f", new Class<?>[] { ContainingFeatureUpdate.class });
+		PeacemakerResource pmResource =
+				testCase("f", new Class<?>[] { ContainingFeatureUpdate.class });
+
+		String objId = "_4l8U4JRCEeGUu8zWDEISZA";
+
+		EObject leftObj = pmResource.getLeftEObject(objId);
+		EObject rightObj = pmResource.getRightEObject(objId);
+
+		EStructuralFeature leftFeature = leftObj.eContainingFeature();
+		EStructuralFeature rightFeature = rightObj.eContainingFeature();
+
+		assertTrue(leftFeature != rightFeature);
+
+		Conflict conflict = pmResource.getConflicts().get(0);
+		ConflictResolveCommand command = new ConflictResolveCommand(
+				Arrays.asList(pmResource.getLeftResource(), pmResource.getRightResource()),
+				conflict, ResolveAction.KEEP_LEFT, null);
+
+		command.execute();
+
+		assertTrue(leftObj.eContainingFeature() == rightObj.eContainingFeature()
+				&& leftObj.eContainingFeature() == leftFeature);
+
+		command.undo();
+
+		assertTrue(leftObj.eContainingFeature() != rightObj.eContainingFeature()
+				&& leftObj.eContainingFeature() == leftFeature
+				&& rightObj.eContainingFeature() == rightFeature);
+
+		command = new ConflictResolveCommand(
+				Arrays.asList(pmResource.getLeftResource(), pmResource.getRightResource()),
+				conflict, ResolveAction.KEEP_RIGHT, null);
+
+		command.execute();
+
+		assertTrue(leftObj.eContainingFeature() == rightObj.eContainingFeature()
+				&& rightObj.eContainingFeature() == rightFeature);
+
+		command.undo();
+
+		assertTrue(leftObj.eContainingFeature() != rightObj.eContainingFeature()
+				&& leftObj.eContainingFeature() == leftFeature
+				&& rightObj.eContainingFeature() == rightFeature);
 	}
 
 	@Test
@@ -190,7 +236,7 @@ public class EMFCompareTests {
 		testCase("k4", new Class<?>[] { DoubleUpdate.class, KeepDelete.class });
 	}
 
-	protected void testCase(String conflictCase, Class<?>[] conflictTypes) throws IOException {
+	protected PeacemakerResource testCase(String conflictCase, Class<?>[] conflictTypes) throws IOException {
 		PeacemakerResource pmResource = loadConflictResource(conflictCase);
 
 		assertTrue(pmResource.getConflicts().size() == conflictTypes.length);
@@ -198,6 +244,8 @@ public class EMFCompareTests {
 		for (int c = 0; c < conflictTypes.length; c++) {
 			assertTrue(pmResource.getConflicts().get(c).getClass().equals(conflictTypes[c]));
 		}
+
+		return pmResource;
 	}
 
 	@Test

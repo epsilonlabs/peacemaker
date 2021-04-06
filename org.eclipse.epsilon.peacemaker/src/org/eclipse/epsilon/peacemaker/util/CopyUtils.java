@@ -266,4 +266,36 @@ public class CopyUtils {
 			copyIds(obj, copy);
 		}
 	}
+
+	/**
+	 * Swaps object to a different containing feature of the same container
+	 */
+	public static void swapContainingFeature(EObject obj,
+			EStructuralFeature destinationFeature, int destinationIndex) {
+
+		if (destinationFeature.isMany()) {
+			@SuppressWarnings("unchecked")
+			List<EObject> destinationFeatureValues =
+					(List<EObject>) obj.eContainer().eGet(destinationFeature);
+			safeIndexAdd(destinationFeatureValues, destinationIndex, obj);
+		}
+		else {
+			obj.eContainer().eSet(destinationFeature, obj);
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public static int getContainingFeatureIndex(EObject obj) {
+		EStructuralFeature containingFeature = obj.eContainingFeature();
+		if (containingFeature == null) {
+			return -1;
+		}
+		if (containingFeature.isMany()) {
+			return ((List<EObject>) obj.eContainer().eGet(containingFeature)).indexOf(obj);
+		}
+		else {
+			return 0;
+		}
+	}
+
 }

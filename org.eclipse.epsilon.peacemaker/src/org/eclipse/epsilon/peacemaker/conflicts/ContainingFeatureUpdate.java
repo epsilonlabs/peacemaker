@@ -2,6 +2,7 @@ package org.eclipse.epsilon.peacemaker.conflicts;
 
 import org.eclipse.emf.ecore.EStructuralFeature;
 import org.eclipse.epsilon.peacemaker.PeacemakerResource;
+import org.eclipse.epsilon.peacemaker.util.CopyUtils;
 
 public class ContainingFeatureUpdate extends DoubleUpdate {
 
@@ -28,6 +29,24 @@ public class ContainingFeatureUpdate extends DoubleUpdate {
 						+ " to %s in the left and to %s in the right",
 				leftObject.eClass().getName(), eObjectId,
 				leftFeature.getName(), rightFeature.getName());
+	}
+
+	@Override
+	public void resolve(ResolveAction action) {
+		switch (action) {
+		case KEEP_LEFT:
+			CopyUtils.swapContainingFeature(rightObject, leftFeature,
+					CopyUtils.getContainingFeatureIndex(leftObject));
+			CopyUtils.replace(leftObject, rightObject);
+			break;
+		case KEEP_RIGHT:
+			CopyUtils.swapContainingFeature(leftObject, rightFeature,
+					CopyUtils.getContainingFeatureIndex(rightObject));
+			CopyUtils.replace(rightObject, leftObject);
+			break;
+		default:
+			super.resolve(action);
+		}
 	}
 
 }

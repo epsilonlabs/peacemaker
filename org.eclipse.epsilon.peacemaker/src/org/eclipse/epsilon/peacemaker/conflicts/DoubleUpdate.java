@@ -58,7 +58,6 @@ public class DoubleUpdate extends Conflict {
 			break;
 		default:
 			super.resolve(action);
-			return;
 		}
 	}
 
