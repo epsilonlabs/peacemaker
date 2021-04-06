@@ -44,8 +44,8 @@ public class PeacemakerResource extends XMIResourceImpl {
 	private static final String BASE_VERSION_EXTENSION = "pmBaseVersion";
 	private static final String RIGHT_VERSION_EXTENSION = "pmRightVersion";
 
-	// placeholder for those resources where no conflicts are found
-	protected XMIResource unconflictedResource;
+	// for those resources where no conflict sections are found
+	protected XMIResource singleLoadResource;
 
 	protected Map<?, ?> loadOptions = Collections.EMPTY_MAP;
 
@@ -161,12 +161,12 @@ public class PeacemakerResource extends XMIResourceImpl {
 		// load it as a standard XMI Resource (using specific factories if registered)
 		Resource.Factory specificFactory = getSpecificFactory();
 
-		unconflictedResource = (XMIResource) specificFactory.createResource(getURI());
-		((XMIResourceImpl) unconflictedResource).basicSetResourceSet(getResourceSet(), null);
+		singleLoadResource = (XMIResource) specificFactory.createResource(getURI());
+		((XMIResourceImpl) singleLoadResource).basicSetResourceSet(getResourceSet(), null);
 
 		Map<Object, Object> loadOptions = new HashMap<Object, Object>(this.loadOptions);
 		loadOptions.put(XMLResource.OPTION_USE_PARSER_POOL, new PeacemakerXMLParserPoolImpl(this, null));
-		unconflictedResource.load(preprocessor.getLeftVersionHelper().getVersionContents(), loadOptions);
+		singleLoadResource.load(preprocessor.getLeftVersionHelper().getVersionContents(), loadOptions);
 
 		// no conflict sections does not always imply that there are no conflicts
 		identifyConflicts(preprocessor);
@@ -184,15 +184,13 @@ public class PeacemakerResource extends XMIResourceImpl {
 		if (isSingleLoad()) {
 			// only enough information to flag it as duplicated element
 			//   could be a container change, or new additions
-			if (hasDuplicatedIds()) {
-				for (Entry<String, List<EObject>> entry : getDuplicatedIds().entrySet()) {
-					conflicts.add(new DuplicatedId(entry.getKey(), this));
-				}
+			for (Entry<String, List<EObject>> entry : getDuplicatedIds().entrySet()) {
+				conflicts.add(new DuplicatedId(entry.getKey(), this));
 			}
 		}
 		else {
 			// if the base version contains the resource, treat the conflict as
-			//   a container update (it's the same conflict, but gives more precise information)
+			//   a container update (gives more precise information)
 			for (Entry<String, List<EObject>> entry : leftDuplicatedIds.entrySet()) {
 				if (hasBaseResource() && IdUtils.containsObjectWithId(baseResource, entry.getKey())) {
 					conflicts.add(new ContainerUpdate(entry.getKey(), this));
@@ -202,11 +200,16 @@ public class PeacemakerResource extends XMIResourceImpl {
 				}
 			}
 			for (Entry<String, List<EObject>> entry : rightDuplicatedIds.entrySet()) {
-				if (hasBaseResource() && IdUtils.containsObjectWithId(baseResource, entry.getKey())) {
-					conflicts.add(new ContainerUpdate(entry.getKey(), this));
-				}
-				else {
-					conflicts.add(new DuplicatedId(entry.getKey(), this));
+				// prevent adding the same conflict twice
+				if (!leftDuplicatedIds.containsKey(entry.getKey())) {
+					if (hasBaseResource()
+							&& IdUtils.containsObjectWithId(baseResource, entry.getKey())) {
+
+						conflicts.add(new ContainerUpdate(entry.getKey(), this));
+					}
+					else {
+						conflicts.add(new DuplicatedId(entry.getKey(), this));
+					}
 				}
 			}
 		}
@@ -431,20 +434,12 @@ public class PeacemakerResource extends XMIResourceImpl {
 		return conflicts;
 	}
 
-	public boolean hasConflicts() {
-		return !conflicts.isEmpty();
-	}
-
 	public boolean isSingleLoad() {
-		return unconflictedResource != null;
+		return singleLoadResource != null;
 	}
 
-	public void setUnconflictedResource(XMIResource resource) {
-		this.unconflictedResource = resource;
-	}
-
-	public XMIResource getUnconflictedResource() {
-		return unconflictedResource;
+	public XMIResource getSingleLoadResource() {
+		return singleLoadResource;
 	}
 
 	public void setLoadOptions(Map<?, ?> options) {

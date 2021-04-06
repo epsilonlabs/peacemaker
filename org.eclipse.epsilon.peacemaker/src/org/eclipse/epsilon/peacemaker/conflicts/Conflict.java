@@ -7,7 +7,7 @@ public abstract class Conflict {
 
 	public enum ResolveAction {
 
-		KEEP, REMOVE, KEEP_LEFT, KEEP_RIGHT, NO_ACTION;
+		KEEP, REMOVE, KEEP_LEFT, KEEP_RIGHT, KEEP_FIRST, KEEP_SECOND, NO_ACTION;
 
 		@Override
 		public String toString() {
@@ -20,6 +20,10 @@ public abstract class Conflict {
 				return "Keep left";
 			case KEEP_RIGHT:
 				return "Keep right";
+			case KEEP_FIRST:
+				return "Keep first";
+			case KEEP_SECOND:
+				return "Keep second";
 			case NO_ACTION:
 				return "No Action";
 			default:
