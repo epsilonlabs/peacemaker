@@ -232,7 +232,9 @@ public class EMFCompareTests {
 	@Test
 	public void k_Additions() throws IOException {
 
-		// k1, k2 and k3 are merged by git, causing no conflicts (but duplicated ids)
+		testCase("k1", new Class<?>[] { DuplicatedId.class, DuplicatedId.class });
+		testCase("k2", new Class<?>[] { DuplicatedId.class, DuplicatedId.class, DuplicatedId.class });
+		testCase("k3", new Class<?>[] { DuplicatedId.class, DuplicatedId.class, DuplicatedId.class });
 		testCase("k4", new Class<?>[] { DoubleUpdate.class, KeepDelete.class });
 	}
 
