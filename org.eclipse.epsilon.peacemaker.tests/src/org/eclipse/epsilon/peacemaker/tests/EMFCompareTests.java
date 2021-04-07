@@ -219,6 +219,7 @@ public class EMFCompareTests {
 
 		testCase("g", new Class<?>[] { ContainerUpdate.class });
 		testCase("g_interleaveddummy", new Class<?>[] { DuplicatedId.class });
+		testCase("g_interleaveddummy_singleline", new Class<?>[] { ContainerUpdate.class });
 	}
 
 	@Test

@@ -27,13 +27,14 @@ tests = [["a1", ["conflict_a1_attribute", "conflict_a1_reference"]],
          ["d5", ["conflict_d5_attribute", "conflict_d5_reference"]],
          ["d6", ["conflict_d6_attribute", "conflict_d6_reference"]],
 
-         ["e1", ["conflict_e1"]],
+         ["e1", ["conflict_e1", "conflict_e1_interleaveddummy"]],
          ["e2", ["conflict_e2"]],
          ["e3", ["conflict_e3", "conflict_e3_avoidemptyroot"]],
 
          ["f", ["conflict_f"]],
 
-         ["g", ["conflict_g", "conflict_g_interleaveddummy"]],
+         ["g", ["conflict_g",
+                "conflict_g_interleaveddummy", "conflict_g_interleaveddummy_singleline"]],
 
          ["h1", ["conflict_h1"]],
          ["h2", ["conflict_h2"]],
