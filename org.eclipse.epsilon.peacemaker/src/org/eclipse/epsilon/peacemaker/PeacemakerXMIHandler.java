@@ -3,15 +3,20 @@ package org.eclipse.epsilon.peacemaker;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.EReference;
+import org.eclipse.emf.ecore.resource.Resource.Diagnostic;
+import org.eclipse.emf.ecore.xmi.UnresolvedReferenceException;
 import org.eclipse.emf.ecore.xmi.XMLHelper;
 import org.eclipse.emf.ecore.xmi.XMLResource;
 import org.eclipse.emf.ecore.xmi.impl.SAXXMIHandler;
 import org.eclipse.epsilon.peacemaker.ConflictsPreprocessor.ConflictVersionHelper;
+import org.eclipse.epsilon.peacemaker.conflicts.InternalDanglingReference;
 import org.eclipse.epsilon.peacemaker.util.ids.DuplicatedIdsException;
 import org.eclipse.epsilon.peacemaker.util.ids.IdUtils;
 import org.xml.sax.Attributes;
@@ -106,5 +111,29 @@ public class PeacemakerXMIHandler extends SAXXMIHandler {
 		super.endElement(uri, localName, name);
 
 		currentLine = locator.getLineNumber() + 1;
+	}
+
+	@Override
+	public void endDocument() {
+		super.endDocument();
+
+		Iterator<Diagnostic> errorsIterator = xmlResource.getErrors().iterator();
+		while (errorsIterator.hasNext()) {
+			Diagnostic error = errorsIterator.next();
+			if (error instanceof UnresolvedReferenceException) {
+				UnresolvedReferenceException unresolvedReference =
+						(UnresolvedReferenceException) error;
+
+				InternalDanglingReference danglingRef = new InternalDanglingReference (
+						IdUtils.getAvailableId(xmlResource, unresolvedReference.getObject()),
+						unresolvedReference.getObject(),
+						pmResource,
+						(EReference) unresolvedReference.getFeature(),
+						unresolvedReference.getReference());
+				pmResource.addConflict(danglingRef);
+
+				errorsIterator.remove();
+			}
+		}
 	}
 }

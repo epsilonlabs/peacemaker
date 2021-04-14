@@ -355,9 +355,11 @@ public class PeacemakerEditor extends EcoreEditor {
 				}
 			});
 
-			ResolveActionGroup resolveGroup = new ResolveActionGroup(conflictControl, SWT.NONE, conflict);
-			GridDataFactory.fillDefaults().grab(false, false).minSize(1, 1).applyTo(resolveGroup.getGroup());
-			resolveGroup.createActionButtons(conflict);
+			if (hasResolveActions(conflict)) {
+				ResolveActionGroup resolveGroup = new ResolveActionGroup(conflictControl, SWT.NONE, conflict);
+				GridDataFactory.fillDefaults().grab(false, false).minSize(1, 1).applyTo(resolveGroup.getGroup());
+				resolveGroup.createActionButtons(conflict);
+			}
 		}
 
 		conflictsListScrollable.addControlListener(new ControlAdapter() {
@@ -369,6 +371,15 @@ public class PeacemakerEditor extends EcoreEditor {
 		conflictsListScrollable.setMinHeight(conflictsList.computeSize(SWT.DEFAULT, SWT.DEFAULT).y);
 
 		resourceConflictsSash.setWeights(new int[] { 2, 1 });
+	}
+
+	protected boolean hasResolveActions(Conflict conflict) {
+		for (ResolveAction action : ResolveAction.values()) {
+			if (conflict.supports(action)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	protected void createTreeViewerSection(Composite parent) {

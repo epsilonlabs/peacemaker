@@ -391,7 +391,7 @@ public class PeacemakerResource extends XMIResourceImpl {
 				!((EReference) feature).isMany();
 	}
 
-	protected void addConflict(Conflict conflict) {
+	public void addConflict(Conflict conflict) {
 		conflicts.add(conflict);
 	}
 

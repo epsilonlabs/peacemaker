@@ -26,6 +26,7 @@ import org.eclipse.epsilon.peacemaker.conflicts.ContainerUpdate;
 import org.eclipse.epsilon.peacemaker.conflicts.ContainingFeatureUpdate;
 import org.eclipse.epsilon.peacemaker.conflicts.DoubleUpdate;
 import org.eclipse.epsilon.peacemaker.conflicts.DuplicatedId;
+import org.eclipse.epsilon.peacemaker.conflicts.InternalDanglingReference;
 import org.eclipse.epsilon.peacemaker.conflicts.KeepDelete;
 import org.eclipse.epsilon.peacemaker.conflicts.SingleContainmentReferenceUpdate;
 import org.eclipse.epsilon.peacemaker.conflicts.UnconflictedObject;
@@ -157,6 +158,8 @@ public class EMFCompareTests {
 	public void e_DeleteReferencedNotifier() throws IOException {
 
 		testCase("e1", new Class<?>[] { KeepDelete.class, DoubleUpdate.class });
+
+		testCase("e1_interleaveddummy", new Class<?>[] { InternalDanglingReference.class });
 
 		testCase("e2", new Class<?>[] { KeepDelete.class, DoubleUpdate.class });
 
