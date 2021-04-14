@@ -16,8 +16,8 @@
    <extension
          point="org.eclipse.egit.core.mergeStrategy">
       <strategy
-            class="org.eclipse.epsilon.peacemaker.dt.DuplicatedIdsMergeStrategy"
-            label="Detect Duplicated Ids (from Peacemaker)">
+            class="org.eclipse.epsilon.peacemaker.dt.PeacemakerMergeStrategy"
+            label="Detect Missed Conflicts (from Peacemaker)">
       </strategy>
    </extension>
 </plugin>

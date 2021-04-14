@@ -19,7 +19,7 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.content.IContentDescriber;
 import org.eclipse.emf.common.util.URI;
-import org.eclipse.epsilon.peacemaker.util.ids.IdUtils;
+import org.eclipse.epsilon.peacemaker.util.ids.PeacemakerUtils;
 import org.eclipse.jgit.attributes.Attributes;
 import org.eclipse.jgit.dircache.DirCacheBuildIterator;
 import org.eclipse.jgit.dircache.DirCacheEntry;
@@ -38,7 +38,7 @@ import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.eclipse.jgit.treewalk.WorkingTreeIterator;
 
 @SuppressWarnings("restriction")
-public class DuplicatedIdsMerger extends RecursiveMerger {
+public class PeacemakerConflictsMerger extends RecursiveMerger {
 
 	protected List<String> pathsToWrongModels = new ArrayList<String>();
 
@@ -46,11 +46,11 @@ public class DuplicatedIdsMerger extends RecursiveMerger {
 	protected Map<String, CanonicalTreeParser> oursMap = new HashMap<>();
 	protected Map<String, CanonicalTreeParser> theirsMap = new HashMap<>();
 
-	public DuplicatedIdsMerger(ObjectInserter inserter, Config config) {
+	public PeacemakerConflictsMerger(ObjectInserter inserter, Config config) {
 		super(inserter, config);
 	}
 
-	public DuplicatedIdsMerger(Repository db, boolean inCore) {
+	public PeacemakerConflictsMerger(Repository db, boolean inCore) {
 		super(db, inCore);
 	}
 
@@ -85,7 +85,7 @@ public class DuplicatedIdsMerger extends RecursiveMerger {
 			return true;
 		}
 
-		// else: if it is a model, do the check duplicate ids thing
+		// else: if it is a model, do the check conflicts thing
 
 		// TODO: determine the best way to detect if a file is an xmi model
 		// - Use a list of filename extensions: good performance, requires setting preferences
@@ -102,9 +102,9 @@ public class DuplicatedIdsMerger extends RecursiveMerger {
 			return true;
 		}
 
-		// if the check detects duplicates, store the information required
+		// if the check detects conflicts, store the information required
 		//   for marking the model as in conflict later (after super.mergeTrees())
-		if (IdUtils.hasDuplicatedIds(URI.createFileURI(fullPath), fileContents)) {
+		if (PeacemakerUtils.hasConflicts(URI.createFileURI(fullPath), fileContents)) {
 			String modelPath = tw.getPathString();
 			pathsToWrongModels.add(modelPath);
 			baseMap.put(modelPath, base);
@@ -130,12 +130,12 @@ public class DuplicatedIdsMerger extends RecursiveMerger {
 		if (!noConflicts && pathsToWrongModels.isEmpty()) {
 			return false;
 		}
-		// if the merge ended cleanly and no models with duplicated ids were found
+		// if the merge ended cleanly and no conflicts were found by peacemaker
 		else if (pathsToWrongModels.isEmpty()) {
 			return true;
 		}
 
-		// update the index to mark as conflicting models with duplicated ids
+		// update the index to mark model as conflicting
 		dircache = nonNullRepo().lockDirCache();
 		builder = dircache.builder();
 
@@ -143,7 +143,6 @@ public class DuplicatedIdsMerger extends RecursiveMerger {
 			DirCacheEntry entry = dircache.getEntry(index);
 			String modelPath = entry.getPathString();
 			if (pathsToWrongModels.contains(modelPath)) {
-				// create a conflict (see if this works)
 				add(entry.getRawPath(), baseMap.get(modelPath), DirCacheEntry.STAGE_1, EPOCH, 0);
 				add(entry.getRawPath(), oursMap.get(modelPath), DirCacheEntry.STAGE_2, EPOCH, 0);
 				add(entry.getRawPath(), theirsMap.get(modelPath), DirCacheEntry.STAGE_3, EPOCH, 0);
@@ -157,7 +156,7 @@ public class DuplicatedIdsMerger extends RecursiveMerger {
 		}
 		builder.commit();
 
-		return false; // because we have found duplicated ids in a model
+		return false; // because we have found conflicts in a model
 	}
 
 	protected DirCacheEntry add(byte[] path, CanonicalTreeParser p, int stage,

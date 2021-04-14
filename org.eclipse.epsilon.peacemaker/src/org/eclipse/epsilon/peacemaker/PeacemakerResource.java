@@ -434,6 +434,10 @@ public class PeacemakerResource extends XMIResourceImpl {
 		return conflicts;
 	}
 
+	public boolean hasConflicts() {
+		return !conflicts.isEmpty();
+	}
+
 	public boolean isSingleLoad() {
 		return singleLoadResource != null;
 	}
