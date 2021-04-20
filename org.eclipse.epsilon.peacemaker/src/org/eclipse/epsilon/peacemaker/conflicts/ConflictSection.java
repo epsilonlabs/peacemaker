@@ -1,7 +1,11 @@
 package org.eclipse.epsilon.peacemaker.conflicts;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+
+import org.eclipse.emf.ecore.EObject;
 
 public class ConflictSection {
 
@@ -9,16 +13,23 @@ public class ConflictSection {
 	protected Set<String> rightIds = new HashSet<>();
 	protected Set<String> baseIds = new HashSet<>();
 
-	public synchronized void addLeft(String objId) {
+	protected Map<String, EObject> leftObjects = new HashMap<>();
+	protected Map<String, EObject> rightObjects = new HashMap<>();
+	protected Map<String, EObject> baseObjects = new HashMap<>();
+
+	public synchronized void addLeft(String objId, EObject obj) {
 		leftIds.add(objId);
+		leftObjects.put(objId, obj);
 	}
 
-	public synchronized void addBase(String objId) {
+	public synchronized void addBase(String objId, EObject obj) {
 		baseIds.add(objId);
+		baseObjects.put(objId, obj);
 	}
 
-	public synchronized void addRight(String objId) {
+	public synchronized void addRight(String objId, EObject obj) {
 		rightIds.add(objId);
+		rightObjects.put(objId, obj);
 	}
 
 	public boolean leftContains(String objId) {
@@ -47,6 +58,18 @@ public class ConflictSection {
 
 	public Set<String> getRightIds() {
 		return rightIds;
+	}
+
+	public EObject getLeft(String objId) {
+		return leftObjects.get(objId);
+	}
+
+	public EObject getBase(String objId) {
+		return baseObjects.get(objId);
+	}
+
+	public EObject getRight(String objId) {
+		return rightObjects.get(objId);
 	}
 
 	public boolean isEmpty() {

@@ -218,10 +218,10 @@ public class PeacemakerResource extends XMIResourceImpl {
 	protected void identifyConflicts(ConflictSection conflictSection) {
 		for (String id : conflictSection.getLeftIds()) {
 
-			EObject leftObj = getLeftEObject(id);
+			EObject leftObj = conflictSection.getLeft(id);
 
 			if (conflictSection.rightContains(id)) {
-				EObject rightObj = getRightEObject(id);
+				EObject rightObj = conflictSection.getRight(id);
 
 				Conflict conflict = new DoubleUpdate(id, this);
 
@@ -249,7 +249,8 @@ public class PeacemakerResource extends XMIResourceImpl {
 			else if (hasBaseResource() && conflictSection.baseContains(id)) {
 				Conflict conflict = getDeleteConflict(id, leftObj,
 						leftResource, leftDuplicatedIds,
-						rightResource, rightDuplicatedIds);
+						rightResource, rightDuplicatedIds,
+						conflictSection.getBase(id));
 
 				if (conflict != null) {
 					addConflict(conflict);
@@ -263,9 +264,10 @@ public class PeacemakerResource extends XMIResourceImpl {
 		// delete conflicts can appear the other way (delete in left, update in right)
 		for (String id : conflictSection.getRightIds()) {
 			if (hasBaseResource() && conflictSection.baseContains(id)) {
-				Conflict conflict = getDeleteConflict(id, getRightEObject(id),
+				Conflict conflict = getDeleteConflict(id, conflictSection.getRight(id),
 						rightResource, rightDuplicatedIds,
-						leftResource, leftDuplicatedIds);
+						leftResource, leftDuplicatedIds,
+						conflictSection.getBase(id));
 
 				if (conflict != null) {
 					addConflict(conflict);
@@ -283,7 +285,8 @@ public class PeacemakerResource extends XMIResourceImpl {
 	 */
 	protected Conflict getDeleteConflict(String id, EObject object,
 			XMIResource resource, Map<String, List<EObject>> duplicatedIds,
-			XMIResource deleteVersionResource, Map<String, List<EObject>> deleteVersionDuplicatedIds) {
+			XMIResource deleteVersionResource, Map<String, List<EObject>> deleteVersionDuplicatedIds,
+			EObject baseObject) {
 
 		Conflict conflict = null;
 
@@ -326,7 +329,7 @@ public class PeacemakerResource extends XMIResourceImpl {
 		else {
 			boolean deleteInRightVersion = deleteVersionResource == rightResource;
 			// if object kept unmodified
-			if (equalityHelper.equals(object, getBaseEObject(id))) {
+			if (equalityHelper.equals(object, baseObject)) {
 				conflict = new KeepDelete(id, this, deleteInRightVersion);
 			}
 			else {

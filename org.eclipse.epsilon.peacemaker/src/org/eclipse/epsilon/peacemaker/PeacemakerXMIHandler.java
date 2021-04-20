@@ -98,7 +98,8 @@ public class PeacemakerXMIHandler extends SAXXMIHandler {
 
 				if (checkConflicts) {
 					versionHelper.addToConflictSections(start, end,
-							IdUtils.getAvailableId(xmlResource, objects.peek()));
+							IdUtils.getAvailableId(xmlResource, objects.peek()),
+							objects.peek());
 				}
 			}
 		}

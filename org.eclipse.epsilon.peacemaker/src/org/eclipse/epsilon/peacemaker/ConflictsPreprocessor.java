@@ -12,6 +12,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.eclipse.emf.ecore.EObject;
 import org.eclipse.epsilon.peacemaker.conflicts.ConflictSection;
 import org.eclipse.epsilon.peacemaker.util.StreamUtils;
 
@@ -190,7 +191,7 @@ public class ConflictsPreprocessor {
 			return originalLinesIndex.get(line - 1);
 		}
 
-		public void addToConflictSections(int start, int end, String objId) {
+		public void addToConflictSections(int start, int end, String objId, EObject obj) {
 			// there could be several conflict sections in the same element
 			// for the only case this can happen (ObjectRedefinition), we only
 			// need to add the element to the first conflict section
@@ -198,13 +199,13 @@ public class ConflictsPreprocessor {
 				if (lineTypes[line] == versionType) {
 					ConflictSection cs = line2conflictSection.get(line);
 					if (versionType == LineType.LEFT) {
-						cs.addLeft(objId);
+						cs.addLeft(objId, obj);
 					}
 					else if (versionType == LineType.BASE) {
-						cs.addBase(objId);
+						cs.addBase(objId, obj);
 					}
 					else {
-						cs.addRight(objId);
+						cs.addRight(objId, obj);
 					}
 					break; // we only need the first one
 				}
