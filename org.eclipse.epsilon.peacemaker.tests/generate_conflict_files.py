@@ -36,7 +36,9 @@ tests = [["a1", ["conflict_a1_attribute", "conflict_a1_reference"]],
          ["g", ["conflict_g",
                 "conflict_g_interleaveddummy", "conflict_g_interleaveddummy_singleline"]],
 
-         ["h1", ["conflict_h1"]],
+         ["h1", ["conflict_h1", "conflict_h1_singleLines",
+                 "conflict_h1_dummyInOrigin", "conflict_h1_dummyInOriginAndLeft",
+                 "conflict_h1_inbetween_onedummy", "conflict_h1_inbetween_twoDummies"]],
          ["h2", ["conflict_h2"]],
 
          ["i", ["conflict_i"]],

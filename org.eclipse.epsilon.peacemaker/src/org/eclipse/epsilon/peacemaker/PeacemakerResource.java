@@ -366,26 +366,24 @@ public class PeacemakerResource extends XMIResourceImpl {
 	protected boolean checkSingleContainmentReference(String leftId, EObject leftObj, ConflictSection conflictSection) {
 		EStructuralFeature feature = leftObj.eContainingFeature();
 
-		if (feature != null && isSignleContainmentReference(feature)) {
+		if (feature != null && isSingleContainmentReference(feature)) {
 			EReference ref = (EReference) feature;
 
 			String parentId = getLeftId(leftObj.eContainer());
 			EObject rightParent = getRightEObject(parentId);
-			if (rightParent == null) {
-				throw new RuntimeException("complicated reference case, study deeper");
-			}
-
-			EObject rightObj = (EObject) rightParent.eGet(ref);
-			if (rightObj != null && conflictSection.rightContains(getRightId(rightObj))) {
-				addConflict(new SingleContainmentReferenceUpdate(parentId, this, ref));
-				conflictSection.removeRight(getRightId(rightObj));
-				return true;
+			if (rightParent != null) {
+				EObject rightObj = (EObject) rightParent.eGet(ref);
+				if (rightObj != null && conflictSection.rightContains(getRightId(rightObj))) {
+					addConflict(new SingleContainmentReferenceUpdate(parentId, this, ref));
+					conflictSection.removeRight(getRightId(rightObj));
+					return true;
+				}
 			}
 		}
 		return false;
 	}
 
-	protected boolean isSignleContainmentReference(EStructuralFeature feature) {
+	protected boolean isSingleContainmentReference(EStructuralFeature feature) {
 		return feature instanceof EReference &&
 				((EReference) feature).isContainment() &&
 				!((EReference) feature).isMany();
