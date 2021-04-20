@@ -313,15 +313,35 @@ public class PeacemakerResource extends XMIResourceImpl {
 					String deleteVersionObjectContainerId =
 							IdUtils.getAvailableId(deleteVersionResource, deleteVersionObjectContainer);
 
-					// delete from our version the duplicated object
-					//   whose container matches the container from the delete version
-					deleteObjectWithMatchingContainer(deleteVersionObjectContainerId,
-							resource, duplicatedIds.get(id));
+					if (sameContainer(deleteVersionObjectContainerId, resource, duplicatedIds.get(id))) {
+						// a potential reordering of elements issue
 
-					// and from the base resource too, if duplicated
-					if (baseDuplicatedIds.containsKey(id)) {
+						// delete from our version the duplicated object that
+						//   appears in the conflict section
+
+						//TODO: better treatment of dangling references
+						duplicatedIds.remove(id);
+						EcoreUtil.delete(object);
+
+						// and from the base resource too, if duplicated
+						if (baseDuplicatedIds.containsKey(id)) {
+							baseDuplicatedIds.remove(id);
+							EcoreUtil.delete(baseObject);
+						}
+					}
+					else {
+						// a conflicting container change
+
+						// delete from our version the duplicated object
+						//   whose container matches the container from the delete version
 						deleteObjectWithMatchingContainer(deleteVersionObjectContainerId,
-								baseResource, baseDuplicatedIds.get(id));
+								resource, duplicatedIds.get(id));
+
+						// and from the base resource too, if duplicated
+						if (baseDuplicatedIds.containsKey(id)) {
+							deleteObjectWithMatchingContainer(deleteVersionObjectContainerId,
+									baseResource, baseDuplicatedIds.get(id));
+						}
 					}
 				}
 			}
@@ -338,6 +358,20 @@ public class PeacemakerResource extends XMIResourceImpl {
 		}
 		
 		return conflict;
+	}
+
+	/**
+	 * Returns true if the container of all objects in the list share the provided id
+	 */
+	protected boolean sameContainer(String containerId, XMIResource resource, List<EObject> objects) {
+		for (EObject obj : objects) {
+			EObject dupObjectContainer = obj.eContainer();
+			if (dupObjectContainer != null && !containerId.equals(
+					IdUtils.getAvailableId(resource, dupObjectContainer))) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	protected void deleteObjectWithMatchingContainer(String containerId, XMIResource resource,
