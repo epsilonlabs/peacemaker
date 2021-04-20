@@ -136,22 +136,30 @@ public class EMFCompareTests {
 
 		Class<?>[] conflictTypes = new Class<?>[] { DoubleUpdate.class };
 
-		// d1_attribute, d2_attribute and d3_attribute are wrongly processed by git
+		// wrongly processed by git:
+		// d1_attribute, d2_attribute, d3_attribute
+		// d1_containment_reference, d2_containment_reference
+
+		// TODO: d3 can be fixed by looking for duplicates in unique multi-valued attributes
 
 		testCase("d1_reference", conflictTypes);
 
 		testCase("d2_reference", conflictTypes);
 
 		testCase("d3_reference", conflictTypes);
+		testCase("d3_containment_reference", new Class<?>[] { DuplicatedId.class });
 
 		testCase("d4_attribute", NO_CONFLICTS);
 		testCase("d4_reference", NO_CONFLICTS);
+		testCase("d4_containment_reference", NO_CONFLICTS);
 
 		testCase("d5_attribute", NO_CONFLICTS);
 		testCase("d5_reference", NO_CONFLICTS);
+		testCase("d5_containment_reference", NO_CONFLICTS);
 
 		testCase("d6_attribute", NO_CONFLICTS);
 		testCase("d6_reference", NO_CONFLICTS);
+		testCase("d6_containment_reference", NO_CONFLICTS);
 	}
 
 	@Test
