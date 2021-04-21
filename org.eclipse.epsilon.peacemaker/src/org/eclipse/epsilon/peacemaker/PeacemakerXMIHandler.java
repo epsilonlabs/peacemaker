@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.eclipse.emf.ecore.EAttribute;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EReference;
 import org.eclipse.emf.ecore.resource.Resource.Diagnostic;
@@ -17,6 +18,7 @@ import org.eclipse.emf.ecore.xmi.XMLResource;
 import org.eclipse.emf.ecore.xmi.impl.SAXXMIHandler;
 import org.eclipse.epsilon.peacemaker.ConflictsPreprocessor.ConflictVersionHelper;
 import org.eclipse.epsilon.peacemaker.conflicts.InternalDanglingReference;
+import org.eclipse.epsilon.peacemaker.conflicts.MultiValuedAttributeDuplicates;
 import org.eclipse.epsilon.peacemaker.util.ids.DuplicatedIdsException;
 import org.eclipse.epsilon.peacemaker.util.ids.IdUtils;
 import org.xml.sax.Attributes;
@@ -34,6 +36,8 @@ public class PeacemakerXMIHandler extends SAXXMIHandler {
 	protected Set<String> ids = new HashSet<>();
 	protected Map<String, List<EObject>> idObjects = new HashMap<>();
 	protected Map<String, List<EObject>> duplicatedIds;
+
+	protected Map<EObject, Set<EAttribute>> multiValuedAttributesToCheck = new HashMap<>();
 
 	public PeacemakerXMIHandler(XMLResource xmlResource, XMLHelper helper, Map<?, ?> options,
 			PeacemakerResource pmResource, ConflictVersionHelper versionHelper) {
@@ -75,7 +79,7 @@ public class PeacemakerXMIHandler extends SAXXMIHandler {
 		int start = currentLine;
 		int end = locator.getLineNumber();
 
-		EObject peekObject = objects.peek();
+		EObject peekObject = objects.peekEObject();
 		// if the object's stack head is not null (sometimes null is even pushed
 		//   e.g. when parsing multi-valued attributes)
 		if (peekObject != null) {
@@ -98,20 +102,78 @@ public class PeacemakerXMIHandler extends SAXXMIHandler {
 
 				if (checkConflicts) {
 					versionHelper.addToConflictSections(start, end,
-							IdUtils.getAvailableId(xmlResource, objects.peek()),
-							objects.peek());
+							IdUtils.getAvailableId(xmlResource, peekObject),
+							peekObject);
 				}
+			}
+		}
+		else {
+			Object feature = types.peek();
+			if (isMultiValuedAttribute(feature)) {
+				addMultiValuedAttributeToCheck(getHiddenPeekObject(), (EAttribute) feature);
 			}
 		}
 
 		currentLine = end + 1;
 	}
 
+	protected void addMultiValuedAttributeToCheck(EObject peekObject, EAttribute mvAttr) {
+		Set<EAttribute> mvAttributes = multiValuedAttributesToCheck.get(peekObject);
+		if (mvAttributes == null) {
+			mvAttributes = new HashSet<>();
+			multiValuedAttributesToCheck.put(peekObject, mvAttributes);
+		}
+		mvAttributes.add(mvAttr);
+	}
+
+	protected EObject getHiddenPeekObject() {
+		EObject peekObject = objects.peekEObject();
+		if (peekObject == null && objects.size() > 1) {
+			objects.popEObject(); // remove the "null" at the top
+			peekObject = objects.peekEObject();
+			objects.push(null); // put it back
+		}
+		return peekObject;
+	}
+
+	protected boolean isMultiValuedAttribute(Object feature) {
+		return feature instanceof EAttribute &&
+				helper.getFeatureKind((EAttribute) feature) == XMLHelper.DATATYPE_IS_MANY;
+	}
+
+
 	@Override
 	public void endElement(String uri, String localName, String name) {
-		super.endElement(uri, localName, name);
+
+		EObject peekObject = objects.peekEObject();
+		if (multiValuedAttributesToCheck.containsKey(peekObject)) {
+			for (EAttribute mvAttr : multiValuedAttributesToCheck.get(peekObject)) {
+				if (hasDuplicatedValues(peekObject, mvAttr)) {
+					pmResource.addConflict(new MultiValuedAttributeDuplicates(
+							IdUtils.getAvailableId(xmlResource, peekObject),
+							pmResource, mvAttr));
+				}
+			}
+			multiValuedAttributesToCheck.remove(peekObject);
+		}
 
 		currentLine = locator.getLineNumber() + 1;
+
+		super.endElement(uri, localName, name);
+	}
+
+	protected boolean hasDuplicatedValues(EObject peekObject, EAttribute mvAttr) {
+		@SuppressWarnings("unchecked")
+		List<Object> values = (List<Object>) peekObject.eGet(mvAttr);
+
+		Set<Object> uniqueValues = new HashSet<>();
+		for (Object value : values) {
+			if (!uniqueValues.add(value)) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	@Override

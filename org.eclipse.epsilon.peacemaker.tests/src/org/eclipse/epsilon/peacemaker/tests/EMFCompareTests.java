@@ -28,6 +28,7 @@ import org.eclipse.epsilon.peacemaker.conflicts.DoubleUpdate;
 import org.eclipse.epsilon.peacemaker.conflicts.DuplicatedId;
 import org.eclipse.epsilon.peacemaker.conflicts.InternalDanglingReference;
 import org.eclipse.epsilon.peacemaker.conflicts.KeepDelete;
+import org.eclipse.epsilon.peacemaker.conflicts.MultiValuedAttributeDuplicates;
 import org.eclipse.epsilon.peacemaker.conflicts.SingleContainmentReferenceUpdate;
 import org.eclipse.epsilon.peacemaker.conflicts.UnconflictedObject;
 import org.eclipse.epsilon.peacemaker.conflicts.UpdateDelete;
@@ -137,15 +138,14 @@ public class EMFCompareTests {
 		Class<?>[] conflictTypes = new Class<?>[] { DoubleUpdate.class };
 
 		// wrongly processed by git:
-		// d1_attribute, d2_attribute, d3_attribute
+		// d1_attribute, d2_attribute
 		// d1_containment_reference, d2_containment_reference
-
-		// TODO: d3 can be fixed by looking for duplicates in unique multi-valued attributes
 
 		testCase("d1_reference", conflictTypes);
 
 		testCase("d2_reference", conflictTypes);
 
+		testCase("d3_attribute", new Class<?>[] { MultiValuedAttributeDuplicates.class });
 		testCase("d3_reference", conflictTypes);
 		testCase("d3_containment_reference", new Class<?>[] { DuplicatedId.class });
 
