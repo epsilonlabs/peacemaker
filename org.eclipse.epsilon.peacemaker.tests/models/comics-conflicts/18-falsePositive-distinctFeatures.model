@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="ASCII"?>
+<comicshop:Shop xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:comicshop="comicshop" xmi:id="_rqtZkBUPEeut3qj6TjgmMQ" name="Travelling Man">
+<<<<<<< left.model
+  <comics xmi:id="comic1" title="A Basketful of Noses" releaseDate="20/02/2010"/>
+||||||| base.model
+  <comics xmi:id="comic1" title="A Basketful of Heads" releaseDate="20/02/2010"/>
+=======
+  <comics xmi:id="comic1" title="A Basketful of Heads" releaseDate="01/03/2010"/>
+>>>>>>> right.model
+</comicshop:Shop>

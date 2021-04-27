@@ -36,6 +36,7 @@ import org.eclipse.epsilon.peacemaker.conflicts.SingleContainmentReferenceUpdate
 import org.eclipse.epsilon.peacemaker.conflicts.UnconflictedObject;
 import org.eclipse.epsilon.peacemaker.conflicts.UpdateDelete;
 import org.eclipse.epsilon.peacemaker.util.TagBasedEqualityHelper;
+import org.eclipse.epsilon.peacemaker.util.TagBasedEqualityHelper.ThreeWayComparison;
 import org.eclipse.epsilon.peacemaker.util.ids.IdUtils;
 
 public class PeacemakerResource extends XMIResourceImpl {
@@ -232,7 +233,17 @@ public class PeacemakerResource extends XMIResourceImpl {
 							leftObj.eContainingFeature(), rightObj.eContainingFeature());
 				}
 				else {
-					if (equalityHelper.equals(leftObj, rightObj)) {
+					if (hasBaseResource() && conflictSection.baseContains(id)) {
+						ThreeWayComparison comparison = equalityHelper.compare(
+								leftObj, conflictSection.getBase(id), rightObj);
+
+						if (comparison.canBeMerged()) {
+							// false positive because of disjoint feature updates
+							conflict = null;
+							comparison.merge();
+						}
+					}
+					else if (equalityHelper.equals(leftObj, rightObj)) {
 						conflict = null; // false positive
 					}
 				}
