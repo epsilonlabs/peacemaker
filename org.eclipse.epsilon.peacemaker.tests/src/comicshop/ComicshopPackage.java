@@ -85,13 +85,31 @@ public interface ComicshopPackage extends EPackage {
 	int SHOP__COMICS = 1;
 
 	/**
+	 * The feature id for the '<em><b>Two Comics</b></em>' containment reference list.
+	 * <!-- begin-user-doc -->
+	 * <!-- end-user-doc -->
+	 * @generated
+	 * @ordered
+	 */
+	int SHOP__TWO_COMICS = 2;
+
+	/**
+	 * The feature id for the '<em><b>Three Comics</b></em>' containment reference list.
+	 * <!-- begin-user-doc -->
+	 * <!-- end-user-doc -->
+	 * @generated
+	 * @ordered
+	 */
+	int SHOP__THREE_COMICS = 3;
+
+	/**
 	 * The feature id for the '<em><b>Publishers</b></em>' containment reference list.
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
 	 * @generated
 	 * @ordered
 	 */
-	int SHOP__PUBLISHERS = 2;
+	int SHOP__PUBLISHERS = 4;
 
 	/**
 	 * The feature id for the '<em><b>Authors</b></em>' containment reference list.
@@ -100,7 +118,7 @@ public interface ComicshopPackage extends EPackage {
 	 * @generated
 	 * @ordered
 	 */
-	int SHOP__AUTHORS = 3;
+	int SHOP__AUTHORS = 5;
 
 	/**
 	 * The number of structural features of the '<em>Shop</em>' class.
@@ -109,7 +127,7 @@ public interface ComicshopPackage extends EPackage {
 	 * @generated
 	 * @ordered
 	 */
-	int SHOP_FEATURE_COUNT = 4;
+	int SHOP_FEATURE_COUNT = 6;
 
 	/**
 	 * The number of operations of the '<em>Shop</em>' class.
@@ -429,6 +447,28 @@ public interface ComicshopPackage extends EPackage {
 	EReference getShop_Comics();
 
 	/**
+	 * Returns the meta object for the containment reference list '{@link comicshop.Shop#getTwoComics <em>Two Comics</em>}'.
+	 * <!-- begin-user-doc -->
+	 * <!-- end-user-doc -->
+	 * @return the meta object for the containment reference list '<em>Two Comics</em>'.
+	 * @see comicshop.Shop#getTwoComics()
+	 * @see #getShop()
+	 * @generated
+	 */
+	EReference getShop_TwoComics();
+
+	/**
+	 * Returns the meta object for the containment reference list '{@link comicshop.Shop#getThreeComics <em>Three Comics</em>}'.
+	 * <!-- begin-user-doc -->
+	 * <!-- end-user-doc -->
+	 * @return the meta object for the containment reference list '<em>Three Comics</em>'.
+	 * @see comicshop.Shop#getThreeComics()
+	 * @see #getShop()
+	 * @generated
+	 */
+	EReference getShop_ThreeComics();
+
+	/**
 	 * Returns the meta object for the containment reference list '{@link comicshop.Shop#getPublishers <em>Publishers</em>}'.
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
@@ -713,6 +753,22 @@ public interface ComicshopPackage extends EPackage {
 		 * @generated
 		 */
 		EReference SHOP__COMICS = eINSTANCE.getShop_Comics();
+
+		/**
+		 * The meta object literal for the '<em><b>Two Comics</b></em>' containment reference list feature.
+		 * <!-- begin-user-doc -->
+		 * <!-- end-user-doc -->
+		 * @generated
+		 */
+		EReference SHOP__TWO_COMICS = eINSTANCE.getShop_TwoComics();
+
+		/**
+		 * The meta object literal for the '<em><b>Three Comics</b></em>' containment reference list feature.
+		 * <!-- begin-user-doc -->
+		 * <!-- end-user-doc -->
+		 * @generated
+		 */
+		EReference SHOP__THREE_COMICS = eINSTANCE.getShop_ThreeComics();
 
 		/**
 		 * The meta object literal for the '<em><b>Publishers</b></em>' containment reference list feature.

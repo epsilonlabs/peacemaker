@@ -13,6 +13,8 @@ public class ConflictSection {
 	protected Set<String> rightIds = new HashSet<>();
 	protected Set<String> baseIds = new HashSet<>();
 
+	protected Set<String> solvedLeftIds = new HashSet<>();
+
 	protected Map<String, EObject> leftObjects = new HashMap<>();
 	protected Map<String, EObject> rightObjects = new HashMap<>();
 	protected Map<String, EObject> baseObjects = new HashMap<>();
@@ -85,5 +87,19 @@ public class ConflictSection {
 		s.append("\t").append(String.join("\n\t", rightIds));
 
 		return s.toString();
+	}
+
+	/**
+	 * Mark a identifier from the left segment as solved, basically due to a previously
+	 * identified conflict involving several elements of the conflict section
+	 */
+	public void markSolved(String leftId) {
+		if (leftContains(leftId)) {
+			solvedLeftIds.add(leftId);
+		}
+	}
+
+	public boolean isSolved(String leftId) {
+		return solvedLeftIds.contains(leftId);
 	}
 }

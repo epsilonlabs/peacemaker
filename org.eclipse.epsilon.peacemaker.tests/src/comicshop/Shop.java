@@ -17,6 +17,8 @@ import org.eclipse.emf.ecore.EObject;
  * <ul>
  *   <li>{@link comicshop.Shop#getName <em>Name</em>}</li>
  *   <li>{@link comicshop.Shop#getComics <em>Comics</em>}</li>
+ *   <li>{@link comicshop.Shop#getTwoComics <em>Two Comics</em>}</li>
+ *   <li>{@link comicshop.Shop#getThreeComics <em>Three Comics</em>}</li>
  *   <li>{@link comicshop.Shop#getPublishers <em>Publishers</em>}</li>
  *   <li>{@link comicshop.Shop#getAuthors <em>Authors</em>}</li>
  * </ul>
@@ -59,6 +61,30 @@ public interface Shop extends EObject {
 	 * @generated
 	 */
 	EList<Comic> getComics();
+
+	/**
+	 * Returns the value of the '<em><b>Two Comics</b></em>' containment reference list.
+	 * The list contents are of type {@link comicshop.Comic}.
+	 * <!-- begin-user-doc -->
+	 * <!-- end-user-doc -->
+	 * @return the value of the '<em>Two Comics</em>' containment reference list.
+	 * @see comicshop.ComicshopPackage#getShop_TwoComics()
+	 * @model containment="true" upper="2"
+	 * @generated
+	 */
+	EList<Comic> getTwoComics();
+
+	/**
+	 * Returns the value of the '<em><b>Three Comics</b></em>' containment reference list.
+	 * The list contents are of type {@link comicshop.Comic}.
+	 * <!-- begin-user-doc -->
+	 * <!-- end-user-doc -->
+	 * @return the value of the '<em>Three Comics</em>' containment reference list.
+	 * @see comicshop.ComicshopPackage#getShop_ThreeComics()
+	 * @model containment="true" upper="3"
+	 * @generated
+	 */
+	EList<Comic> getThreeComics();
 
 	/**
 	 * Returns the value of the '<em><b>Publishers</b></em>' containment reference list.

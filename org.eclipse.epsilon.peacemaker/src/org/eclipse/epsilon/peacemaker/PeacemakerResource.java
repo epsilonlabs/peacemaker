@@ -32,12 +32,13 @@ import org.eclipse.epsilon.peacemaker.conflicts.ContainingFeatureUpdate;
 import org.eclipse.epsilon.peacemaker.conflicts.DoubleUpdate;
 import org.eclipse.epsilon.peacemaker.conflicts.DuplicatedId;
 import org.eclipse.epsilon.peacemaker.conflicts.KeepDelete;
-import org.eclipse.epsilon.peacemaker.conflicts.SingleContainmentReferenceUpdate;
 import org.eclipse.epsilon.peacemaker.conflicts.UnconflictedObject;
 import org.eclipse.epsilon.peacemaker.conflicts.UpdateDelete;
+import org.eclipse.epsilon.peacemaker.conflicts.UpperBoundedUpdate;
 import org.eclipse.epsilon.peacemaker.util.TagBasedEqualityHelper;
 import org.eclipse.epsilon.peacemaker.util.TagBasedEqualityHelper.ThreeWayComparison;
 import org.eclipse.epsilon.peacemaker.util.ids.IdUtils;
+import org.eclipse.epsilon.peacemaker.util.ids.PeacemakerUtils;
 
 public class PeacemakerResource extends XMIResourceImpl {
 
@@ -218,6 +219,10 @@ public class PeacemakerResource extends XMIResourceImpl {
 
 	protected void identifyConflicts(ConflictSection conflictSection) {
 		for (String id : conflictSection.getLeftIds()) {
+
+			if (conflictSection.isSolved(id)) {
+				continue;
+			}
 
 			EObject leftObj = conflictSection.getLeft(id);
 
@@ -414,27 +419,52 @@ public class PeacemakerResource extends XMIResourceImpl {
 	protected boolean checkSingleContainmentReference(String leftId, EObject leftObj, ConflictSection conflictSection) {
 		EStructuralFeature feature = leftObj.eContainingFeature();
 
-		if (feature != null && isSingleContainmentReference(feature)) {
+		if (isUpperBoundedContainmentReference(feature)) {
 			EReference ref = (EReference) feature;
+			EObject leftParent = leftObj.eContainer();
 
-			String parentId = getLeftId(leftObj.eContainer());
-			EObject rightParent = getRightEObject(parentId);
-			if (rightParent != null) {
-				EObject rightObj = (EObject) rightParent.eGet(ref);
-				if (rightObj != null && conflictSection.rightContains(getRightId(rightObj))) {
-					addConflict(new SingleContainmentReferenceUpdate(parentId, this, ref));
-					conflictSection.removeRight(getRightId(rightObj));
-					return true;
+			if (leftParent != null && isFull(leftParent, feature)) {
+				String parentId = getLeftId(leftObj.eContainer());
+				EObject rightParent = getRightEObject(parentId);
+
+				if (rightParent != null && isFull(rightParent, feature)) {
+
+					Conflict conflict = null;
+					for (EObject rightObj : PeacemakerUtils.getContents(rightParent, ref)) {
+						if (conflictSection.rightContains(getRightId(rightObj))) {
+							if (conflict == null) {
+								conflict = new UpperBoundedUpdate(parentId, this, ref);
+							}
+							conflictSection.removeRight(getRightId(rightObj));
+						}
+					}
+					if (conflict != null) {
+						addConflict(conflict);
+						// omit all left contents of the feature in the conflicts identification
+						for (EObject left : PeacemakerUtils.getContents(leftParent, ref)) {
+							conflictSection.markSolved(getLeftId(left));
+						}
+						return true;
+					}
 				}
 			}
 		}
 		return false;
 	}
 
-	protected boolean isSingleContainmentReference(EStructuralFeature feature) {
+	protected boolean isFull(EObject obj, EStructuralFeature feature) {
+		if (feature.getUpperBound() == 1) {
+			return obj.eGet(feature) != null;
+		}
+		else {
+			return ((List<?>) obj.eGet(feature)).size() >= feature.getUpperBound();
+		}
+	}
+
+	protected boolean isUpperBoundedContainmentReference(EStructuralFeature feature) {
 		return feature instanceof EReference &&
 				((EReference) feature).isContainment() &&
-				!((EReference) feature).isMany();
+				((EReference) feature).getUpperBound() >= 1;
 	}
 
 	public void addConflict(Conflict conflict) {

@@ -4,6 +4,8 @@ package comicshop;
 class Shop {
 	attr String name;
 	val Comic[*] comics;
+	val Comic[0..2] twoComics;
+	val Comic[0..3] threeComics;
 	val Publisher[*] publishers;
 	val Author[*] authors;
 }

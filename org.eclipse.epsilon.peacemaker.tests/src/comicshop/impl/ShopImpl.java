@@ -34,6 +34,8 @@ import org.eclipse.emf.ecore.util.InternalEList;
  * <ul>
  *   <li>{@link comicshop.impl.ShopImpl#getName <em>Name</em>}</li>
  *   <li>{@link comicshop.impl.ShopImpl#getComics <em>Comics</em>}</li>
+ *   <li>{@link comicshop.impl.ShopImpl#getTwoComics <em>Two Comics</em>}</li>
+ *   <li>{@link comicshop.impl.ShopImpl#getThreeComics <em>Three Comics</em>}</li>
  *   <li>{@link comicshop.impl.ShopImpl#getPublishers <em>Publishers</em>}</li>
  *   <li>{@link comicshop.impl.ShopImpl#getAuthors <em>Authors</em>}</li>
  * </ul>
@@ -70,6 +72,26 @@ public class ShopImpl extends MinimalEObjectImpl.Container implements Shop {
 	 * @ordered
 	 */
 	protected EList<Comic> comics;
+
+	/**
+	 * The cached value of the '{@link #getTwoComics() <em>Two Comics</em>}' containment reference list.
+	 * <!-- begin-user-doc -->
+	 * <!-- end-user-doc -->
+	 * @see #getTwoComics()
+	 * @generated
+	 * @ordered
+	 */
+	protected EList<Comic> twoComics;
+
+	/**
+	 * The cached value of the '{@link #getThreeComics() <em>Three Comics</em>}' containment reference list.
+	 * <!-- begin-user-doc -->
+	 * <!-- end-user-doc -->
+	 * @see #getThreeComics()
+	 * @generated
+	 * @ordered
+	 */
+	protected EList<Comic> threeComics;
 
 	/**
 	 * The cached value of the '{@link #getPublishers() <em>Publishers</em>}' containment reference list.
@@ -152,6 +174,32 @@ public class ShopImpl extends MinimalEObjectImpl.Container implements Shop {
 	 * @generated
 	 */
 	@Override
+	public EList<Comic> getTwoComics() {
+		if (twoComics == null) {
+			twoComics = new EObjectContainmentEList<Comic>(Comic.class, this, ComicshopPackage.SHOP__TWO_COMICS);
+		}
+		return twoComics;
+	}
+
+	/**
+	 * <!-- begin-user-doc -->
+	 * <!-- end-user-doc -->
+	 * @generated
+	 */
+	@Override
+	public EList<Comic> getThreeComics() {
+		if (threeComics == null) {
+			threeComics = new EObjectContainmentEList<Comic>(Comic.class, this, ComicshopPackage.SHOP__THREE_COMICS);
+		}
+		return threeComics;
+	}
+
+	/**
+	 * <!-- begin-user-doc -->
+	 * <!-- end-user-doc -->
+	 * @generated
+	 */
+	@Override
 	public EList<Publisher> getPublishers() {
 		if (publishers == null) {
 			publishers = new EObjectContainmentEList<Publisher>(Publisher.class, this, ComicshopPackage.SHOP__PUBLISHERS);
@@ -182,6 +230,10 @@ public class ShopImpl extends MinimalEObjectImpl.Container implements Shop {
 		switch (featureID) {
 			case ComicshopPackage.SHOP__COMICS:
 				return ((InternalEList<?>)getComics()).basicRemove(otherEnd, msgs);
+			case ComicshopPackage.SHOP__TWO_COMICS:
+				return ((InternalEList<?>)getTwoComics()).basicRemove(otherEnd, msgs);
+			case ComicshopPackage.SHOP__THREE_COMICS:
+				return ((InternalEList<?>)getThreeComics()).basicRemove(otherEnd, msgs);
 			case ComicshopPackage.SHOP__PUBLISHERS:
 				return ((InternalEList<?>)getPublishers()).basicRemove(otherEnd, msgs);
 			case ComicshopPackage.SHOP__AUTHORS:
@@ -202,6 +254,10 @@ public class ShopImpl extends MinimalEObjectImpl.Container implements Shop {
 				return getName();
 			case ComicshopPackage.SHOP__COMICS:
 				return getComics();
+			case ComicshopPackage.SHOP__TWO_COMICS:
+				return getTwoComics();
+			case ComicshopPackage.SHOP__THREE_COMICS:
+				return getThreeComics();
 			case ComicshopPackage.SHOP__PUBLISHERS:
 				return getPublishers();
 			case ComicshopPackage.SHOP__AUTHORS:
@@ -225,6 +281,14 @@ public class ShopImpl extends MinimalEObjectImpl.Container implements Shop {
 			case ComicshopPackage.SHOP__COMICS:
 				getComics().clear();
 				getComics().addAll((Collection<? extends Comic>)newValue);
+				return;
+			case ComicshopPackage.SHOP__TWO_COMICS:
+				getTwoComics().clear();
+				getTwoComics().addAll((Collection<? extends Comic>)newValue);
+				return;
+			case ComicshopPackage.SHOP__THREE_COMICS:
+				getThreeComics().clear();
+				getThreeComics().addAll((Collection<? extends Comic>)newValue);
 				return;
 			case ComicshopPackage.SHOP__PUBLISHERS:
 				getPublishers().clear();
@@ -252,6 +316,12 @@ public class ShopImpl extends MinimalEObjectImpl.Container implements Shop {
 			case ComicshopPackage.SHOP__COMICS:
 				getComics().clear();
 				return;
+			case ComicshopPackage.SHOP__TWO_COMICS:
+				getTwoComics().clear();
+				return;
+			case ComicshopPackage.SHOP__THREE_COMICS:
+				getThreeComics().clear();
+				return;
 			case ComicshopPackage.SHOP__PUBLISHERS:
 				getPublishers().clear();
 				return;
@@ -274,6 +344,10 @@ public class ShopImpl extends MinimalEObjectImpl.Container implements Shop {
 				return NAME_EDEFAULT == null ? name != null : !NAME_EDEFAULT.equals(name);
 			case ComicshopPackage.SHOP__COMICS:
 				return comics != null && !comics.isEmpty();
+			case ComicshopPackage.SHOP__TWO_COMICS:
+				return twoComics != null && !twoComics.isEmpty();
+			case ComicshopPackage.SHOP__THREE_COMICS:
+				return threeComics != null && !threeComics.isEmpty();
 			case ComicshopPackage.SHOP__PUBLISHERS:
 				return publishers != null && !publishers.isEmpty();
 			case ComicshopPackage.SHOP__AUTHORS:

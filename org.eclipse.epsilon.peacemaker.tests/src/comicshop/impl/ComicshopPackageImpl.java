@@ -164,7 +164,7 @@ public class ComicshopPackageImpl extends EPackageImpl implements ComicshopPacka
 	 * @generated
 	 */
 	@Override
-	public EReference getShop_Publishers() {
+	public EReference getShop_TwoComics() {
 		return (EReference)shopEClass.getEStructuralFeatures().get(2);
 	}
 
@@ -174,8 +174,28 @@ public class ComicshopPackageImpl extends EPackageImpl implements ComicshopPacka
 	 * @generated
 	 */
 	@Override
-	public EReference getShop_Authors() {
+	public EReference getShop_ThreeComics() {
 		return (EReference)shopEClass.getEStructuralFeatures().get(3);
+	}
+
+	/**
+	 * <!-- begin-user-doc -->
+	 * <!-- end-user-doc -->
+	 * @generated
+	 */
+	@Override
+	public EReference getShop_Publishers() {
+		return (EReference)shopEClass.getEStructuralFeatures().get(4);
+	}
+
+	/**
+	 * <!-- begin-user-doc -->
+	 * <!-- end-user-doc -->
+	 * @generated
+	 */
+	@Override
+	public EReference getShop_Authors() {
+		return (EReference)shopEClass.getEStructuralFeatures().get(5);
 	}
 
 	/**
@@ -410,6 +430,8 @@ public class ComicshopPackageImpl extends EPackageImpl implements ComicshopPacka
 		shopEClass = createEClass(SHOP);
 		createEAttribute(shopEClass, SHOP__NAME);
 		createEReference(shopEClass, SHOP__COMICS);
+		createEReference(shopEClass, SHOP__TWO_COMICS);
+		createEReference(shopEClass, SHOP__THREE_COMICS);
 		createEReference(shopEClass, SHOP__PUBLISHERS);
 		createEReference(shopEClass, SHOP__AUTHORS);
 
@@ -472,6 +494,8 @@ public class ComicshopPackageImpl extends EPackageImpl implements ComicshopPacka
 		initEClass(shopEClass, Shop.class, "Shop", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
 		initEAttribute(getShop_Name(), ecorePackage.getEString(), "name", null, 0, 1, Shop.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
 		initEReference(getShop_Comics(), this.getComic(), null, "comics", null, 0, -1, Shop.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, IS_COMPOSITE, !IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+		initEReference(getShop_TwoComics(), this.getComic(), null, "twoComics", null, 0, 2, Shop.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, IS_COMPOSITE, !IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+		initEReference(getShop_ThreeComics(), this.getComic(), null, "threeComics", null, 0, 3, Shop.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, IS_COMPOSITE, !IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
 		initEReference(getShop_Publishers(), this.getPublisher(), null, "publishers", null, 0, -1, Shop.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, IS_COMPOSITE, !IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
 		initEReference(getShop_Authors(), this.getAuthor(), null, "authors", null, 0, -1, Shop.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, IS_COMPOSITE, !IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
 

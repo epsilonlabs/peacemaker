@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="ASCII"?>
+<comicshop:Shop xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:comicshop="comicshop" xmi:id="_rqtZkBUPEeut3qj6TjgmMQ" name="Travelling Man">
+  <comics xmi:id="comic1" title="A Basketful of Heads"/>
+<<<<<<< twoComics-v2-left.model
+  <twoComics xmi:id="left1" title="One comic left"/>
+  <twoComics xmi:id="left2" title="Another comic left"/>
+||||||| twoComics-v2-base.model
+=======
+  <twoComics xmi:id="right1" title="One comic right"/>
+  <twoComics xmi:id="right2" title="Another comic right"/>
+>>>>>>> twoComics-v2-right.model
+</comicshop:Shop>

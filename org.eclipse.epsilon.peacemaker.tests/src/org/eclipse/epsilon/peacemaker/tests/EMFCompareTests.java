@@ -29,9 +29,9 @@ import org.eclipse.epsilon.peacemaker.conflicts.DuplicatedId;
 import org.eclipse.epsilon.peacemaker.conflicts.InternalDanglingReference;
 import org.eclipse.epsilon.peacemaker.conflicts.KeepDelete;
 import org.eclipse.epsilon.peacemaker.conflicts.MultiValuedAttributeDuplicates;
-import org.eclipse.epsilon.peacemaker.conflicts.SingleContainmentReferenceUpdate;
 import org.eclipse.epsilon.peacemaker.conflicts.UnconflictedObject;
 import org.eclipse.epsilon.peacemaker.conflicts.UpdateDelete;
+import org.eclipse.epsilon.peacemaker.conflicts.UpperBoundedUpdate;
 import org.eclipse.epsilon.peacemaker.dt.ConflictResolveCommand;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -99,7 +99,7 @@ public class EMFCompareTests {
 		testCase("b3_reference", conflictTypes);
 
 		testCase("b3_containment_reference", 
-				new Class<?>[] { SingleContainmentReferenceUpdate.class });
+				new Class<?>[] { UpperBoundedUpdate.class });
 
 		testCase("b4_attribute", conflictTypes);
 		testCase("b4_reference", conflictTypes);

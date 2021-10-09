@@ -24,7 +24,7 @@ import org.eclipse.epsilon.peacemaker.PeacemakerResourceFactory;
 import org.eclipse.epsilon.peacemaker.conflicts.Conflict;
 import org.eclipse.epsilon.peacemaker.conflicts.Conflict.ResolveAction;
 import org.eclipse.epsilon.peacemaker.conflicts.DoubleUpdate;
-import org.eclipse.epsilon.peacemaker.conflicts.SingleContainmentReferenceUpdate;
+import org.eclipse.epsilon.peacemaker.conflicts.UpperBoundedUpdate;
 import org.eclipse.epsilon.peacemaker.conflicts.UpdateDelete;
 import org.eclipse.epsilon.peacemaker.dt.ConflictResolveCommand;
 import org.eclipse.epsilon.peacemaker.util.FormatModels;
@@ -77,7 +77,7 @@ public class ComicTests {
 		PeacemakerResource resource = loadConflictResource(String.format(CONFLICTS_LOCATION, inputCase));
 
 		assertTrue(resource.getConflicts().size() == 2);
-		assertTrue(resource.getConflicts().get(0) instanceof SingleContainmentReferenceUpdate);
+		assertTrue(resource.getConflicts().get(0) instanceof UpperBoundedUpdate);
 
 		System.out.println("\nKeep left in both (FULL RESOLUTION)");
 		resource.getConflicts().get(0).resolve(ResolveAction.KEEP_LEFT);
@@ -342,6 +342,24 @@ public class ComicTests {
 		for (String inputCase : newLinesCases) {
 			testSave(inputCase, FormatModels.getBreakAttributesSaveOptions());
 		}
+	}
+
+	@Test
+	public void testUpperBoundedFeatures() throws IOException {
+		upperBoundedCase("19-twoComics-v1");
+		upperBoundedCase("19-twoComics-v2");
+		upperBoundedCase("19-threeComics");
+	}
+
+	public PeacemakerResource upperBoundedCase(String inputCase) throws IOException {
+		displayCase(inputCase);
+
+		PeacemakerResource resource = loadConflictResource(String.format(CONFLICTS_LOCATION, inputCase));
+
+		assertTrue(resource.getConflicts().size() == 1);
+		assertTrue(resource.getConflicts().get(0) instanceof UpperBoundedUpdate);
+
+		return resource;
 	}
 
 	public void testSave(String inputCase, Map<?, ?> saveOptions) throws IOException {

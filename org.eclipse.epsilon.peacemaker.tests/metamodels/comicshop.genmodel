@@ -9,6 +9,8 @@
     <genClasses ecoreClass="comicshop.ecore#//Shop">
       <genFeatures createChild="false" ecoreFeature="ecore:EAttribute comicshop.ecore#//Shop/name"/>
       <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference comicshop.ecore#//Shop/comics"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference comicshop.ecore#//Shop/twoComics"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference comicshop.ecore#//Shop/threeComics"/>
       <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference comicshop.ecore#//Shop/publishers"/>
       <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference comicshop.ecore#//Shop/authors"/>
     </genClasses>

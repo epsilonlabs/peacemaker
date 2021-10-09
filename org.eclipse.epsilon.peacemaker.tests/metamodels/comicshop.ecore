@@ -5,6 +5,10 @@
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
     <eStructuralFeatures xsi:type="ecore:EReference" name="comics" upperBound="-1"
         eType="#//Comic" containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="twoComics" upperBound="2"
+        eType="#//Comic" containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="threeComics" upperBound="3"
+        eType="#//Comic" containment="true"/>
     <eStructuralFeatures xsi:type="ecore:EReference" name="publishers" upperBound="-1"
         eType="#//Publisher" containment="true"/>
     <eStructuralFeatures xsi:type="ecore:EReference" name="authors" upperBound="-1"
